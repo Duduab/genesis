@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useI18n } from '../i18n/I18nContext'
+import { useTheme } from '../theme/ThemeContext'
 import {
   User,
   ShieldAlert,
@@ -27,6 +28,8 @@ import {
   Crown,
   ArrowRight,
   X,
+  Moon,
+  Sun,
 } from 'lucide-react'
 
 /* ─── Shared primitives ─── */
@@ -38,15 +41,15 @@ function Toggle({ enabled, onChange, id }) {
       aria-checked={enabled}
       id={id}
       onClick={() => onChange(!enabled)}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genesis-400 focus-visible:ring-offset-2 ${
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genesis-400 focus-visible:ring-offset-2 ${
         enabled ? 'bg-genesis-600' : 'bg-surface-300'
       }`}
     >
       <span
-        className={`pointer-events-none inline-block transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
-          enabled ? 'translate-x-[22px]' : 'translate-x-[3px]'
+        className={`pointer-events-none absolute top-[3px] h-[18px] w-[18px] rounded-full shadow-sm transition-[inset] duration-200 ${
+          enabled ? 'start-[23px]' : 'start-[3px]'
         }`}
-        style={{ height: 18, width: 18 }}
+        style={{ backgroundColor: '#fff' }}
       />
     </button>
   )
@@ -124,15 +127,28 @@ function InputField({ label, id, type = 'text', value, onChange, placeholder, ic
 
 /* ─── User Profile Tab ─── */
 
+const DEFAULT_AVATAR = 'https://api.dicebear.com/9.x/notionists/svg?seed=David&backgroundColor=c4b8f6'
+
 function ProfileContent() {
   const { t, locale, toggleLocale } = useI18n()
+  const { dark, toggleTheme } = useTheme()
   const [name, setName] = useState('David Abrahams')
   const [email, setEmail] = useState('david@genesisai.com')
   const [phone, setPhone] = useState('+972 50 123 4567')
   const [twoFA, setTwoFA] = useState(true)
   const [saved, setSaved] = useState(false)
+  const [avatar, setAvatar] = useState(DEFAULT_AVATAR)
+  const fileInputRef = useRef(null)
 
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2500) }
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    setAvatar(url)
+    e.target.value = ''
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -141,19 +157,35 @@ function ProfileContent() {
         <div className="flex items-center gap-5">
           <div className="relative">
             <img
-              src="https://api.dicebear.com/9.x/notionists/svg?seed=David&backgroundColor=c4b8f6"
+              src={avatar}
               alt="Avatar"
               className="h-20 w-20 rounded-2xl bg-genesis-100 object-cover ring-4 ring-genesis-100"
             />
-            <div className="absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full bg-genesis-600 text-white ring-2 ring-white">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full bg-genesis-600 text-white ring-2 ring-white transition-colors hover:bg-genesis-700"
+            >
               <Camera className="h-3.5 w-3.5" />
-            </div>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <button className="rounded-lg border border-genesis-200 bg-genesis-50 px-4 py-2 text-xs font-semibold text-genesis-700 transition-colors hover:bg-genesis-100">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-lg border border-genesis-200 bg-genesis-50 px-4 py-2 text-xs font-semibold text-genesis-700 transition-colors hover:bg-genesis-100"
+            >
               {t('profile.avatar.change')}
             </button>
-            <button className="rounded-lg border border-surface-200 px-4 py-2 text-xs font-semibold text-surface-500 transition-colors hover:bg-surface-50">
+            <button
+              onClick={() => setAvatar(DEFAULT_AVATAR)}
+              className="rounded-lg border border-surface-200 px-4 py-2 text-xs font-semibold text-surface-500 transition-colors hover:bg-surface-50"
+            >
               {t('profile.avatar.remove')}
             </button>
           </div>
@@ -211,6 +243,17 @@ function ProfileContent() {
             >
               {locale === 'en' ? '🇮🇱 עברית' : '🇺🇸 English'}
             </button>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between border-t border-surface-100 pt-4">
+            <div className="flex items-center gap-2">
+              {dark ? <Moon className="h-4 w-4 text-surface-400" /> : <Sun className="h-4 w-4 text-surface-400" />}
+              <div>
+                <p className="text-xs font-semibold text-surface-600">{t('profile.personal.darkMode')}</p>
+                <p className="text-[11px] text-surface-400">{t('profile.personal.darkModeHelper')}</p>
+              </div>
+            </div>
+            <Toggle enabled={dark} onChange={toggleTheme} id="dark-mode-toggle" />
           </div>
         </div>
       </SectionCard>

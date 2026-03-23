@@ -52,7 +52,33 @@
     "subPhaseBreakdown": "פילוח שלבי הקמה עסקית",
     "humanLoopPanel": "לוח בקרת אישור אנושי",
     "seeAll": "הצג הכל",
-    "viewAll": "צפה בהכל"
+    "viewAll": "צפה בהכל",
+    "metrics": {
+      "title": "מדדי ביצוע ותוצאות",
+      "achievements": "מה הושג עד כה",
+      "timeSaved": "חיסכון בזמן",
+      "moneySaved": "חיסכון בכסף",
+      "efficiencyNote": "יחסית להקמת עסק ללא המערכת",
+      "disclaimer": "לתשומת לב: עמדת המשתמש היא הקובעת סופית.",
+      "achievementItems": [
+        "רישום חברה הושלם ואושר",
+        "הרשמה לרשות המסים הסתיימה",
+        "חשבון בנק נפתח וקושר",
+        "3 סוכני AI פרוסים ופעילים",
+        "חוזי העסקה נוצרו אוטומטית"
+      ],
+      "timeSavedValue": "127",
+      "timeSavedUnit": "שעות",
+      "timeSavedLabel": "נחסכו ברבעון הנוכחי",
+      "timeManualValue": "~210",
+      "timeManualLabel": "שעות הקמה ידנית ממוצעת",
+      "moneySavedValue": "₪18,400",
+      "moneySavedLabel": "נחסכו לעומת הקמה מסורתית",
+      "moneyManualValue": "₪32,000",
+      "moneyManualLabel": "עלות ממוצעת ללא Genesis",
+      "moneyGenesisValue": "₪13,600",
+      "moneyGenesisLabel": "העלות שלך עם Genesis"
+    }
   },
   "entities": {
     "title": "הישויות שלי",
@@ -233,7 +259,9 @@
       "language": "שפת ממשק",
       "languageHelper": "שינוי שפת הממשק וכיוון הטקסט (LTR / RTL)",
       "languageHebrew": "עברית",
-      "languageEnglish": "English"
+      "languageEnglish": "English",
+      "darkMode": "מצב כהה",
+      "darkModeHelper": "מעבר בין ערכת נושא בהירה לכהה"
     },
     "security": {
       "title": "אבטחה",
@@ -412,6 +440,9 @@
       "subtitle": "התחבר לניהול הפעילות העסקית שלך באמצעות AI",
       "email": "כתובת דוא״ל",
       "emailPlaceholder": "you@company.com",
+      "username": "שם משתמש",
+      "usernamePlaceholder": "הכנס את שם המשתמש שלך",
+      "invalidCredentials": "שם משתמש או סיסמה שגויים. נסה שוב.",
       "password": "סיסמה",
       "passwordPlaceholder": "הכנס את הסיסמה שלך",
       "continueWhatsApp": "המשך עם WhatsApp",

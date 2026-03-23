@@ -52,7 +52,33 @@
     "subPhaseBreakdown": "Business creation phase breakdown",
     "humanLoopPanel": "Human-in-the-loop oversight panel",
     "seeAll": "See All",
-    "viewAll": "View All"
+    "viewAll": "View All",
+    "metrics": {
+      "title": "Impact & Performance Metrics",
+      "achievements": "Progress Overview",
+      "timeSaved": "Time Saved",
+      "moneySaved": "Money Saved",
+      "efficiencyNote": "Vs. manual business setup",
+      "disclaimer": "Important: The user's decision is final and binding.",
+      "achievementItems": [
+        "Company registration completed and approved",
+        "Tax authority enrollment finalized",
+        "Bank account opened and linked",
+        "3 AI agents deployed and operational",
+        "Employment contracts auto-generated"
+      ],
+      "timeSavedValue": "127",
+      "timeSavedUnit": "hours",
+      "timeSavedLabel": "saved this quarter",
+      "timeManualValue": "~210",
+      "timeManualLabel": "hours typical manual setup",
+      "moneySavedValue": "₪18,400",
+      "moneySavedLabel": "saved vs. traditional setup",
+      "moneyManualValue": "₪32,000",
+      "moneyManualLabel": "avg. cost without Genesis",
+      "moneyGenesisValue": "₪13,600",
+      "moneyGenesisLabel": "your Genesis cost"
+    }
   },
   "entities": {
     "title": "My Entities",
@@ -233,7 +259,9 @@
       "language": "Interface Language",
       "languageHelper": "Changes the UI language and text direction (LTR / RTL)",
       "languageHebrew": "עברית",
-      "languageEnglish": "English"
+      "languageEnglish": "English",
+      "darkMode": "Dark Mode",
+      "darkModeHelper": "Switch between light and dark interface theme"
     },
     "security": {
       "title": "Security",
@@ -412,6 +440,9 @@
       "subtitle": "Sign in to manage your AI-powered business operations",
       "email": "Email Address",
       "emailPlaceholder": "you@company.com",
+      "username": "Username",
+      "usernamePlaceholder": "Enter your username",
+      "invalidCredentials": "Invalid username or password. Please try again.",
       "password": "Password",
       "passwordPlaceholder": "Enter your password",
       "continueWhatsApp": "Continue with WhatsApp",

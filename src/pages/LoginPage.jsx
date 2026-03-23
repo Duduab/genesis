@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { useRouter, Link } from '../router'
+import { useAuth } from '../auth/AuthContext'
 import AuthHeroPanel from '../components/AuthHeroPanel'
 
 function WhatsAppIcon({ className }) {
@@ -26,13 +27,21 @@ function GoogleIcon({ className }) {
 export default function LoginPage() {
   const { t, locale, toggleLocale } = useI18n()
   const { navigate } = useRouter()
-  const [email, setEmail] = useState('')
+  const { login } = useAuth()
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    navigate('/dashboard')
+    setError('')
+    const result = login(username, password)
+    if (result.success) {
+      navigate('/dashboard')
+    } else {
+      setError(t('auth.login.invalidCredentials'))
+    }
   }
 
   return (
@@ -91,20 +100,27 @@ export default function LoginPage() {
                 <div className="h-px flex-1 bg-surface-200" />
               </div>
 
-              {/* Email + Password form */}
+              {/* Username + Password form */}
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                {error && (
+                  <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {error}
+                  </div>
+                )}
+
                 <div>
-                  <label htmlFor="login-email" className="mb-1.5 block text-xs font-semibold text-surface-600">
-                    {t('auth.login.email')}
+                  <label htmlFor="login-username" className="mb-1.5 block text-xs font-semibold text-surface-600">
+                    {t('auth.login.username')}
                   </label>
                   <div className="relative">
-                    <Mail className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
+                    <User className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
                     <input
-                      id="login-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder={t('auth.login.emailPlaceholder')}
+                      id="login-username"
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder={t('auth.login.usernamePlaceholder')}
                       className="h-11 w-full rounded-xl border border-surface-200 bg-surface-50 ps-10 pe-3 text-sm text-surface-700 placeholder:text-surface-400 outline-none transition-all focus:border-genesis-400 focus:bg-white focus:ring-2 focus:ring-genesis-100"
                     />
                   </div>
