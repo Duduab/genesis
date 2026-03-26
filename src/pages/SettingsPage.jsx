@@ -298,9 +298,9 @@ function ProfileContent() {
         )}
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-genesis-600 to-genesis-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-genesis-500/25 transition-all hover:from-genesis-700 hover:to-genesis-600 active:scale-[0.98]"
+          className="btn-authora-gradient flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition-all active:scale-[0.98]"
         >
-          <Save className="h-4 w-4" />
+          <Save className="h-4 w-4 text-[#020617]" />
           {t('settings.saveChanges')}
         </button>
       </div>
@@ -413,9 +413,9 @@ function NotificationsContent() {
         )}
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-genesis-600 to-genesis-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-genesis-500/25 transition-all hover:from-genesis-700 hover:to-genesis-600 active:scale-[0.98]"
+          className="btn-authora-gradient flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition-all active:scale-[0.98]"
         >
-          <Save className="h-4 w-4" />
+          <Save className="h-4 w-4 text-[#020617]" />
           {t('settings.saveChanges')}
         </button>
       </div>
@@ -435,7 +435,7 @@ function BillingContent() {
     <div className="flex flex-col gap-5">
       {/* Current Plan */}
       <div className="overflow-hidden rounded-xl border border-genesis-200/60 shadow-sm">
-        <div className="bg-gradient-to-br from-genesis-700 via-genesis-600 to-genesis-500 px-6 py-5 text-white">
+        <div className="bg-[linear-gradient(135deg,#0e7490_0%,#2563eb_45%,#6d28d9_100%)] px-6 py-5 text-white">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2">
@@ -711,9 +711,9 @@ function GuardrailsContent() {
         )}
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-genesis-600 to-genesis-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-genesis-500/25 transition-all hover:from-genesis-700 hover:to-genesis-600 active:scale-[0.98]"
+          className="btn-authora-gradient flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition-all active:scale-[0.98]"
         >
-          <Save className="h-4 w-4" />
+          <Save className="h-4 w-4 text-[#020617]" />
           {t('settings.saveChanges')}
         </button>
       </div>

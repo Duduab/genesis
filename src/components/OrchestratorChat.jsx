@@ -319,7 +319,7 @@ export default function OrchestratorChat({ open, onClose }) {
             <button
               onClick={handleSend}
               disabled={!input.trim()}
-              className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-genesis-600 to-genesis-500 text-white shadow-md shadow-genesis-500/25 transition-all hover:from-genesis-700 hover:to-genesis-600 disabled:opacity-40 disabled:shadow-none disabled:hover:from-genesis-600 disabled:hover:to-genesis-500"
+              className="btn-authora-gradient btn-authora-gradient--on-dark mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all disabled:opacity-40 disabled:shadow-none"
             >
               <SendHorizonal className="h-[18px] w-[18px]" />
             </button>

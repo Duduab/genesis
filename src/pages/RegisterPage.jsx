@@ -1,160 +1,276 @@
-import { useState } from 'react'
-import { User, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import * as LucideIcons from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
-import { useRouter, Link } from '../router'
+import { Link, useRouter } from '../router'
 import AuthHeroPanel from '../components/AuthHeroPanel'
+import {
+  BUDGET_MAX_NIS,
+  BUDGET_MIN_NIS,
+  BUDGET_STEP_NIS,
+  BUSINESS_CATEGORIES,
+  CITY_IDS,
+} from '../config/businessCategories'
+import { readWizardStep1OrNull, saveWizardStep1 } from '../wizard/createBusinessWizardStorage'
+
+function formatBudgetShort(nis) {
+  if (nis >= 1_000_000) return '1M'
+  const k = nis / 1000
+  return Number.isInteger(k) ? `${k}K` : `${Math.round(k)}K`
+}
+
+function interpolate(template, vars) {
+  return Object.entries(vars).reduce((acc, [k, v]) => acc.replaceAll(`{{${k}}}`, String(v)), template)
+}
+
+const ACCENT = {
+  cyan: {
+    ring: 'ring-cyan-400/90 shadow-[0_0_28px_rgba(34,211,238,0.38)] border-cyan-400/55',
+    idle: 'border-white/10 hover:border-cyan-400/25',
+    slider: 'accent-cyan-400',
+  },
+  violet: {
+    ring: 'ring-violet-400/90 shadow-[0_0_28px_rgba(167,139,250,0.38)] border-violet-400/55',
+    idle: 'border-white/10 hover:border-violet-400/25',
+    slider: 'accent-violet-400',
+  },
+  fuchsia: {
+    ring: 'ring-fuchsia-400/90 shadow-[0_0_28px_rgba(232,121,249,0.38)] border-fuchsia-400/55',
+    idle: 'border-white/10 hover:border-fuchsia-400/25',
+    slider: 'accent-fuchsia-400',
+  },
+}
+
+function CategoryIcon({ name, className }) {
+  const Cmp = LucideIcons[name] || LucideIcons.Circle
+  return <Cmp className={className} aria-hidden />
+}
 
 export default function RegisterPage() {
   const { t, locale, toggleLocale } = useI18n()
   const { navigate } = useRouter()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPw, setShowPw] = useState(false)
+  const [categoryId, setCategoryId] = useState(null)
+  const [subTypeId, setSubTypeId] = useState(null)
+  const [budgetNis, setBudgetNis] = useState(BUDGET_MIN_NIS)
+  const [cityId, setCityId] = useState(null)
+  const [licenseType, setLicenseType] = useState(null)
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    navigate('/dashboard')
+  useEffect(() => {
+    const saved = readWizardStep1OrNull()
+    if (!saved) return
+    setCategoryId(saved.categoryId)
+    setSubTypeId(saved.subTypeId)
+    setBudgetNis(saved.budgetNis)
+    setCityId(saved.cityId)
+    setLicenseType(saved.licenseType)
+  }, [])
+
+  const selectedCategory = useMemo(
+    () => BUSINESS_CATEGORIES.find((c) => c.id === categoryId) ?? null,
+    [categoryId],
+  )
+
+  const accentKey = selectedCategory?.accent ?? 'cyan'
+  const accent = ACCENT[accentKey] ?? ACCENT.cyan
+
+  const selectCategory = (id) => {
+    setCategoryId(id)
+    setSubTypeId(null)
   }
 
-  const strength = (() => {
-    if (password.length === 0) return 0
-    let s = 0
-    if (password.length >= 8) s++
-    if (password.length >= 12) s++
-    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) s++
-    if (/\d/.test(password)) s++
-    if (/[^A-Za-z0-9]/.test(password)) s++
-    return Math.min(s, 4)
-  })()
+  const budgetRangeText = interpolate(t('createBusiness.budgetValueFormat'), {
+    min: formatBudgetShort(BUDGET_MIN_NIS),
+    max: formatBudgetShort(BUDGET_MAX_NIS),
+  })
 
-  const strengthColors = ['bg-surface-200', 'bg-red-400', 'bg-amber-400', 'bg-emerald-400', 'bg-emerald-500']
+  const budgetSelectedText = interpolate(t('createBusiness.budgetSelectedFormat'), {
+    value: formatBudgetShort(budgetNis),
+  })
+
+  const canProceedStep1 = Boolean(categoryId && subTypeId && cityId && licenseType)
+
+  const handleNext = () => {
+    if (!canProceedStep1 || !categoryId || !subTypeId || !cityId || !licenseType) return
+    saveWizardStep1({
+      categoryId,
+      subTypeId,
+      budgetNis,
+      cityId,
+      licenseType,
+    })
+    navigate('/register/step2')
+  }
 
   return (
-    <div className="flex h-screen bg-white">
-      {/* Left — Hero (reversed: hero on left for register) */}
+    <div className="flex h-screen bg-[#0f0618]">
       <div className="hidden lg:block lg:w-1/2">
         <AuthHeroPanel />
       </div>
 
-      {/* Right — Form */}
-      <div className="flex w-full flex-col lg:w-1/2">
-        {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-5 sm:px-10">
+      <div className="relative flex min-h-0 w-full flex-1 flex-col bg-gradient-to-br from-[#1a0a2e] via-[#12081f] to-[#050208] lg:w-1/2">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(139,92,246,0.18),transparent)]" />
+
+        <header className="relative z-10 flex shrink-0 items-center justify-between px-6 py-5 sm:px-10">
           <Link to="/register" className="flex items-center">
             <img
               src="/logos/logo-primary.png"
-              alt="Genesis Technologies"
-              className="animate-fade-in h-12 w-auto object-contain"
-              style={{ aspectRatio: 'auto' }}
+              alt={t('createBusiness.logoAlt')}
+              className="h-11 w-auto max-w-[200px] object-contain opacity-95"
             />
           </Link>
           <button
+            type="button"
             onClick={toggleLocale}
-            className="rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-600 transition-colors hover:bg-surface-50"
+            className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 backdrop-blur-sm transition-colors hover:bg-white/10"
           >
             {locale === 'en' ? '🇮🇱 עברית' : '🇺🇸 English'}
           </button>
-        </div>
+        </header>
 
-        {/* Form body */}
-        <div className="flex flex-1 items-center justify-center px-6 sm:px-10">
-          <div className="w-full max-w-[400px]">
-            <h1 className="text-3xl font-bold tracking-tight text-surface-900">{t('auth.register.title')}</h1>
-            <p className="mt-2 text-sm text-surface-400">{t('auth.register.subtitle')}</p>
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 sm:px-8 sm:pb-6">
+          <div className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.06] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl sm:max-w-xl sm:p-8">
+            <p className="text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-200/70">
+              {t('createBusiness.stepProgress')}
+            </p>
+            <div className="mt-3 flex gap-1.5">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className={`h-1 flex-1 rounded-full ${i < 1 ? 'bg-gradient-to-r from-cyan-400 to-violet-500' : 'bg-white/10'}`}
+                />
+              ))}
+            </div>
+            <h1 className="mt-4 text-center text-2xl font-bold tracking-tight text-white sm:text-[1.65rem]">
+              {t('createBusiness.title')}
+            </h1>
 
-            <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
-              <div>
-                <label htmlFor="reg-name" className="mb-1.5 block text-xs font-semibold text-surface-600">
-                  {t('auth.register.fullName')}
-                </label>
-                <div className="relative">
-                  <User className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
-                  <input
-                    id="reg-name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t('auth.register.fullNamePlaceholder')}
-                    className="h-11 w-full rounded-xl border border-surface-200 bg-surface-50 ps-10 pe-3 text-sm text-surface-700 placeholder:text-surface-400 outline-none transition-all focus:border-genesis-400 focus:bg-white focus:ring-2 focus:ring-genesis-100"
-                  />
-                </div>
+            <section className="mt-8">
+              <h2 className="mb-3 text-sm font-semibold text-white/90">{t('createBusiness.categoriesHeading')}</h2>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                {BUSINESS_CATEGORIES.map((cat) => {
+                  const a = ACCENT[cat.accent]
+                  const isOn = categoryId === cat.id
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => selectCategory(cat.id)}
+                      className={`flex flex-col items-center gap-2 rounded-xl border bg-white/[0.04] px-2 py-4 text-center transition-all sm:py-5 ${
+                        isOn ? `${a.ring} ring-2` : a.idle
+                      }`}
+                    >
+                      <CategoryIcon name={cat.iconName} className="h-7 w-7 text-white/85 sm:h-8 sm:w-8" />
+                      <span className="text-[11px] font-medium leading-tight text-white/90 sm:text-xs">{t(cat.i18nKey)}</span>
+                    </button>
+                  )
+                })}
               </div>
+            </section>
 
-              <div>
-                <label htmlFor="reg-email" className="mb-1.5 block text-xs font-semibold text-surface-600">
-                  {t('auth.register.email')}
-                </label>
-                <div className="relative">
-                  <Mail className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
-                  <input
-                    id="reg-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t('auth.register.emailPlaceholder')}
-                    className="h-11 w-full rounded-xl border border-surface-200 bg-surface-50 ps-10 pe-3 text-sm text-surface-700 placeholder:text-surface-400 outline-none transition-all focus:border-genesis-400 focus:bg-white focus:ring-2 focus:ring-genesis-100"
-                  />
+            {selectedCategory && (
+              <section className="mt-7">
+                <h2 className="mb-3 text-sm font-semibold text-white/90">{t('createBusiness.businessTypeHeading')}</h2>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {selectedCategory.subTypes.map((st) => {
+                    const isOn = subTypeId === st.id
+                    const a = ACCENT[selectedCategory.accent]
+                    return (
+                      <button
+                        key={st.id}
+                        type="button"
+                        onClick={() => setSubTypeId(st.id)}
+                        className={`rounded-xl border bg-white/[0.04] px-3 py-3 text-center text-xs font-medium text-white/90 transition-all sm:text-[13px] ${
+                          isOn ? `${a.ring} ring-2` : a.idle
+                        }`}
+                      >
+                        {t(st.i18nKey)}
+                      </button>
+                    )
+                  })}
                 </div>
+              </section>
+            )}
+
+            <section className="mt-7">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <h2 className="text-sm font-semibold text-white/90">{t('createBusiness.budgetLabel')}</h2>
+                <span className="text-sm font-semibold text-cyan-200/90">{budgetSelectedText}</span>
               </div>
+              <p className="mb-2 text-[11px] text-white/45">{budgetRangeText}</p>
+              <input
+                type="range"
+                min={BUDGET_MIN_NIS}
+                max={BUDGET_MAX_NIS}
+                step={BUDGET_STEP_NIS}
+                value={budgetNis}
+                onChange={(e) => setBudgetNis(Number(e.target.value))}
+                className={`h-2 w-full cursor-pointer rounded-full bg-white/10 ${accent.slider}`}
+              />
+            </section>
 
-              <div>
-                <label htmlFor="reg-pw" className="mb-1.5 block text-xs font-semibold text-surface-600">
-                  {t('auth.register.password')}
-                </label>
-                <div className="relative">
-                  <Lock className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
-                  <input
-                    id="reg-pw"
-                    type={showPw ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t('auth.register.passwordPlaceholder')}
-                    className="h-11 w-full rounded-xl border border-surface-200 bg-surface-50 ps-10 pe-10 text-sm text-surface-700 placeholder:text-surface-400 outline-none transition-all focus:border-genesis-400 focus:bg-white focus:ring-2 focus:ring-genesis-100"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw(!showPw)}
-                    className="absolute end-3 top-1/2 -translate-y-1/2 text-surface-400 transition-colors hover:text-surface-600"
-                  >
-                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-
-                {password.length > 0 && (
-                  <div className="mt-2 flex gap-1">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className={`h-1 flex-1 rounded-full transition-colors ${i <= strength ? strengthColors[strength] : 'bg-surface-200'}`}
-                      />
-                    ))}
-                  </div>
-                )}
-                <p className="mt-1.5 text-[11px] text-surface-400">{t('auth.register.passwordHint')}</p>
+            <section className="mt-7">
+              <h2 className="mb-3 text-sm font-semibold text-white/90">{t('createBusiness.cityLabel')}</h2>
+              <div className="grid grid-cols-2 gap-2">
+                {CITY_IDS.map((id) => {
+                  const isOn = cityId === id
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setCityId(id)}
+                      className={`rounded-xl border bg-white/[0.04] px-3 py-3.5 text-sm font-medium text-white/90 transition-all ${
+                        isOn ? `${accent.ring} ring-2` : accent.idle
+                      }`}
+                    >
+                      {t(`createBusiness.city.${id}`)}
+                    </button>
+                  )
+                })}
               </div>
+            </section>
 
-              <button type="submit" className="group mt-2 flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-genesis-600 to-genesis-500 text-sm font-semibold text-white shadow-lg shadow-genesis-500/25 transition-all hover:from-genesis-700 hover:to-genesis-600 hover:shadow-genesis-600/30 active:scale-[0.98]">
-                <ShieldCheck className="h-[18px] w-[18px]" />
-                {t('auth.register.joinButton')}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </button>
+            <section className="mt-8">
+              <h2 className="mb-3 text-sm font-semibold text-white/90">{t('createBusiness.licensingHeading')}</h2>
+              <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+                <button
+                  type="button"
+                  onClick={() => setLicenseType('authorized_dealer')}
+                  className={`rounded-2xl border bg-white/[0.04] p-4 text-start transition-all sm:p-5 ${
+                    licenseType === 'authorized_dealer' ? `${accent.ring} ring-2` : accent.idle
+                  }`}
+                >
+                  <span className="block text-sm font-semibold text-white">{t('createBusiness.licenseAuthorizedTitle')}</span>
+                  <p className="mt-2 text-xs leading-relaxed text-white/55">{t('createBusiness.licenseAuthorizedDesc')}</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLicenseType('ltd')}
+                  className={`rounded-2xl border bg-white/[0.04] p-4 text-start transition-all sm:p-5 ${
+                    licenseType === 'ltd' ? `${accent.ring} ring-2` : accent.idle
+                  }`}
+                >
+                  <span className="block text-sm font-semibold text-white">{t('createBusiness.licenseLtdTitle')}</span>
+                  <p className="mt-2 text-xs leading-relaxed text-white/55">{t('createBusiness.licenseLtdDesc')}</p>
+                </button>
+              </div>
+            </section>
+          </div>
 
-              <p className="text-center text-[11px] leading-relaxed text-surface-400">
-                {t('auth.register.terms')}{' '}
-                <span className="font-medium text-genesis-600 hover:underline cursor-pointer">{t('auth.register.termsLink')}</span>
-                {' '}{t('auth.register.and')}{' '}
-                <span className="font-medium text-genesis-600 hover:underline cursor-pointer">{t('auth.register.privacyLink')}</span>
-              </p>
-            </form>
-
-            <p className="mt-8 text-center text-sm text-surface-400">
-              {t('auth.register.hasAccount')}{' '}
-              <Link to="/login" className="font-semibold text-genesis-600 transition-colors hover:text-genesis-700">
-                {t('auth.register.signIn')}
+          <footer className="relative z-10 mx-auto mt-4 w-full max-w-lg shrink-0 sm:max-w-xl">
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={!canProceedStep1}
+              className="btn-authora-gradient flex h-12 w-full items-center justify-center rounded-xl text-sm font-semibold text-[#020617] transition-all active:scale-[0.99] disabled:pointer-events-none disabled:opacity-45"
+            >
+              {t('createBusiness.nextStepButton')}
+            </button>
+            <p className="mt-4 text-center text-sm text-white/50">
+              {t('createBusiness.hasAccount')}{' '}
+              <Link to="/login" className="font-semibold text-cyan-300/90 underline-offset-2 hover:text-cyan-200 hover:underline">
+                {t('createBusiness.signIn')}
               </Link>
             </p>
-          </div>
+          </footer>
         </div>
       </div>
     </div>

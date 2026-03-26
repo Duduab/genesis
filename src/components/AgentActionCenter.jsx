@@ -118,10 +118,10 @@ export default function AgentActionCenter() {
         </div>
 
         {/* Review Actions button */}
-        <button className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-genesis-600 to-genesis-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-genesis-500/25 transition-all hover:from-genesis-700 hover:to-genesis-600 hover:shadow-genesis-600/30 active:scale-[0.98]">
-          <Bot className="h-[18px] w-[18px]" />
+        <button className="btn-authora-gradient mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all active:scale-[0.98]">
+          <Bot className="h-[18px] w-[18px] text-[#020617]" />
           {t('chat.reviewActions')}
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4 text-[#020617]" />
         </button>
       </div>
     </div>

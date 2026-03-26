@@ -30,20 +30,20 @@ export default function AuthHeroPanel() {
   ]
 
   return (
-    <div className="relative hidden h-full overflow-hidden bg-genesis-950 lg:flex lg:flex-col lg:justify-between">
-      {/* Gradient layers */}
+    <div className="landing-authora-mesh relative hidden h-full overflow-hidden lg:flex lg:flex-col lg:justify-between">
+      {/* Gradient layers — cyan / blue / violet (Authora-style) */}
       <div className="pointer-events-none absolute inset-0">
         <div
-          className="absolute h-[500px] w-[500px] rounded-full opacity-30 blur-[100px]"
-          style={{ background: 'radial-gradient(circle, #6344d6 0%, transparent 70%)', top: '10%', left: '20%', animation: 'auth-float 12s ease-in-out infinite' }}
+          className="absolute h-[500px] w-[500px] rounded-full opacity-35 blur-[100px]"
+          style={{ background: 'radial-gradient(circle, rgba(6, 182, 212, 0.55) 0%, transparent 70%)', top: '10%', left: '20%', animation: 'auth-float 12s ease-in-out infinite' }}
         />
         <div
-          className="absolute h-[400px] w-[400px] rounded-full opacity-20 blur-[80px]"
-          style={{ background: 'radial-gradient(circle, #8268e8 0%, transparent 70%)', bottom: '10%', right: '15%', animation: 'auth-float 15s ease-in-out infinite 2s' }}
+          className="absolute h-[400px] w-[400px] rounded-full opacity-25 blur-[80px]"
+          style={{ background: 'radial-gradient(circle, rgba(124, 58, 237, 0.45) 0%, transparent 70%)', bottom: '10%', right: '15%', animation: 'auth-float 15s ease-in-out infinite 2s' }}
         />
         <div
-          className="absolute h-[300px] w-[300px] rounded-full opacity-15 blur-[60px]"
-          style={{ background: 'radial-gradient(circle, #4a30a8 0%, transparent 70%)', top: '50%', left: '60%', animation: 'auth-float 10s ease-in-out infinite 4s' }}
+          className="absolute h-[300px] w-[300px] rounded-full opacity-20 blur-[60px]"
+          style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)', top: '50%', left: '60%', animation: 'auth-float 10s ease-in-out infinite 4s' }}
         />
       </div>
 
@@ -53,7 +53,7 @@ export default function AuthHeroPanel() {
           <line
             key={i}
             x1={conn.x1} y1={conn.y1} x2={conn.x2} y2={conn.y2}
-            stroke="#6344d6"
+            stroke="#06b6d4"
             strokeWidth="1"
             opacity="0.15"
             strokeDasharray="6 4"
@@ -64,19 +64,19 @@ export default function AuthHeroPanel() {
           <g key={i}>
             <circle
               cx={node.x} cy={node.y} r={node.size + 8}
-              fill="#6344d6"
+              fill="#0891b2"
               opacity="0.08"
               style={{ animation: `auth-pulse ${node.dur} ease-in-out infinite ${node.delay}` }}
             />
             <circle
               cx={node.x} cy={node.y} r={node.size}
-              fill="#8268e8"
+              fill="#7c3aed"
               opacity="0.5"
               style={{ animation: `auth-pulse ${node.dur} ease-in-out infinite ${node.delay}` }}
             />
             <circle
               cx={node.x} cy={node.y} r={3}
-              fill="#c4b8f6"
+              fill="#67e8f9"
               opacity="0.9"
             />
           </g>
@@ -87,11 +87,11 @@ export default function AuthHeroPanel() {
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <div className="relative h-[240px] w-[240px]">
           <div
-            className="absolute h-3 w-3 rounded-full bg-genesis-400 shadow-lg shadow-genesis-400/50"
+            className="absolute h-3 w-3 rounded-full bg-cyan-400 shadow-lg shadow-cyan-400/50"
             style={{ animation: 'auth-orbit 20s linear infinite', top: '50%', left: '50%', marginTop: '-6px', marginLeft: '-6px' }}
           />
           <div
-            className="absolute h-2 w-2 rounded-full bg-genesis-300"
+            className="absolute h-2 w-2 rounded-full bg-violet-400"
             style={{ animation: 'auth-orbit 28s linear infinite reverse', top: '50%', left: '50%', marginTop: '-4px', marginLeft: '-4px' }}
           />
         </div>

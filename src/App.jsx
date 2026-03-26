@@ -12,6 +12,10 @@ import SettingsPage from './pages/SettingsPage'
 import AgentActivityPage from './pages/AgentActivityPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import RegisterStep2 from './pages/RegisterStep2'
+import RegisterStep3 from './pages/RegisterStep3'
+import RegisterStep4 from './pages/RegisterStep4'
+import RegisterStep5 from './pages/RegisterStep5'
 import LandingPage from './pages/LandingPage'
 import { Activity, Building2, ShieldCheck, TrendingUp, MessageSquareText, Trophy, Clock, DollarSign, CheckCircle2, AlertTriangle, ArrowDownRight } from 'lucide-react'
 import { useI18n } from './i18n/I18nContext'
@@ -216,6 +220,10 @@ export default function App() {
   if (page === 'landing') return <LandingPage />
   if (page === 'login') return <LoginPage />
   if (page === 'register') return <RegisterPage />
+  if (page === 'register/step2') return <RegisterStep2 />
+  if (page === 'register/step3') return <RegisterStep3 />
+  if (page === 'register/step4') return <RegisterStep4 />
+  if (page === 'register/step5') return <RegisterStep5 />
 
   if (!isAuthenticated) {
     navigate('/login')
@@ -248,7 +256,7 @@ export default function App() {
 
       <button
         onClick={openChat}
-        className={`fixed bottom-6 end-6 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-genesis-600 to-genesis-500 text-white shadow-xl shadow-genesis-600/30 transition-all hover:scale-105 hover:shadow-genesis-600/40 active:scale-95 animate-glow-pulse ${
+        className={`btn-authora-gradient btn-authora-gradient--on-dark fixed bottom-6 end-6 z-40 flex h-14 w-14 items-center justify-center rounded-2xl transition-all hover:scale-105 active:scale-95 animate-glow-pulse ${
           chatOpen ? 'pointer-events-none opacity-0' : 'opacity-100'
         }`}
       >

@@ -38,7 +38,7 @@ function NotificationPanel({ open, onClose, t }) {
   return (
     <div
       ref={panelRef}
-      className="animate-slide-up-fade absolute end-0 top-full z-50 mt-2 w-[380px] overflow-hidden rounded-xl border border-surface-200 bg-white shadow-xl shadow-surface-900/8"
+      className="animate-slide-up-fade absolute end-0 top-full z-50 mt-2 w-[380px] overflow-hidden rounded-xl border border-surface-200 bg-surface-100 shadow-xl shadow-surface-900/8 dark:shadow-black/40"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-surface-100 px-4 py-3">
@@ -128,7 +128,7 @@ export default function TopHeader({ onMenuClick }) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-surface-200 bg-white/80 px-4 backdrop-blur-md sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-surface-200 bg-surface-50/90 px-4 backdrop-blur-md sm:px-6">
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
@@ -167,7 +167,7 @@ export default function TopHeader({ onMenuClick }) {
             className={`relative flex h-9 w-9 items-center justify-center rounded-lg text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700 ${notifOpen ? 'bg-surface-100 text-surface-700' : ''}`}
           >
             <Bell className="h-[18px] w-[18px]" />
-            <span className="absolute end-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" />
+            <span className="absolute end-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-surface-50 bg-red-500 dark:border-surface-100" />
           </button>
 
           <NotificationPanel open={notifOpen} onClose={() => setNotifOpen(false)} t={t} />

@@ -8,28 +8,30 @@
   --animate-fade-in: fade-in 400ms ease-out both;
   --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
 
-  --color-genesis-950: #0f0a2a;
-  --color-genesis-900: #1a1145;
-  --color-genesis-800: #251860;
-  --color-genesis-700: #32207a;
-  --color-genesis-600: #4a30a8;
-  --color-genesis-500: #6344d6;
-  --color-genesis-400: #8268e8;
-  --color-genesis-300: #a18ff0;
-  --color-genesis-200: #c4b8f6;
-  --color-genesis-100: #e6e0fc;
-  --color-genesis-50: #f5f3fe;
+  /* Brand accent — Authora-inspired: cyan / blue / violet infrastructure feel */
+  --color-genesis-950: #020617;
+  --color-genesis-900: #0b1220;
+  --color-genesis-800: #111d38;
+  --color-genesis-700: #0e7490;
+  --color-genesis-600: #0891b2;
+  --color-genesis-500: #06b6d4;
+  --color-genesis-400: #22d3ee;
+  --color-genesis-300: #67e8f9;
+  --color-genesis-200: #a5f3fc;
+  --color-genesis-100: #cffafe;
+  --color-genesis-50: #ecfeff;
 
-  --color-surface-50: #f8f9fc;
-  --color-surface-100: #f1f3f8;
-  --color-surface-200: #e4e7ef;
-  --color-surface-300: #d1d5e1;
-  --color-surface-400: #9ca3b8;
-  --color-surface-500: #6b7280;
-  --color-surface-600: #4b5563;
-  --color-surface-700: #374151;
-  --color-surface-800: #1f2937;
-  --color-surface-900: #111827;
+  /* Cool neutral surfaces (slate-tinted) */
+  --color-surface-50: #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-300: #cbd5e1;
+  --color-surface-400: #94a3b8;
+  --color-surface-500: #64748b;
+  --color-surface-600: #475569;
+  --color-surface-700: #334155;
+  --color-surface-800: #1e293b;
+  --color-surface-900: #0f172a;
 }
 
 body {
@@ -42,29 +44,29 @@ body {
   transition: background-color 0.2s ease;
 }
 
-/* ── Dark mode — surface scale inversion ─── */
+/* ── Dark mode — Authora-style deep navy + readable surfaces ─── */
 .dark {
-  --color-surface-50:  #0b0e14;
-  --color-surface-100: #131720;
-  --color-surface-200: #1e2533;
-  --color-surface-300: #2a3346;
-  --color-surface-400: #6b7280;
-  --color-surface-500: #9ca3b8;
-  --color-surface-600: #c8cdd8;
-  --color-surface-700: #dde1e8;
-  --color-surface-800: #edf0f4;
-  --color-surface-900: #f5f7fa;
+  --color-surface-50:  #020617;
+  --color-surface-100: #0c1222;
+  --color-surface-200: #152032;
+  --color-surface-300: #1e3a4f;
+  --color-surface-400: #64748b;
+  --color-surface-500: #94a3b8;
+  --color-surface-600: #cbd5e1;
+  --color-surface-700: #e2e8f0;
+  --color-surface-800: #f1f5f9;
+  --color-surface-900: #f8fafc;
 
-  --color-genesis-50:  #15112a;
-  --color-genesis-100: #1f1940;
-  --color-genesis-200: #2d2460;
+  --color-genesis-50:  #0a1620;
+  --color-genesis-100: #0f2433;
+  --color-genesis-200: #153447;
 
   color-scheme: dark;
 }
 
 /* Cards, sidebar, inputs, modals — anything using bg-white */
 :is(.dark) .bg-white {
-  background-color: #161b26;
+  background-color: #0c1524;
 }
 
 /* Colored tint backgrounds */
@@ -111,8 +113,8 @@ body {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(130, 104, 232, 0.4), 0 0 20px rgba(130, 104, 232, 0.15); }
-  50%      { box-shadow: 0 0 16px rgba(130, 104, 232, 0.6), 0 0 32px rgba(130, 104, 232, 0.25); }
+  0%, 100% { box-shadow: 0 0 10px rgba(6, 182, 212, 0.45), 0 0 24px rgba(124, 58, 237, 0.2); }
+  50%      { box-shadow: 0 0 18px rgba(6, 182, 212, 0.65), 0 0 40px rgba(59, 130, 246, 0.3); }
 }
 
 @keyframes ai-orb-breathe {
@@ -174,8 +176,8 @@ body {
 }
 
 @keyframes landing-glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(99, 68, 214, 0.3), 0 0 60px rgba(99, 68, 214, 0.1); }
-  50% { box-shadow: 0 0 30px rgba(99, 68, 214, 0.5), 0 0 80px rgba(99, 68, 214, 0.2); }
+  0%, 100% { box-shadow: 0 0 22px rgba(45, 212, 191, 0.4), 0 0 50px rgba(124, 58, 237, 0.18); }
+  50% { box-shadow: 0 0 34px rgba(45, 212, 191, 0.55), 0 0 64px rgba(124, 58, 237, 0.28); }
 }
 
 @keyframes landing-gradient-shift {
@@ -207,3 +209,67 @@ body {
 .landing-stagger-2 { animation: landing-float-up 0.6s ease-out 0.25s both; }
 .landing-stagger-3 { animation: landing-float-up 0.6s ease-out 0.4s both; }
 .landing-stagger-4 { animation: landing-float-up 0.6s ease-out 0.55s both; }
+
+/* Landing — Authora hero: deep charcoal + teal top-left + violet bottom-right */
+.landing-authora-mesh {
+  background-color: #020617;
+  background-image:
+    radial-gradient(ellipse 90% 70% at 0% 0%, rgba(45, 212, 191, 0.38), transparent 52%),
+    radial-gradient(ellipse 85% 65% at 100% 100%, rgba(124, 58, 237, 0.32), transparent 50%);
+}
+
+/* Blueprint grid — faint graph-paper lines (Authora-style) */
+.landing-authora-grid-bg {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center top;
+}
+
+/* Landing light mode — subtle grid on pale background */
+.landing-light-grid-bg {
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center top;
+}
+
+/* Primary CTA — teal → violet (matches authora.dev hero); dark label for contrast */
+.btn-authora-gradient {
+  background-image: linear-gradient(90deg, #2dd4bf 0%, #7c3aed 100%);
+  color: #020617;
+  box-shadow: 0 10px 40px -8px rgba(45, 212, 191, 0.35), 0 12px 36px -10px rgba(124, 58, 237, 0.25);
+}
+.btn-authora-gradient:hover {
+  background-image: linear-gradient(90deg, #5eead4 0%, #a78bfa 100%);
+  color: #020617;
+}
+
+/* Icon-only / FAB: keep glyphs white on same gradient */
+.btn-authora-gradient--on-dark {
+  color: #ffffff;
+}
+.btn-authora-gradient--on-dark:hover {
+  color: #ffffff;
+}
+
+/* Hero title accent line — cyan start → purple end (matches authora.dev headline) */
+.text-authora-hero-accent {
+  background-image: linear-gradient(90deg, #2dd4bf 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+[dir="rtl"] .text-authora-hero-accent {
+  background-image: linear-gradient(270deg, #2dd4bf 0%, #7c3aed 100%);
+}
+
+/* Full-line gradient headline (legacy / optional) */
+.text-authora-gradient {
+  background-image: linear-gradient(135deg, #f8fafc 0%, #a5f3fc 35%, #93c5fd 65%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

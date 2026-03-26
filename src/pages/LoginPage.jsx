@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { useRouter, Link } from '../router'
@@ -32,6 +32,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
+  const [regSuccess, setRegSuccess] = useState('')
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('genesis-reg-success')) {
+        sessionStorage.removeItem('genesis-reg-success')
+        setRegSuccess(t('createBusiness.step5.registration_success_msg'))
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [t])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -71,6 +83,12 @@ export default function LoginPage() {
           <div className="w-full max-w-[400px]">
             <h1 className="text-3xl font-bold tracking-tight text-surface-900">{t('auth.login.title')}</h1>
             <p className="mt-2 text-sm text-surface-400">{t('auth.login.subtitle')}</p>
+
+            {regSuccess ? (
+              <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800" role="status">
+                {regSuccess}
+              </p>
+            ) : null}
 
             <div className="mt-8 flex flex-col gap-4">
               {/* WhatsApp */}
@@ -155,9 +173,9 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <button type="submit" className="group mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-genesis-600 to-genesis-500 text-sm font-semibold text-white shadow-lg shadow-genesis-500/25 transition-all hover:from-genesis-700 hover:to-genesis-600 hover:shadow-genesis-600/30 active:scale-[0.98]">
+                <button type="submit" className="btn-authora-gradient group mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all active:scale-[0.98]">
                   {t('auth.login.signInEmail')}
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="h-4 w-4 shrink-0 text-[#020617] transition-transform group-hover:translate-x-0.5" />
                 </button>
               </form>
             </div>

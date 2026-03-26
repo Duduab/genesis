@@ -1,195 +1,57 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { ChevronRight, Shield, Scale, Landmark, Users, FileText, CreditCard, Briefcase, BadgeCheck, CircleDot, ArrowRight, Terminal, MessageSquare, Bot, Zap, Globe, Menu, X } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronRight, Shield, Landmark, Users, CreditCard, BadgeCheck, ArrowRight, Terminal, MessageSquare, Bot, Zap, Globe, Menu, X, Moon, Sun } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
+import { useTheme } from '../theme/ThemeContext'
 import { Link } from '../router'
-
-/* ────────────────────────────────────────────────
-   Auto-typing terminal component
-   ──────────────────────────────────────────────── */
-function HeroTerminal({ t }) {
-  const [lines, setLines] = useState([])
-  const [cursorVisible, setCursorVisible] = useState(true)
-  const termRef = useRef(null)
-  const hasRun = useRef(false)
-
-  const script = useCallback(() => [
-    { type: 'prompt', text: '' },
-    { type: 'user', text: t('landing.hero.terminalUser1') },
-    { type: 'blank', text: '' },
-    { type: 'ai', text: t('landing.hero.terminalAi1') },
-    { type: 'ai', text: t('landing.hero.terminalAi2') },
-    { type: 'blank', text: '' },
-    { type: 'success', text: t('landing.hero.terminalAi3') },
-    { type: 'success', text: t('landing.hero.terminalAi4') },
-    { type: 'success', text: t('landing.hero.terminalAi5') },
-    { type: 'blank', text: '' },
-    { type: 'status', text: t('landing.hero.terminalStatus') },
-  ], [t])
-
-  useEffect(() => {
-    if (hasRun.current) {
-      setLines([])
-      hasRun.current = false
-    }
-
-    const s = script()
-    let idx = 0
-    let charIdx = 0
-    let currentLine = null
-    let timer
-
-    function tick() {
-      if (idx >= s.length) return
-
-      const entry = s[idx]
-
-      if (entry.type === 'blank' || entry.type === 'prompt') {
-        setLines(prev => [...prev, entry])
-        idx++
-        timer = setTimeout(tick, entry.type === 'prompt' ? 600 : 300)
-        return
-      }
-
-      if (!currentLine) {
-        currentLine = { ...entry, text: '' }
-        setLines(prev => [...prev, currentLine])
-        charIdx = 0
-      }
-
-      if (charIdx < entry.text.length) {
-        currentLine = { ...currentLine, text: entry.text.slice(0, charIdx + 1) }
-        setLines(prev => {
-          const copy = [...prev]
-          copy[copy.length - 1] = currentLine
-          return copy
-        })
-        charIdx++
-        const speed = entry.type === 'user' ? 40 : 22
-        timer = setTimeout(tick, speed)
-      } else {
-        currentLine = null
-        idx++
-        timer = setTimeout(tick, entry.type === 'user' ? 800 : 350)
-      }
-    }
-
-    const start = setTimeout(() => {
-      hasRun.current = true
-      tick()
-    }, 1200)
-
-    return () => { clearTimeout(start); clearTimeout(timer) }
-  }, [script])
-
-  useEffect(() => {
-    const iv = setInterval(() => setCursorVisible(v => !v), 530)
-    return () => clearInterval(iv)
-  }, [])
-
-  useEffect(() => {
-    if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight
-  }, [lines])
-
-  const colorMap = {
-    user: 'text-cyan-400',
-    ai: 'text-genesis-300',
-    success: 'text-emerald-400',
-    status: 'text-slate-500',
-    prompt: 'text-slate-600',
-    blank: '',
-  }
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-slate-950/80 shadow-2xl shadow-genesis-950/60 backdrop-blur-xl">
-      {/* Title bar */}
-      <div className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3">
-        <div className="flex gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-500/70" />
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" />
-        </div>
-        <span className="ms-2 text-[11px] font-medium tracking-wide text-slate-500">
-          {t('landing.hero.terminalTitle')}
-        </span>
-      </div>
-
-      {/* Terminal body */}
-      <div ref={termRef} className="h-[300px] overflow-y-auto p-5 font-mono text-[13px] leading-relaxed sm:h-[340px]">
-        {lines.map((line, i) => {
-          if (line.type === 'blank') return <div key={i} className="h-3" />
-          if (line.type === 'prompt') {
-            return (
-              <div key={i} className="flex items-center gap-2 text-slate-600">
-                <span className="text-cyan-500">$</span>
-                <span className="text-slate-400">{line.text}</span>
-              </div>
-            )
-          }
-          return (
-            <div key={i} className={`${colorMap[line.type] || 'text-slate-400'}`}>
-              {line.type === 'user' && <span className="text-cyan-600">{'> '}</span>}
-              {line.type === 'ai' && <span className="text-genesis-600">{'◆ '}</span>}
-              {line.text}
-              {i === lines.length - 1 && (
-                <span className={`ms-0.5 inline-block h-4 w-[2px] translate-y-[2px] bg-cyan-400 transition-opacity ${cursorVisible ? 'opacity-100' : 'opacity-0'}`} />
-              )}
-            </div>
-          )
-        })}
-        {lines.length === 0 && (
-          <div className="flex items-center gap-2 text-slate-600">
-            <span className="text-cyan-500">$</span>
-            <span className={`inline-block h-4 w-[2px] bg-cyan-400 transition-opacity ${cursorVisible ? 'opacity-100' : 'opacity-0'}`} />
-          </div>
-        )}
-      </div>
-
-      {/* Glow accent */}
-      <div className="pointer-events-none absolute -bottom-10 -end-10 h-40 w-40 rounded-full bg-genesis-500/20 blur-[60px]" />
-      <div className="pointer-events-none absolute -start-10 -top-10 h-32 w-32 rounded-full bg-cyan-500/10 blur-[50px]" />
-    </div>
-  )
-}
 
 /* ────────────────────────────────────────────────
    Agent Card with glow border
    ──────────────────────────────────────────────── */
-function AgentCard({ name, role, desc, caps, icon: Icon, gradient, glowColor }) {
+function AgentCard({ name, role, desc, caps, icon: Icon, gradient, glowColor, isDark = true }) {
   return (
     <div className="group relative">
       <div className={`pointer-events-none absolute -inset-[1px] rounded-2xl opacity-0 blur-[2px] transition-opacity duration-500 group-hover:opacity-100 ${glowColor}`} />
 
-      <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-slate-900/60 p-7 backdrop-blur-md transition-all duration-500 group-hover:border-white/[0.12] group-hover:bg-slate-900/80">
+      <div
+        className={`relative flex h-full flex-col overflow-hidden rounded-2xl p-7 backdrop-blur-md transition-all duration-500 ${
+          isDark
+            ? 'border border-white/[0.06] bg-slate-900/60 group-hover:border-white/[0.12] group-hover:bg-slate-900/80'
+            : 'border border-slate-200 bg-white shadow-sm group-hover:border-slate-300 group-hover:shadow-md'
+        }`}
+      >
         <div className="mb-5 flex items-start gap-4">
           <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${gradient}`}>
             <Icon className="h-6 w-6 text-white" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-white">{name}</h3>
+              <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{name}</h3>
               <img
                 src="/logos/logo-icon.png"
                 alt=""
-                className="h-4 w-4 shrink-0 object-contain opacity-20 transition-opacity group-hover:opacity-40"
+                className={`h-4 w-4 shrink-0 object-contain transition-opacity group-hover:opacity-60 ${isDark ? 'opacity-20 group-hover:opacity-40' : 'opacity-40'}`}
                 style={{ aspectRatio: 'auto' }}
               />
             </div>
-            <p className="text-xs font-medium tracking-wide text-slate-500">{role}</p>
+            <p className={`text-xs font-medium tracking-wide ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{role}</p>
           </div>
         </div>
 
-        <p className="mb-6 flex-1 text-sm leading-relaxed text-slate-400">{desc}</p>
+        <p className={`mb-6 flex-1 text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{desc}</p>
 
         <div className="flex flex-col gap-2.5">
           {caps.map((cap) => (
-            <div key={cap} className="flex items-center gap-2.5 text-xs text-slate-500 transition-colors group-hover:text-slate-300">
-              <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-genesis-400" />
+            <div
+              key={cap}
+              className={`flex items-center gap-2.5 text-xs transition-colors ${isDark ? 'text-slate-500 group-hover:text-slate-300' : 'text-slate-600 group-hover:text-slate-800'}`}
+            >
+              <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-cyan-500" />
               <span>{cap}</span>
             </div>
           ))}
         </div>
 
-        <div className="pointer-events-none absolute -bottom-8 -end-8 h-24 w-24 rounded-full bg-genesis-500/5 blur-[40px] transition-all group-hover:bg-genesis-500/15" />
+        <div className={`pointer-events-none absolute -bottom-8 -end-8 h-24 w-24 rounded-full blur-[40px] transition-all ${isDark ? 'bg-cyan-500/5 group-hover:bg-violet-500/15' : 'bg-cyan-500/10 group-hover:bg-violet-500/20'}`} />
       </div>
     </div>
   )
@@ -198,26 +60,32 @@ function AgentCard({ name, role, desc, caps, icon: Icon, gradient, glowColor }) 
 /* ────────────────────────────────────────────────
    Pipeline step
    ──────────────────────────────────────────────── */
-function PipelineStep({ num, title, desc, icon: Icon, isLast }) {
+function PipelineStep({ num, title, desc, icon: Icon, isLast, isDark = true }) {
   return (
     <div className="group relative flex gap-5">
       {/* Vertical line + circle */}
       <div className="flex flex-col items-center">
-        <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full border border-genesis-500/30 bg-genesis-950/80 transition-all group-hover:border-genesis-400/60 group-hover:shadow-lg group-hover:shadow-genesis-500/20">
-          <Icon className="h-5 w-5 text-genesis-400 transition-colors group-hover:text-genesis-300" />
+        <div
+          className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-full border transition-all group-hover:shadow-lg ${
+            isDark
+              ? 'border-cyan-500/35 bg-slate-950/80 group-hover:border-violet-400/50 group-hover:shadow-cyan-500/20'
+              : 'border-cyan-500/40 bg-white group-hover:border-violet-400/60 group-hover:shadow-cyan-500/15'
+          }`}
+        >
+          <Icon className="h-5 w-5 text-cyan-500 transition-colors group-hover:text-violet-600" />
         </div>
         {!isLast && (
-          <div className="mt-1 w-px flex-1 bg-gradient-to-b from-genesis-500/30 to-transparent" />
+          <div className="mt-1 w-px flex-1 bg-gradient-to-b from-cyan-500/40 via-violet-500/20 to-transparent" />
         )}
       </div>
 
       {/* Content */}
       <div className={`${isLast ? 'pb-0' : 'pb-12'} pt-1`}>
-        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-widest text-genesis-500">
+        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-widest text-cyan-600">
           0{num}
         </span>
-        <h3 className="mb-2 text-xl font-bold text-white">{title}</h3>
-        <p className="max-w-md text-sm leading-relaxed text-slate-400">{desc}</p>
+        <h3 className={`mb-2 text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
+        <p className={`max-w-md text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{desc}</p>
       </div>
     </div>
   )
@@ -228,15 +96,19 @@ function PipelineStep({ num, title, desc, icon: Icon, isLast }) {
    ──────────────────────────────────────────────── */
 export default function LandingPage() {
   const { t, locale, toggleLocale } = useI18n()
+  const { dark, toggleTheme } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      {/* Subtle noise + grid overlay */}
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cdefs%3E%3Cpattern id=\'g\' width=\'60\' height=\'60\' patternUnits=\'userSpaceOnUse\'%3E%3Cpath d=\'M60 0H0v60\' fill=\'none\' stroke=\'%23fff\' stroke-width=\'.5\'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'url(%23g)\'/%3E%3C/svg%3E")' }} />
+    <div className={dark ? 'landing-authora-mesh min-h-screen text-white' : 'min-h-screen bg-slate-50 text-slate-900'}>
+      {dark ? (
+        <div className="landing-authora-grid-bg pointer-events-none fixed inset-0 z-0" />
+      ) : (
+        <div className="landing-light-grid-bg pointer-events-none fixed inset-0 z-0" />
+      )}
 
-      {/* ──── NAV ──── */}
-      <nav className="relative z-30 border-b border-white/[0.04]">
+      {/* ──── NAV — solid black bar ──── */}
+      <nav className="relative z-30 border-b border-white/10 bg-black">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
           <Link to="/" className="flex items-center">
             <img
@@ -247,29 +119,47 @@ export default function LandingPage() {
             />
           </Link>
 
-          <div className="hidden items-center gap-8 md:flex">
-            <a href="#agents-section" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.nav.features')}</a>
-            <a href="#pipeline-section" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.nav.howItWorks')}</a>
-            <button onClick={toggleLocale} className="text-sm text-slate-500 transition-colors hover:text-white">
+          <div className="hidden items-center gap-6 md:flex">
+            <a href="#agents-section" className="text-sm text-slate-300 transition-colors hover:text-white">{t('landing.nav.features')}</a>
+            <a href="#pipeline-section" className="text-sm text-slate-300 transition-colors hover:text-white">{t('landing.nav.howItWorks')}</a>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-slate-200 transition-colors hover:bg-white/20 hover:text-white"
+              aria-label={dark ? t('landing.nav.themeLight') : t('landing.nav.themeDark')}
+            >
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <button onClick={toggleLocale} className="text-sm text-slate-400 transition-colors hover:text-white">
               {locale === 'en' ? '🇮🇱 עברית' : '🇺🇸 English'}
             </button>
-            <Link to="/login" className="text-sm font-medium text-slate-300 transition-colors hover:text-white">{t('landing.nav.login')}</Link>
-            <Link to="/register" className="rounded-lg bg-white/[0.08] px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/[0.14]">{t('landing.nav.getStarted')}</Link>
+            <Link to="/login" className="text-sm font-medium text-slate-200 transition-colors hover:text-white">{t('landing.nav.login')}</Link>
+            <Link to="/register" className="rounded-lg bg-white/[0.12] px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-white/[0.2]">{t('landing.nav.getStarted')}</Link>
           </div>
 
-          <button onClick={() => setMenuOpen(!menuOpen)} className="text-slate-400 md:hidden">
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-slate-200 transition-colors hover:bg-white/20 hover:text-white"
+              aria-label={dark ? t('landing.nav.themeLight') : t('landing.nav.themeDark')}
+            >
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="flex h-9 w-9 items-center justify-center text-slate-300">
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {menuOpen && (
-          <div className="border-t border-white/[0.04] bg-slate-950/95 px-5 py-4 backdrop-blur-lg md:hidden">
+          <div className="border-t border-white/10 bg-black px-5 py-4 md:hidden">
             <div className="flex flex-col gap-3">
-              <a href="#agents-section" onClick={() => setMenuOpen(false)} className="text-sm text-slate-400">{t('landing.nav.features')}</a>
-              <a href="#pipeline-section" onClick={() => setMenuOpen(false)} className="text-sm text-slate-400">{t('landing.nav.howItWorks')}</a>
-              <button onClick={toggleLocale} className="text-start text-sm text-slate-500">{locale === 'en' ? '🇮🇱 עברית' : '🇺🇸 English'}</button>
-              <Link to="/login" onClick={() => setMenuOpen(false)} className="text-sm text-slate-300">{t('landing.nav.login')}</Link>
-              <Link to="/register" onClick={() => setMenuOpen(false)} className="mt-1 block w-full rounded-lg bg-white/[0.08] py-2.5 text-center text-sm font-semibold">{t('landing.nav.getStarted')}</Link>
+              <a href="#agents-section" onClick={() => setMenuOpen(false)} className="text-sm text-slate-300">{t('landing.nav.features')}</a>
+              <a href="#pipeline-section" onClick={() => setMenuOpen(false)} className="text-sm text-slate-300">{t('landing.nav.howItWorks')}</a>
+              <button onClick={toggleLocale} className="text-start text-sm text-slate-400">{locale === 'en' ? '🇮🇱 עברית' : '🇺🇸 English'}</button>
+              <Link to="/login" onClick={() => setMenuOpen(false)} className="text-sm text-slate-200">{t('landing.nav.login')}</Link>
+              <Link to="/register" onClick={() => setMenuOpen(false)} className="mt-1 block w-full rounded-lg bg-white/[0.12] py-2.5 text-center text-sm font-semibold text-white">{t('landing.nav.getStarted')}</Link>
             </div>
           </div>
         )}
@@ -277,80 +167,107 @@ export default function LandingPage() {
 
       {/* ──── HERO ──── */}
       <section className="relative overflow-hidden">
-        {/* Background gradients */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute start-1/4 top-0 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-genesis-600/8 blur-[120px]" />
-          <div className="absolute end-1/4 bottom-0 h-[500px] w-[500px] translate-y-1/3 rounded-full bg-cyan-600/5 blur-[100px]" />
-        </div>
-
         <div className="relative z-10 mx-auto max-w-6xl px-5 pb-20 pt-20 sm:pt-28 lg:pt-32">
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
             {/* Left — Copy */}
             <div>
-              <div className="landing-stagger-1 mb-6 inline-flex items-center gap-2 rounded-full border border-genesis-500/20 bg-genesis-500/[0.06] px-4 py-1.5 backdrop-blur-sm">
-                <CircleDot className="h-3.5 w-3.5 text-genesis-400" />
-                <span className="text-xs font-semibold tracking-wide text-genesis-300">{t('landing.hero.badge')}</span>
+              <div
+                className={`landing-stagger-1 mb-6 inline-flex items-center gap-1.5 rounded-full border border-[#2dd4bf]/45 px-4 py-1.5 backdrop-blur-sm ${
+                  dark ? 'bg-[#020617]/40' : 'bg-white/90 shadow-sm'
+                }`}
+              >
+                <span className="text-xs font-semibold tracking-wide text-[#0d9488]">{t('landing.hero.badge')}</span>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#0d9488]" />
               </div>
 
-              <h1 className="landing-stagger-2 whitespace-pre-line text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-                {t('landing.hero.headline')}
+              <h1 className="landing-stagger-2 text-4xl font-bold leading-[1.12] tracking-tight sm:text-5xl lg:text-6xl">
+                <span className={dark ? 'text-white' : 'text-slate-900'}>{t('landing.hero.headlineLead')}</span>
+                <br />
+                <span className="text-authora-hero-accent">{t('landing.hero.headlineAccent')}</span>
               </h1>
 
-              <p className="landing-stagger-3 mt-6 max-w-lg text-base leading-relaxed text-slate-400 sm:text-lg">
+              <p className={`landing-stagger-3 mt-6 max-w-lg text-base leading-relaxed sm:text-lg ${dark ? 'text-slate-400' : 'text-slate-600'}`}>
                 {t('landing.hero.sub')}
               </p>
 
-              <div className="landing-stagger-4 mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="landing-stagger-4 mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
                 <Link
                   to="/register"
-                  className="landing-glow-btn group inline-flex h-13 items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-genesis-600 to-genesis-500 px-7 text-sm font-bold text-white transition-all hover:from-genesis-500 hover:to-genesis-400 active:scale-[0.97]"
+                  className="landing-glow-btn btn-authora-gradient group inline-flex h-12 items-center justify-center gap-2 rounded-lg px-6 text-sm font-bold transition-all active:scale-[0.97]"
                 >
-                  <Zap className="h-4 w-4" />
+                  <Zap className="h-4 w-4 shrink-0 text-[#020617]" />
                   {t('landing.hero.cta')}
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="h-4 w-4 shrink-0 text-[#020617] transition-transform group-hover:translate-x-0.5" />
                 </Link>
-                <span className="text-xs text-slate-500">{t('landing.hero.ctaSub')}</span>
+                <a
+                  href="#pipeline-section"
+                  className={`inline-flex h-12 items-center justify-center rounded-lg border px-6 text-sm font-semibold transition-all ${
+                    dark
+                      ? 'border-white/[0.12] bg-[#020617]/80 text-white backdrop-blur-sm hover:border-white/20 hover:bg-[#020617]'
+                      : 'border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50'
+                  }`}
+                >
+                  {t('landing.hero.ctaSecondary')}
+                </a>
+                <span className={`w-full text-xs sm:w-auto ${dark ? 'text-slate-500' : 'text-slate-500'}`}>{t('landing.hero.ctaSub')}</span>
               </div>
             </div>
 
-            {/* Right — Terminal with glowing core logo */}
-            <div className="landing-stagger-3 relative">
-              <div className="pointer-events-none absolute -top-8 start-1/2 z-20 -translate-x-1/2">
-                <div className="relative flex h-16 w-16 items-center justify-center">
-                  <div className="absolute inset-0 rounded-full bg-genesis-500/20 blur-[20px]" style={{ animation: 'ai-orb-breathe 3s ease-in-out infinite' }} />
-                  <img
-                    src="/logos/logo-icon.png"
-                    alt="Genesis Core"
-                    className="relative h-10 w-10 object-contain brightness-0 invert drop-shadow-[0_0_12px_rgba(130,104,232,0.6)]"
-                    style={{ aspectRatio: 'auto', animation: 'ai-orb-breathe 3s ease-in-out infinite' }}
-                  />
-                </div>
+            {/* Right — Primary logo */}
+            <div className="landing-stagger-3 relative flex items-center justify-center lg:justify-end">
+              <div className="relative w-full max-w-lg">
+                <div
+                  className={`pointer-events-none absolute start-1/2 top-1/2 h-[min(100%,420px)] w-[min(100%,420px)] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[80px] ${
+                    dark ? 'bg-gradient-to-tr from-cyan-500/25 via-violet-500/20 to-transparent' : 'bg-gradient-to-tr from-cyan-400/20 via-violet-400/15 to-transparent'
+                  }`}
+                />
+                <img
+                  src="/logos/logo-primary.png"
+                  alt="Genesis Technologies"
+                  className={`relative z-10 mx-auto h-auto w-full max-w-[min(100%,440px)] object-contain ${
+                    dark ? 'drop-shadow-[0_8px_48px_rgba(0,0,0,0.4)]' : 'drop-shadow-[0_12px_40px_rgba(15,23,42,0.12)]'
+                  }`}
+                  style={{ aspectRatio: 'auto' }}
+                />
               </div>
-              <HeroTerminal t={t} />
             </div>
           </div>
         </div>
 
         {/* Divider glow */}
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-genesis-500/20 to-transparent" />
+        <div
+          className={`h-px w-full ${dark ? 'bg-[linear-gradient(90deg,transparent,rgba(6,182,212,0.28),rgba(124,58,237,0.2),transparent)]' : 'bg-gradient-to-r from-transparent via-slate-300 to-transparent'}`}
+        />
       </section>
 
       {/* ──── AGENTS / BOARD OF DIRECTORS ──── */}
       <section id="agents-section" className="relative overflow-hidden py-24 sm:py-32">
-        <div className="pointer-events-none absolute end-0 top-0 h-[500px] w-[500px] rounded-full bg-genesis-600/5 blur-[120px]" />
+        {dark && (
+          <div className="pointer-events-none absolute end-0 top-0 h-[500px] w-[500px] rounded-full bg-violet-600/8 blur-[120px]" />
+        )}
+        {!dark && (
+          <div className="pointer-events-none absolute end-0 top-0 h-[400px] w-[400px] rounded-full bg-cyan-400/10 blur-[100px]" />
+        )}
 
         <div className="relative z-10 mx-auto max-w-6xl px-5">
           <div className="mb-14 text-center">
-            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.03] px-4 py-1.5 text-xs font-semibold tracking-wide text-slate-400">
-              <Bot className="h-3.5 w-3.5 text-genesis-400" />
+            <span
+              className={`mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold tracking-wide ${
+                dark
+                  ? 'border-white/[0.08] bg-gradient-to-r from-white/[0.04] to-cyan-500/[0.04] text-slate-400'
+                  : 'border-slate-200 bg-slate-100/80 text-slate-600'
+              }`}
+            >
+              <Bot className="h-3.5 w-3.5 text-cyan-600" />
               {t('landing.agents.badge')}
             </span>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{t('landing.agents.title')}</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-base text-slate-400">{t('landing.agents.sub')}</p>
+            <h2 className={`mt-4 text-3xl font-bold tracking-tight sm:text-4xl ${dark ? '' : 'text-slate-900'}`}>{t('landing.agents.title')}</h2>
+            <p className={`mx-auto mt-4 max-w-2xl text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>{t('landing.agents.sub')}</p>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <AgentCard
+              isDark={dark}
               name={t('landing.agents.govregName')}
               role={t('landing.agents.govregRole')}
               desc={t('landing.agents.govregDesc')}
@@ -360,15 +277,17 @@ export default function LandingPage() {
               glowColor="bg-gradient-to-r from-cyan-400/40 to-blue-500/40"
             />
             <AgentCard
+              isDark={dark}
               name={t('landing.agents.taxfinName')}
               role={t('landing.agents.taxfinRole')}
               desc={t('landing.agents.taxfinDesc')}
               caps={[t('landing.agents.taxfinCap1'), t('landing.agents.taxfinCap2'), t('landing.agents.taxfinCap3')]}
               icon={CreditCard}
-              gradient="bg-gradient-to-br from-genesis-500 to-purple-600"
-              glowColor="bg-gradient-to-r from-genesis-400/40 to-purple-500/40"
+              gradient="bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-600"
+              glowColor="bg-gradient-to-r from-cyan-400/35 to-violet-500/35"
             />
             <AgentCard
+              isDark={dark}
               name={t('landing.agents.opshrName')}
               role={t('landing.agents.opshrRole')}
               desc={t('landing.agents.opshrDesc')}
@@ -382,73 +301,94 @@ export default function LandingPage() {
       </section>
 
       {/* Divider */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      <div className={`h-px w-full ${dark ? 'bg-gradient-to-r from-transparent via-white/[0.06] to-transparent' : 'bg-gradient-to-r from-transparent via-slate-200 to-transparent'}`} />
 
       {/* ──── PIPELINE / TRUST CONTAINER ──── */}
       <section id="pipeline-section" className="relative overflow-hidden py-24 sm:py-32">
-        <div className="pointer-events-none absolute start-0 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full bg-cyan-600/4 blur-[120px]" />
+        {dark ? (
+          <div className="pointer-events-none absolute start-0 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full bg-cyan-600/4 blur-[120px]" />
+        ) : (
+          <div className="pointer-events-none absolute start-0 top-1/2 h-[400px] w-[400px] -translate-y-1/2 rounded-full bg-violet-400/10 blur-[100px]" />
+        )}
 
         <div className="relative z-10 mx-auto max-w-6xl px-5">
           <div className="grid items-start gap-16 lg:grid-cols-2">
             {/* Left — Heading */}
             <div className="lg:sticky lg:top-32">
-              <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.03] px-4 py-1.5 text-xs font-semibold tracking-wide text-slate-400">
-                <Globe className="h-3.5 w-3.5 text-genesis-400" />
+              <span
+                className={`mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold tracking-wide ${
+                  dark
+                    ? 'border-white/[0.08] bg-gradient-to-r from-white/[0.04] to-violet-500/[0.05] text-slate-400'
+                    : 'border-slate-200 bg-slate-100/80 text-slate-600'
+                }`}
+              >
+                <Globe className="h-3.5 w-3.5 text-violet-600" />
                 {t('landing.pipeline.badge')}
               </span>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{t('landing.pipeline.title')}</h2>
-              <p className="mt-4 max-w-md text-base leading-relaxed text-slate-400">{t('landing.pipeline.sub')}</p>
+              <h2 className={`mt-4 text-3xl font-bold tracking-tight sm:text-4xl ${dark ? '' : 'text-slate-900'}`}>{t('landing.pipeline.title')}</h2>
+              <p className={`mt-4 max-w-md text-base leading-relaxed ${dark ? 'text-slate-400' : 'text-slate-600'}`}>{t('landing.pipeline.sub')}</p>
 
               {/* Decorative card */}
-              <div className="mt-10 hidden overflow-hidden rounded-xl border border-white/[0.06] bg-slate-900/40 p-5 backdrop-blur-sm lg:block">
-                <div className="flex items-center gap-3 text-xs text-slate-500">
-                  <Terminal className="h-4 w-4 text-genesis-500" />
-                  <code className="text-genesis-400">genesis.spawn(&#34;tech-startup&#34;)</code>
-                  <span className="ms-auto text-emerald-400">→ Entity live</span>
+              <div
+                className={`mt-10 hidden overflow-hidden rounded-xl border p-5 backdrop-blur-sm lg:block ${
+                  dark ? 'border-white/[0.06] bg-slate-900/40' : 'border-slate-200 bg-white shadow-sm'
+                }`}
+              >
+                <div className={`flex items-center gap-3 text-xs ${dark ? 'text-slate-500' : 'text-slate-600'}`}>
+                  <Terminal className="h-4 w-4 text-cyan-600" />
+                  <code className="bg-gradient-to-r from-cyan-600 to-violet-600 bg-clip-text text-transparent">genesis.spawn(&#34;tech-startup&#34;)</code>
+                  <span className={`ms-auto ${dark ? 'text-emerald-400' : 'text-emerald-600'}`}>→ Entity live</span>
                 </div>
               </div>
             </div>
 
             {/* Right — Timeline */}
             <div>
-              <PipelineStep num={1} title={t('landing.pipeline.step1Title')} desc={t('landing.pipeline.step1Desc')} icon={MessageSquare} />
-              <PipelineStep num={2} title={t('landing.pipeline.step2Title')} desc={t('landing.pipeline.step2Desc')} icon={Zap} />
-              <PipelineStep num={3} title={t('landing.pipeline.step3Title')} desc={t('landing.pipeline.step3Desc')} icon={Shield} />
-              <PipelineStep num={4} title={t('landing.pipeline.step4Title')} desc={t('landing.pipeline.step4Desc')} icon={TrendingUpIcon} isLast />
+              <PipelineStep isDark={dark} num={1} title={t('landing.pipeline.step1Title')} desc={t('landing.pipeline.step1Desc')} icon={MessageSquare} />
+              <PipelineStep isDark={dark} num={2} title={t('landing.pipeline.step2Title')} desc={t('landing.pipeline.step2Desc')} icon={Zap} />
+              <PipelineStep isDark={dark} num={3} title={t('landing.pipeline.step3Title')} desc={t('landing.pipeline.step3Desc')} icon={Shield} />
+              <PipelineStep isDark={dark} num={4} title={t('landing.pipeline.step4Title')} desc={t('landing.pipeline.step4Desc')} icon={TrendingUpIcon} isLast />
             </div>
           </div>
         </div>
       </section>
 
       {/* Divider */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-genesis-500/20 to-transparent" />
+      <div className={`h-px w-full ${dark ? 'bg-[linear-gradient(90deg,transparent,rgba(6,182,212,0.22),rgba(124,58,237,0.16),transparent)]' : 'bg-gradient-to-r from-transparent via-slate-200 to-transparent'}`} />
 
       {/* ──── FINAL CTA ──── */}
       <section className="relative overflow-hidden py-24 sm:py-32">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-genesis-600/8 blur-[140px]" />
-        </div>
+        {dark && (
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-tr from-cyan-500/15 via-blue-600/10 to-violet-600/15 blur-[140px]" />
+          </div>
+        )}
+        {!dark && (
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute left-1/2 top-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/15 blur-[120px]" />
+          </div>
+        )}
 
         <div className="relative z-10 mx-auto max-w-2xl px-5 text-center">
-          <h2 className="whitespace-pre-line text-3xl font-bold tracking-tight sm:text-5xl">{t('landing.cta.title')}</h2>
-          <p className="mx-auto mt-5 max-w-lg text-base text-slate-400">{t('landing.cta.sub')}</p>
+          <h2 className={`whitespace-pre-line text-3xl font-bold tracking-tight sm:text-5xl ${dark ? '' : 'text-slate-900'}`}>{t('landing.cta.title')}</h2>
+          <p className={`mx-auto mt-5 max-w-lg text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>{t('landing.cta.sub')}</p>
 
           <div className="mt-10 flex flex-col items-center gap-4">
             <Link
               to="/register"
-              className="landing-glow-btn group inline-flex h-14 items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-genesis-600 to-genesis-500 px-10 text-base font-bold text-white transition-all hover:from-genesis-500 hover:to-genesis-400 active:scale-[0.97]"
+              className="landing-glow-btn btn-authora-gradient group inline-flex h-14 items-center justify-center gap-2.5 rounded-lg px-10 text-base font-bold transition-all active:scale-[0.97]"
             >
-              <Zap className="h-5 w-5" />
+              <Zap className="h-5 w-5 shrink-0 text-[#020617]" />
               {t('landing.cta.button')}
-              <ArrowRight className="h-4.5 w-4.5 transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight className="h-4.5 w-4.5 shrink-0 text-[#020617] transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <span className="text-xs text-slate-500">{t('landing.cta.note')}</span>
+            <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-500'}`}>{t('landing.cta.note')}</span>
           </div>
         </div>
       </section>
 
       {/* ──── FOOTER ──── */}
-      <footer className="border-t border-white/[0.04]">
+      <footer className={dark ? 'border-t border-white/[0.04]' : 'border-t border-slate-200'}>
         <div className="mx-auto max-w-6xl px-5 py-14">
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {/* Brand */}
@@ -457,52 +397,52 @@ export default function LandingPage() {
                 <img
                   src="/logos/logo-primary.png"
                   alt="Genesis Technologies"
-                  className="h-8 w-auto brightness-0 invert object-contain"
+                  className={`h-8 w-auto object-contain ${dark ? 'brightness-0 invert' : ''}`}
                   style={{ aspectRatio: 'auto' }}
                 />
               </div>
-              <p className="mt-4 text-xs leading-relaxed text-slate-500">{t('landing.hero.sub').slice(0, 90)}…</p>
+              <p className={`mt-4 text-xs leading-relaxed ${dark ? 'text-slate-500' : 'text-slate-600'}`}>{t('landing.hero.sub').slice(0, 90)}…</p>
             </div>
 
             {/* Product */}
             <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">{t('landing.footer.product')}</h4>
+              <h4 className={`mb-4 text-xs font-semibold uppercase tracking-widest ${dark ? 'text-slate-500' : 'text-slate-500'}`}>{t('landing.footer.product')}</h4>
               <div className="flex flex-col gap-2.5">
-                <a href="#agents-section" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.footer.features')}</a>
-                <a href="#" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.footer.pricing')}</a>
-                <a href="#" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.footer.docs')}</a>
+                <a href="#agents-section" className={`text-sm transition-colors ${dark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{t('landing.footer.features')}</a>
+                <a href="#" className={`text-sm transition-colors ${dark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{t('landing.footer.pricing')}</a>
+                <a href="#" className={`text-sm transition-colors ${dark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{t('landing.footer.docs')}</a>
               </div>
             </div>
 
             {/* Company */}
             <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">{t('landing.footer.company')}</h4>
+              <h4 className={`mb-4 text-xs font-semibold uppercase tracking-widest ${dark ? 'text-slate-500' : 'text-slate-500'}`}>{t('landing.footer.company')}</h4>
               <div className="flex flex-col gap-2.5">
-                <a href="#" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.footer.about')}</a>
-                <a href="#" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.footer.careers')}</a>
-                <a href="#" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.footer.blog')}</a>
+                <a href="#" className={`text-sm transition-colors ${dark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{t('landing.footer.about')}</a>
+                <a href="#" className={`text-sm transition-colors ${dark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{t('landing.footer.careers')}</a>
+                <a href="#" className={`text-sm transition-colors ${dark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{t('landing.footer.blog')}</a>
               </div>
             </div>
 
             {/* Legal */}
             <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">{t('landing.footer.legal')}</h4>
+              <h4 className={`mb-4 text-xs font-semibold uppercase tracking-widest ${dark ? 'text-slate-500' : 'text-slate-500'}`}>{t('landing.footer.legal')}</h4>
               <div className="flex flex-col gap-2.5">
-                <a href="#" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.footer.privacy')}</a>
-                <a href="#" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.footer.terms')}</a>
-                <a href="#" className="text-sm text-slate-400 transition-colors hover:text-white">{t('landing.footer.security')}</a>
+                <a href="#" className={`text-sm transition-colors ${dark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{t('landing.footer.privacy')}</a>
+                <a href="#" className={`text-sm transition-colors ${dark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{t('landing.footer.terms')}</a>
+                <a href="#" className={`text-sm transition-colors ${dark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{t('landing.footer.security')}</a>
               </div>
             </div>
           </div>
 
-          <div className="mt-12 flex flex-col items-center gap-4 border-t border-white/[0.04] pt-6">
+          <div className={`mt-12 flex flex-col items-center gap-4 border-t pt-6 ${dark ? 'border-white/[0.04]' : 'border-slate-200'}`}>
             <img
               src="/logos/logo-specialty.png"
               alt="Genesis Technologies"
-              className="h-6 w-auto object-contain opacity-15 grayscale brightness-200 transition-all hover:opacity-30 hover:grayscale-0"
+              className={`h-6 w-auto object-contain transition-all hover:grayscale-0 ${dark ? 'opacity-15 grayscale brightness-200 hover:opacity-30' : 'opacity-40 grayscale hover:opacity-70'}`}
               style={{ aspectRatio: 'auto' }}
             />
-            <p className="text-xs text-slate-600">{t('landing.footer.copyright')}</p>
+            <p className={`text-xs ${dark ? 'text-slate-600' : 'text-slate-500'}`}>{t('landing.footer.copyright')}</p>
           </div>
         </div>
       </footer>

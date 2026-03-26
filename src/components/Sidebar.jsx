@@ -99,7 +99,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
         <div className={`border-t border-surface-200 p-3 ${collapsed ? 'flex justify-center' : ''}`}>
           {!collapsed && (
-            <div className="mb-3 rounded-lg bg-gradient-to-br from-genesis-600 to-genesis-500 p-3.5 text-white">
+            <div className="mb-3 rounded-lg bg-[linear-gradient(135deg,#0891b2_0%,#2563eb_50%,#7c3aed_100%)] p-3.5 text-white shadow-lg shadow-cyan-900/20">
               <p className="text-xs font-semibold uppercase tracking-wider opacity-80">{t('sidebar.proPlan')}</p>
               <p className="mt-1 text-sm font-medium">{`3 ${t('sidebar.agentsUsedOf')} 5 ${t('sidebar.agentsUsedLabel')}`}</p>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/25">
