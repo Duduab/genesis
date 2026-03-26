@@ -35,6 +35,51 @@
   "dashboard": {
     "welcome": "Welcome back, David",
     "welcomeSub": "Here's what's happening with your AI agents today.",
+    "kpi_analysis": "Negotiation / analysis",
+    "kpi_revenue": "Expected monthly revenue",
+    "kpi_employees": "Employees",
+    "kpi_budget": "Budget invested",
+    "kpi_setup_progress": "Setup progress",
+    "kpi": {
+      "sectionTitle": "Your business plan",
+      "sectionSubtitle": "Key figures from your registration wizard (steps 1–4).",
+      "analysis": {
+        "vsMarket": "+{{delta}}% above market average"
+      },
+      "revenue": {
+        "sublabel": "Progress toward monthly revenue goal"
+      },
+      "employees": {
+        "status": "Capacity aligned with recommended staffing"
+      },
+      "budget": {
+        "utilized": "{{pct}}% utilized vs. plan"
+      },
+      "setup": {
+        "tasksValue": "{{count}} tasks",
+        "sublabel": "Business launch checklist"
+      },
+      "common": {
+        "goalTrack": "Performance track",
+        "currentVsGoal": "Current vs goal",
+        "capacityTrack": "Hiring capacity",
+        "spentVsPlan": "Spent vs budget",
+        "launchProgress": "Launch completion"
+      }
+    },
+    "liveChart": {
+      "sectionTitle": "Monthly revenue flow",
+      "a11yTitle": "Monthly revenue flow, live animated chart",
+      "live_data_label": "LIVE DATA",
+      "legendRevenue": "Revenue",
+      "legendScenario": "Downside / scenario",
+      "legendEmployees": "Employees",
+      "peakTitle": "Peak performance",
+      "peakSub": "+{{delta}}% from previous period",
+      "accuracyLabel": "Accuracy",
+      "dataPointsLabel": "Data points",
+      "averageTitle": "Monthly average"
+    },
     "activeEntities": "My Active Entities",
     "recentActivity": "Recent Agent Activity",
     "actionCenter": "Active Agents Action Center",

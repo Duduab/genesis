@@ -17,6 +17,8 @@ import RegisterStep3 from './pages/RegisterStep3'
 import RegisterStep4 from './pages/RegisterStep4'
 import RegisterStep5 from './pages/RegisterStep5'
 import LandingPage from './pages/LandingPage'
+import DashboardHeader from './components/DashboardHeader'
+import LiveRevenueFlowChart from './components/LiveRevenueFlowChart'
 import { Activity, Building2, ShieldCheck, TrendingUp, MessageSquareText, Trophy, Clock, DollarSign, CheckCircle2, AlertTriangle, ArrowDownRight } from 'lucide-react'
 import { useI18n } from './i18n/I18nContext'
 import { useRouter } from './router'
@@ -34,11 +36,18 @@ function DashboardPage() {
   return (
     <div className="mx-auto max-w-7xl">
       <div className="mb-8 animate-fade-in">
-        <h1 className="text-2xl font-bold text-surface-900">{t('dashboard.welcome')}</h1>
-        <p className="mt-1 text-sm text-surface-500">{t('dashboard.welcomeSub')}</p>
+        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">{t('dashboard.welcome')}</h1>
+        <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">{t('dashboard.welcomeSub')}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <DashboardHeader />
+
+      <div className="mb-2 animate-fade-in">
+        <h2 className="text-lg font-bold text-surface-900 dark:text-surface-50">{t('dashboard.liveChart.sectionTitle')}</h2>
+      </div>
+      <LiveRevenueFlowChart />
+
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statsMeta.map((stat, i) => {
           const Icon = stat.icon
           return (

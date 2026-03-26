@@ -180,6 +180,28 @@ body {
   50% { box-shadow: 0 0 34px rgba(45, 212, 191, 0.55), 0 0 64px rgba(124, 58, 237, 0.28); }
 }
 
+@keyframes live-data-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(0.92);
+  }
+}
+
+.live-data-dot {
+  animation: live-data-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-data-dot {
+    animation: none !important;
+  }
+}
+
 @keyframes landing-gradient-shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }

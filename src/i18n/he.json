@@ -35,6 +35,51 @@
   "dashboard": {
     "welcome": "ברוך שובך, דוד",
     "welcomeSub": "הנה מה שקורה עם סוכני ה-AI שלך היום.",
+    "kpi_analysis": "משא ומתן / ניתוח",
+    "kpi_revenue": "הכנסות חודשיות צפויות",
+    "kpi_employees": "עובדים",
+    "kpi_budget": "תקציב שהושקע",
+    "kpi_setup_progress": "התקדמות הקמה",
+    "kpi": {
+      "sectionTitle": "תוכנית העסק שלך",
+      "sectionSubtitle": "נתונים מסיכום ההרשמה (שלבים 1–4).",
+      "analysis": {
+        "vsMarket": "+{{delta}}% מעל הממוצע"
+      },
+      "revenue": {
+        "sublabel": "התקדמות ליעד הכנסה חודשי"
+      },
+      "employees": {
+        "status": "כוח אדם תואם להמלצת הגיוס"
+      },
+      "budget": {
+        "utilized": "{{pct}}% מנוצל לעומת התוכנית"
+      },
+      "setup": {
+        "tasksValue": "{{count}} משימות",
+        "sublabel": "רשימת השקת העסק"
+      },
+      "common": {
+        "goalTrack": "מסלול יעד",
+        "currentVsGoal": "נוכחי מול יעד",
+        "capacityTrack": "קיבולת גיוס",
+        "spentVsPlan": "הוצאה מול תקציב",
+        "launchProgress": "השלמת השקה"
+      }
+    },
+    "liveChart": {
+      "sectionTitle": "תזרים הכנסות חודשי",
+      "a11yTitle": "תרשים תזרים הכנסות חודשי חי ומונפש",
+      "live_data_label": "נתונים חיים",
+      "legendRevenue": "הכנסות",
+      "legendScenario": "ירידה",
+      "legendEmployees": "עובדים",
+      "peakTitle": "ביצועי שיא",
+      "peakSub": "+{{delta}}% מהתקופה הקודמת",
+      "accuracyLabel": "דיוק",
+      "dataPointsLabel": "נקודות נתונים",
+      "averageTitle": "ממוצע חודשי"
+    },
     "activeEntities": "הישויות הפעילות שלי",
     "recentActivity": "פעילות סוכנים אחרונה",
     "actionCenter": "מרכז פעולות - אישור אנושי",

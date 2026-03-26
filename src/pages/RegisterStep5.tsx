@@ -6,6 +6,7 @@ import AuthHeroPanel from '../components/AuthHeroPanel'
 import { submitBusinessRegistration } from '../api/submitBusinessRegistration'
 import { getBusinessAnalysisProfile } from '../config/businessAnalysisProfiles'
 import { getLocationInsightBundlePrefix } from '../config/locationInsightBundles'
+import { saveDashboardBusinessProfile } from '../dashboard/dashboardBusinessProfileStorage'
 import { clearWizardStorage, loadWizardStep1 } from '../wizard/createBusinessWizardStorage'
 import type { BusinessRegistrationPayload, WizardStep1Persisted } from '../types/business'
 
@@ -97,6 +98,7 @@ export default function RegisterStep5() {
 
     try {
       await submitBusinessRegistration(payload)
+      saveDashboardBusinessProfile(payload.business)
       clearWizardStorage()
       try {
         sessionStorage.setItem('genesis-reg-success', '1')
