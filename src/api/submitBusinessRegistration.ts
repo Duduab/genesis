@@ -1,34 +1,27 @@
 import type { BusinessRegistrationPayload } from '../types/business'
+import { genesisPostJson } from './genesis/client'
+import { wizardPayloadToCreateBusinessRequest } from './genesis/mapWizardToCreateBusiness'
+
+export interface SubmitBusinessRegistrationResult {
+  businessId: string
+}
 
 /**
- * POST full registration payload. Set `VITE_BUSINESS_REGISTRATION_URL` to your API endpoint.
- * If unset, resolves after a short delay (dev mock — logs payload in DEV).
+ * Submits the wizard payload to `POST /api/v1/businesses` (full URL from env / default staging origin).
  */
-export async function submitBusinessRegistration(payload: BusinessRegistrationPayload): Promise<void> {
-  const url = import.meta.env.VITE_BUSINESS_REGISTRATION_URL as string | undefined
+export async function submitBusinessRegistration(
+  payload: BusinessRegistrationPayload,
+  options?: { idempotencyKey?: string },
+): Promise<SubmitBusinessRegistrationResult | undefined> {
+  const body = wizardPayloadToCreateBusinessRequest(payload)
+  const idempotencyKey = options?.idempotencyKey ?? crypto.randomUUID()
 
-  if (!url?.trim()) {
-    await new Promise((r) => setTimeout(r, 900))
-    if (import.meta.env.DEV) {
-      console.info('[submitBusinessRegistration] mock success', payload)
-    }
-    return
-  }
-
-  const res = await fetch(url.trim(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+  const envelope = await genesisPostJson<{ business_id: string }>('/api/v1/businesses', {
+    body,
+    idempotencyKey,
   })
 
-  if (!res.ok) {
-    let detail = ''
-    try {
-      const j = (await res.json()) as { message?: string; error?: string }
-      detail = j.message || j.error || ''
-    } catch {
-      detail = await res.text().catch(() => '')
-    }
-    throw new Error(detail || `HTTP ${res.status}`)
-  }
+  const id = envelope.data?.business_id
+  if (typeof id === 'string') return { businessId: id }
+  return undefined
 }
