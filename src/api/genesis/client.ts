@@ -150,6 +150,10 @@ export async function genesisPostJson<TData>(path: string, init?: Omit<GenesisRe
   return genesisRequestJson<GenesisEnvelopeSingle<TData>>({ ...init, path, method: 'POST' })
 }
 
+export async function genesisPutJson<TData>(path: string, init?: Omit<GenesisRequestOptions, 'path' | 'method'>) {
+  return genesisRequestJson<GenesisEnvelopeSingle<TData>>({ ...init, path, method: 'PUT' })
+}
+
 export async function genesisListJson<TItem>(path: string, init?: Omit<GenesisRequestOptions, 'path' | 'method' | 'body'>) {
   return genesisRequestJson<GenesisEnvelopeList<TItem>>({ ...init, path, method: 'GET' })
 }

@@ -6,6 +6,7 @@ import AgentActionCenter from './components/AgentActionCenter'
 import WeeklyTasksChart from './components/WeeklyTasksChart'
 import EntityStatusChart from './components/EntityStatusChart'
 import OrchestratorChat from './components/OrchestratorChat'
+import AddBusinessWizardModal from './components/AddBusinessWizardModal'
 import MyEntitiesPage from './pages/MyEntitiesPage'
 import LegalCompliancePage from './pages/LegalCompliancePage'
 import SettingsPage from './pages/SettingsPage'
@@ -19,10 +20,12 @@ import RegisterStep5 from './pages/RegisterStep5'
 import LandingPage from './pages/LandingPage'
 import DashboardHeader from './components/DashboardHeader'
 import LiveRevenueFlowChart from './components/LiveRevenueFlowChart'
+import BusinessMilestonesSection from './components/BusinessMilestonesSection'
 import { Activity, Building2, ShieldCheck, TrendingUp, MessageSquareText, Trophy, Clock, DollarSign, CheckCircle2, AlertTriangle, ArrowDownRight } from 'lucide-react'
 import { useI18n } from './i18n/I18nContext'
 import { useRouter } from './router'
 import { useAuth } from './auth/AuthContext'
+import { useActiveBusiness } from './context/ActiveBusinessContext'
 
 const statsMeta = [
   { tKey: 'dashboard.statAgents', value: '3', changeTKey: 'dashboard.statChangeWeek', icon: Activity, color: 'text-emerald-600 bg-emerald-50' },
@@ -33,11 +36,20 @@ const statsMeta = [
 
 function DashboardPage() {
   const { t } = useI18n()
+  const { activeViewModel } = useActiveBusiness()
+  const welcomeTitle =
+    activeViewModel != null
+      ? t('dashboard.welcomeManaged').replaceAll('{{name}}', activeViewModel.name)
+      : t('dashboard.welcome')
+  const welcomeSub =
+    activeViewModel != null
+      ? t('dashboard.welcomeSubManaged').replaceAll('{{name}}', activeViewModel.name)
+      : t('dashboard.welcomeSub')
   return (
     <div className="mx-auto max-w-7xl">
       <div className="mb-8 animate-fade-in">
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">{t('dashboard.welcome')}</h1>
-        <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">{t('dashboard.welcomeSub')}</p>
+        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">{welcomeTitle}</h1>
+        <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">{welcomeSub}</p>
       </div>
 
       <DashboardHeader />
@@ -46,6 +58,10 @@ function DashboardPage() {
         <h2 className="text-lg font-bold text-surface-900 dark:text-surface-50">{t('dashboard.liveChart.sectionTitle')}</h2>
       </div>
       <LiveRevenueFlowChart />
+
+      <div className="mt-8 animate-slide-up-fade" style={{ animationDelay: '120ms' }}>
+        <BusinessMilestonesSection />
+      </div>
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statsMeta.map((stat, i) => {
@@ -223,8 +239,10 @@ export default function App() {
   const { page, navigate } = useRouter()
   const { isAuthenticated } = useAuth()
   const [chatOpen, setChatOpen] = useState(false)
+  const [addBusinessOpen, setAddBusinessOpen] = useState(false)
 
   const openChat = () => setChatOpen(true)
+  const openAddBusiness = () => setAddBusinessOpen(true)
 
   if (page === 'landing') return <LandingPage />
   if (page === 'login') return <LoginPage />
@@ -242,7 +260,7 @@ export default function App() {
   const renderPage = () => {
     switch (page) {
       case 'entities':
-        return <MyEntitiesPage onOpenChat={openChat} />
+        return <MyEntitiesPage onOpenChat={openChat} onAddBusiness={openAddBusiness} />
       case 'legal':
         return <LegalCompliancePage />
       case 'activity':
@@ -262,6 +280,8 @@ export default function App() {
       </div>
 
       <OrchestratorChat open={chatOpen} onClose={() => setChatOpen(false)} />
+
+      <AddBusinessWizardModal open={addBusinessOpen} onClose={() => setAddBusinessOpen(false)} />
 
       <button
         onClick={openChat}

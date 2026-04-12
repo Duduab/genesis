@@ -7,8 +7,9 @@ import { submitBusinessRegistration } from '../api/submitBusinessRegistration'
 import { getBusinessAnalysisProfile } from '../config/businessAnalysisProfiles'
 import { getLocationInsightBundlePrefix } from '../config/locationInsightBundles'
 import { saveDashboardBusinessProfile } from '../dashboard/dashboardBusinessProfileStorage'
+import { upsertPersistedGenesisBusiness } from '../dashboard/genesisBusinessStorage'
 import { clearWizardStorage, loadWizardStep1 } from '../wizard/createBusinessWizardStorage'
-import type { BusinessRegistrationPayload, WizardStep1Persisted } from '../types/business'
+import type { BusinessRegistrationPayload, LicenseTypeId, WizardStep1Persisted } from '../types/business'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -97,7 +98,10 @@ export default function RegisterStep5() {
     const payload = buildPayload(step1, userPayload, t)
 
     try {
-      await submitBusinessRegistration(payload)
+      const created = await submitBusinessRegistration(payload)
+      if (created?.data) {
+        upsertPersistedGenesisBusiness(created.data, payload.business.licenseType as LicenseTypeId)
+      }
       saveDashboardBusinessProfile(payload.business)
       clearWizardStorage()
       try {

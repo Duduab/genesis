@@ -1,9 +1,11 @@
 import type { BusinessRegistrationPayload } from '../types/business'
+import type { GenesisBusinessApiData } from '../types/genesisBusiness'
 import { genesisPostJson } from './genesis/client'
 import { wizardPayloadToCreateBusinessRequest } from './genesis/mapWizardToCreateBusiness'
 
 export interface SubmitBusinessRegistrationResult {
   businessId: string
+  data: GenesisBusinessApiData
 }
 
 /**
@@ -16,12 +18,13 @@ export async function submitBusinessRegistration(
   const body = wizardPayloadToCreateBusinessRequest(payload)
   const idempotencyKey = options?.idempotencyKey ?? crypto.randomUUID()
 
-  const envelope = await genesisPostJson<{ business_id: string }>('/api/v1/businesses', {
+  const envelope = await genesisPostJson<GenesisBusinessApiData>('/api/v1/businesses', {
     body,
     idempotencyKey,
   })
 
-  const id = envelope.data?.business_id
-  if (typeof id === 'string') return { businessId: id }
+  const data = envelope.data
+  const id = data?.business_id
+  if (typeof id === 'string' && data) return { businessId: id, data }
   return undefined
 }

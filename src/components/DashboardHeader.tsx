@@ -1,6 +1,9 @@
 import { useMemo } from 'react'
 import { useI18n } from '../i18n/I18nContext'
-import { loadEffectiveBusinessProfile } from '../dashboard/loadEffectiveBusinessProfile'
+import {
+  loadEffectiveBusinessProfileWithActive,
+} from '../dashboard/loadEffectiveBusinessProfile'
+import { useActiveBusiness } from '../context/ActiveBusinessContext'
 import type { DashboardBusinessProfile } from '../dashboard/dashboardBusinessProfileStorage'
 import { formatNisFull } from '../utils/formatNis'
 
@@ -162,8 +165,12 @@ function KpiCard({
 
 export default function DashboardHeader() {
   const { t, locale } = useI18n()
+  const { activeBusiness } = useActiveBusiness()
 
-  const profile = useMemo(() => loadEffectiveBusinessProfile(t), [t, locale])
+  const profile = useMemo(
+    () => loadEffectiveBusinessProfileWithActive(t, activeBusiness),
+    [t, locale, activeBusiness],
+  )
   const seed = useMemo(() => hashProfile(profile), [profile])
 
   const kpis = useMemo(() => {
