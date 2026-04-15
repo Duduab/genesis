@@ -50,7 +50,7 @@ export function wizardPayloadToCreateBusinessRequest(
     business_type: `${payload.business.categoryId}:${payload.business.subTypeId}`,
     target_city: cityEn,
     total_budget_ils: normalizeBudgetIls(payload.business.budgetNis),
-    requires_genesis_legal: true,
+    requires_genesis_legal: payload.business.requiresGenesisLegal !== false,
     existing_tax_file: existingTaxFileFromLicense(payload.business.licenseType),
   }
 }

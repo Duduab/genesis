@@ -4,6 +4,8 @@ import { useActiveBusiness } from '../context/ActiveBusinessContext'
 import { useLegalDocumentsForBusiness } from '../hooks/useLegalDocumentsForBusiness'
 import { loadPersistedGenesisBusinesses } from '../dashboard/genesisBusinessStorage'
 import { mapPersistedBusinessToEntityView } from '../dashboard/mapPersistedBusinessToEntityView'
+import { normalizeGenesisDocumentCategory, normalizeGenesisDocumentStatus } from '../constants/genesisApiEnums'
+import { getAgentPresentation } from '../config/agentPresentation'
 import {
   FileText,
   FileType2,
@@ -20,13 +22,12 @@ import {
   AlertCircle,
   File,
   Loader2,
-  Handshake,
 } from 'lucide-react'
 
+/** API document categories: `contract` | `tax` | `employment` | `licensing` */
 const SIDEBAR_CATEGORIES = [
   { key: 'contract', tKey: 'legal.catContract', icon: Landmark },
   { key: 'tax', tKey: 'legal.taxFilings', icon: Receipt },
-  { key: 'deal', tKey: 'legal.catDeal', icon: Handshake },
   { key: 'employment', tKey: 'legal.employment', icon: Briefcase },
   { key: 'licensing', tKey: 'legal.catLicensing', icon: ShieldCheck },
 ]
@@ -52,6 +53,11 @@ const statusConfig = {
     icon: AlertCircle,
     tKey: 'legal.statusPending',
   },
+  error: {
+    style: 'bg-red-50 text-red-700 ring-red-600/20',
+    icon: AlertCircle,
+    tKey: 'enums.docStatus.error',
+  },
 }
 
 const fileIcons = {
@@ -75,31 +81,23 @@ function formatDocDate(iso, locale) {
   return d.toLocaleDateString(tag, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function formatAgentId(agentId) {
-  const map = {
-    agent_financial: 'TaxFin-Agent',
-    agent_hr: 'OpsHR-Agent',
-    agent_legal: 'GovReg-Agent',
-    agent_negotiation: 'Negotiation-Agent',
-  }
-  if (map[agentId]) return map[agentId]
-  return String(agentId || '')
-    .replace(/^agent_/, '')
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
-function mapItemToDoc(item, businessName, locale) {
+function mapItemToDoc(item, businessName, locale, t) {
+  const apiCategory = String(item.category || '').toLowerCase()
+  const normalizedCategory = normalizeGenesisDocumentCategory(item.category) ?? apiCategory
+  const agentInfo = getAgentPresentation(item.agent_id)
+  const agentLabel = agentInfo.tKey ? t(agentInfo.tKey) : agentInfo.label
+  const normStatus = normalizeGenesisDocumentStatus(item.status)
   return {
     id: item.document_id,
     title: item.name,
-    category: item.category,
+    category: normalizedCategory,
+    rawCategory: apiCategory,
     entity: businessName,
     date: formatDocDate(item.created_at, locale),
     size: formatFileSize(item.file_size_bytes),
-    agent: formatAgentId(item.agent_id),
+    agent: agentLabel,
     fileType: 'generic',
-    status: item.status,
+    status: normStatus ?? item.status,
     needsSignature: item.status === 'pending_signature',
   }
 }
@@ -107,7 +105,8 @@ function mapItemToDoc(item, businessName, locale) {
 function DocumentRow({ doc, t }) {
   const fi = fileIcons[doc.fileType] || fileIcons.generic
   const FileIcon = fi.icon
-  const st = statusConfig[doc.status] || statusConfig.pending
+  const statusKey = doc.status in statusConfig ? doc.status : 'pending'
+  const st = statusConfig[statusKey] || statusConfig.pending
   const StatusIcon = st.icon
 
   return (
@@ -205,8 +204,8 @@ export default function LegalCompliancePage() {
   const statusCounts = data?.status_counts ?? {}
 
   const docs = useMemo(
-    () => items.map((item) => mapItemToDoc(item, businessName || '—', locale)),
-    [items, businessName, locale],
+    () => items.map((item) => mapItemToDoc(item, businessName || '—', locale, t)),
+    [items, businessName, locale, t],
   )
 
   const categoryNav = useMemo(() => {
@@ -220,16 +219,26 @@ export default function LegalCompliancePage() {
       labelKey: key,
       count: categoryCounts[key] ?? items.filter((i) => i.category === key).length,
     }))
-    const main = SIDEBAR_CATEGORIES.map((c) => ({
-      ...c,
-      labelKey: null,
-      count: categoryCounts[c.key] ?? items.filter((i) => i.category === c.key).length,
-    }))
+    const main = SIDEBAR_CATEGORIES.map((c) => {
+      const baseCount = categoryCounts[c.key] ?? items.filter((i) => i.category === c.key).length
+      const dealCount =
+        c.key === 'contract'
+          ? categoryCounts.deal ?? items.filter((i) => String(i.category).toLowerCase() === 'deal').length
+          : 0
+      return {
+        ...c,
+        labelKey: null,
+        count: baseCount + dealCount,
+      }
+    })
     return { main, extras }
   }, [categoryCounts, items])
 
   const filtered = docs.filter((doc) => {
-    const matchesCategory = activeCategory === 'all' || doc.category === activeCategory
+    const matchesCategory =
+      activeCategory === 'all' ||
+      doc.category === activeCategory ||
+      (activeCategory === 'contract' && doc.rawCategory === 'deal')
     const q = search.toLowerCase()
     const matchesSearch =
       !q || doc.title.toLowerCase().includes(q) || doc.entity.toLowerCase().includes(q) || doc.agent.toLowerCase().includes(q)

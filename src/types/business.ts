@@ -78,5 +78,7 @@ export interface BusinessRegistrationPayload {
     expectedMonthlyRevenueNis: number
     recommendedLocation: string
     alternativeLocation: string
+    /** When false, sends `requires_genesis_legal: false` to POST /businesses (default true). */
+    requiresGenesisLegal?: boolean
   }
 }

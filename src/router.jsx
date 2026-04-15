@@ -20,6 +20,9 @@ export function parseRoute() {
     if (seg === 'users') return { page: 'admin', pathBusinessId: null, adminRoute: 'users' }
     return { page: 'admin', pathBusinessId: null, adminRoute: 'home' }
   }
+  if (path === 'approvals') {
+    return { page: 'approvals', pathBusinessId: null, adminRoute: null }
+  }
   if (path === 'businesses' || path === 'entities') {
     return { page: 'entities', pathBusinessId: null, adminRoute: null }
   }

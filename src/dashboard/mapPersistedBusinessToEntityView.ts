@@ -1,4 +1,5 @@
 import { formatNisFull } from '../utils/formatNis'
+import { normalizeGenesisBusinessStatus } from '../constants/genesisApiEnums'
 import type { PersistedGenesisBusiness } from './genesisBusinessStorage'
 
 export type EntityUiStatus = 'active' | 'pendingVat' | 'underReview' | 'hibernating' | 'dormant'
@@ -22,12 +23,29 @@ export interface GenesisEntityViewModel {
   agentAvatarIndices: number[]
 }
 
+/** Maps API `global_status` (Genesis business lifecycle enums + legacy strings) to dashboard card styles. */
 function mapGlobalStatus(raw: string): EntityUiStatus {
-  const u = raw.toUpperCase()
-  if (u === 'ACTIVE' || u === 'OPERATIONAL') return 'active'
-  if (u.includes('VAT') || u.includes('TAX_PENDING')) return 'pendingVat'
-  if (u.includes('HIBERN') || u.includes('DORMANT') || u.includes('PAUSED')) return 'hibernating'
-  if (u === 'INITIALIZING' || u.includes('PROGRESS') || u.includes('WAITING')) return 'underReview'
+  const legacy = raw.toUpperCase()
+  if (legacy === 'ACTIVE' || legacy === 'OPERATIONAL') return 'active'
+  if (legacy.includes('VAT') || legacy.includes('TAX_PENDING')) return 'pendingVat'
+  if (legacy.includes('HIBERN') || legacy.includes('DORMANT') || legacy.includes('PAUSED')) return 'hibernating'
+
+  const api = normalizeGenesisBusinessStatus(raw)
+  if (api) {
+    if (api === 'COMPLETED' || api === 'OPPORTUNITY') return 'active'
+    if (api === 'FAILED' || api === 'HALTED') return 'pendingVat'
+    if (api === 'CANCELLED' || api === 'INACTIVE') return 'hibernating'
+    if (
+      api === 'INITIALIZING' ||
+      api === 'IN_PROGRESS' ||
+      api === 'CHECKING' ||
+      api === 'PENDING_NEGOTIATION'
+    ) {
+      return 'underReview'
+    }
+  }
+
+  if (legacy === 'INITIALIZING' || legacy.includes('PROGRESS') || legacy.includes('WAITING')) return 'underReview'
   return 'underReview'
 }
 

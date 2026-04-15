@@ -3,6 +3,7 @@ import { CheckCircle2, AlertTriangle, Info, Clock, ArrowRight } from 'lucide-rea
 import { useI18n } from '../i18n/I18nContext'
 import { Link } from '../router'
 import { getAgentPresentation } from '../config/agentPresentation'
+import { normalizeGenesisActivityStatus } from '../constants/genesisApiEnums'
 
 const activityVariants = {
   success: {
@@ -50,16 +51,16 @@ function formatRelative(iso, locale, t) {
 
 function mapFeedToRows(feed, homeBusinessName, locale, t) {
   return feed.slice(0, 8).map((item, idx) => {
-    const st = String(item.status || '').toLowerCase()
+    const norm = normalizeGenesisActivityStatus(item.status)
     let variant = 'info'
     let tag = 'inProgress'
-    if (st === 'completed' || st === 'success') {
+    if (norm === 'completed') {
       variant = 'success'
       tag = 'completed'
-    } else if (st === 'error') {
+    } else if (norm === 'error') {
       variant = 'warning'
       tag = 'actionRequired'
-    } else if (st.includes('pending') || st.includes('approval')) {
+    } else if (norm === 'pending_approval') {
       variant = 'warning'
       tag = 'actionRequired'
     }

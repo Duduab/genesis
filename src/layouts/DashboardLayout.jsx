@@ -3,7 +3,7 @@ import Sidebar from '../components/Sidebar'
 import TopHeader from '../components/TopHeader'
 import { useI18n } from '../i18n/I18nContext'
 
-export default function DashboardLayout({ children, activePage, topSlot = null }) {
+export default function DashboardLayout({ children, activePage, topSlot = null, floatingActions = null }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const { t } = useI18n()
@@ -35,6 +35,7 @@ export default function DashboardLayout({ children, activePage, topSlot = null }
             />
           </footer>
         </main>
+        {floatingActions}
       </div>
     </div>
   )

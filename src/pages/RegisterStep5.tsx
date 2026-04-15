@@ -4,6 +4,7 @@ import { useI18n } from '../i18n/I18nContext'
 import { Link, useRouter } from '../router'
 import AuthHeroPanel from '../components/AuthHeroPanel'
 import { submitBusinessRegistration } from '../api/submitBusinessRegistration'
+import { isGenesisApiError } from '../api/genesis/errors'
 import { getBusinessAnalysisProfile } from '../config/businessAnalysisProfiles'
 import { getLocationInsightBundlePrefix } from '../config/locationInsightBundles'
 import { saveDashboardBusinessProfile } from '../dashboard/dashboardBusinessProfileStorage'
@@ -99,9 +100,7 @@ export default function RegisterStep5() {
 
     try {
       const created = await submitBusinessRegistration(payload)
-      if (created?.data) {
-        upsertPersistedGenesisBusiness(created.data, payload.business.licenseType as LicenseTypeId)
-      }
+      upsertPersistedGenesisBusiness(created.data, payload.business.licenseType as LicenseTypeId)
       saveDashboardBusinessProfile(payload.business)
       clearWizardStorage()
       try {
@@ -110,8 +109,13 @@ export default function RegisterStep5() {
         /* ignore */
       }
       navigate('/login')
-    } catch {
-      setSubmitError(t('createBusiness.step5.error_registration_failed'))
+    } catch (e) {
+      const msg = isGenesisApiError(e)
+        ? e.userFacingMessage(t('createBusiness.step5.error_registration_failed'), t)
+        : e instanceof Error
+          ? e.message
+          : t('createBusiness.step5.error_registration_failed')
+      setSubmitError(msg)
     } finally {
       setSubmitting(false)
     }

@@ -1,7 +1,10 @@
 import { getGenesisAdminApiBearerToken } from '../../config/genesisEnv'
 import { resolveGenesisBearerToken } from './client'
 
-/** Prefer `VITE_GENESIS_ADMIN_BEARER_TOKEN`, else Firebase / `VITE_GENESIS_API_BEARER_TOKEN` (dev fallback). */
+/**
+ * Prefer explicit admin token ({@link getGenesisAdminApiBearerToken} — includes dev default `dev-admin-test`),
+ * else Firebase / tenant env token for rare cases where an admin JWT is provided there.
+ */
 export async function resolveAdminPanelApiBearerToken(): Promise<string | null> {
   const admin = getGenesisAdminApiBearerToken()
   if (admin) return admin

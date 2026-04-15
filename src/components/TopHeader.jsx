@@ -18,9 +18,12 @@ import {
 import { useI18n } from '../i18n/I18nContext'
 import { useRouter, Link } from '../router'
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
+import { useAuth } from '../auth/AuthContext'
 import { useNotifications } from '../hooks/useNotifications'
+import { usePendingAgentApprovalsQuery } from '../hooks/usePendingAgentApprovalsQuery'
 import { fetchGlobalSearch } from '../api/genesis/searchApi'
 import { isGenesisApiError } from '../api/genesis/errors'
+import { genesisBusinessStatusTranslationKey } from '../constants/genesisApiEnums'
 
 const mockUser = {
   name: 'David Abrahams',
@@ -132,7 +135,11 @@ function GlobalSearchResults({ payload, loading, errorText, t, onNavigate }) {
                           {row.entrepreneur_name || row.company_name || row.business_id}
                         </span>
                         <span className="text-xs text-surface-500">
-                          {[row.business_type, row.global_status].filter(Boolean).join(' · ') || '—'}
+                          {(() => {
+                            const gsk = genesisBusinessStatusTranslationKey(row.global_status)
+                            const gLabel = gsk ? t(gsk) : row.global_status
+                            return [row.business_type, gLabel].filter(Boolean).join(' · ') || '—'
+                          })()}
                         </span>
                       </>
                     ) : (
@@ -302,6 +309,11 @@ export default function TopHeader({ onMenuClick }) {
     markAllRead,
   } = useNotifications(notifOpen)
 
+  const { isAuthenticated } = useAuth()
+  const { data: pendingApprovalsPayload } = usePendingAgentApprovalsQuery({ enabled: isAuthenticated })
+  const pendingApprovalCount = pendingApprovalsPayload?.items?.length ?? 0
+  const bellBadgeCount = effectiveUnread + pendingApprovalCount
+
   const searchEnabled = debouncedSearch.trim().length >= 1
   const globalSearchQ = useQuery({
     queryKey: ['globalSearch', debouncedSearch.trim()],
@@ -364,7 +376,7 @@ export default function TopHeader({ onMenuClick }) {
 
   const searchErrorText = globalSearchQ.isError
     ? isGenesisApiError(globalSearchQ.error)
-      ? globalSearchQ.error.userFacingMessage(t('topHeader.searchError'))
+      ? globalSearchQ.error.userFacingMessage(t('topHeader.searchError'), t)
       : t('topHeader.searchError')
     : null
 
@@ -463,9 +475,9 @@ export default function TopHeader({ onMenuClick }) {
             aria-haspopup="true"
           >
             <Bell className="h-[18px] w-[18px]" />
-            {effectiveUnread > 0 ? (
+            {bellBadgeCount > 0 ? (
               <span className="absolute end-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-surface-50 bg-red-500 px-0.5 text-[9px] font-bold text-white dark:border-surface-100">
-                {effectiveUnread > 99 ? '99+' : effectiveUnread}
+                {bellBadgeCount > 99 ? '99+' : bellBadgeCount}
               </span>
             ) : null}
           </button>

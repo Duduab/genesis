@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  ClipboardCheck,
 } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { Link } from '../router'
@@ -16,6 +17,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   const navItems = [
     { label: t('sidebar.dashboard'), icon: LayoutDashboard, href: '/dashboard', key: 'dashboard' },
     { label: t('sidebar.myEntities'), icon: Building2, href: '/businesses', key: 'entities' },
+    { label: t('sidebar.approvals'), icon: ClipboardCheck, href: '/approvals', key: 'approvals' },
     { label: t('sidebar.agentActivity'), icon: Activity, href: '/activity', key: 'activity' },
     { label: t('sidebar.legalCompliance'), icon: ShieldCheck, href: '/legal', key: 'legal' },
     { label: t('sidebar.settings'), icon: Settings, href: '/settings', key: 'settings' },

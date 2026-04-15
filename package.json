@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "gen:api-types": "openapi-typescript https://genesis-api-242231160010.me-west1.run.app/openapi.json -o src/types/genesis-api.ts",
+    "gen:api-types:local": "openapi-typescript docs/openapi.json -o src/types/genesis-api.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.99.0",
@@ -28,6 +30,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "openapi-typescript": "^7.10.1",
     "tailwindcss": "^4.2.2",
     "vite": "^8.0.0"
   }

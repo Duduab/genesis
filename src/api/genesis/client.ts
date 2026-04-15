@@ -1,5 +1,6 @@
 import { getGenesisApiBaseUrl, getGenesisApiBearerToken } from '../../config/genesisEnv'
 import { GenesisApiError } from './errors'
+import { parseGenesisResponseMeta } from './genesisResponseMeta'
 import type { GenesisEnvelopeList, GenesisEnvelopeSingle, GenesisProblemDetails, GenesisValidationErrorItem } from './types'
 
 export type GenesisAccessTokenProvider = () => string | null | Promise<string | null>
@@ -62,31 +63,94 @@ function isValidationErrorBody(body: unknown): body is { detail: GenesisValidati
   return Array.isArray(d)
 }
 
-function toApiError(status: number, body: unknown): GenesisApiError {
+function extractErrorCode(body: unknown, problem?: GenesisProblemDetails): string | undefined {
+  if (problem?.code) return String(problem.code).trim()
+  if (body && typeof body === 'object') {
+    const c = (body as Record<string, unknown>).code
+    if (typeof c === 'string' && c.trim()) return c.trim()
+  }
+  return undefined
+}
+
+function mergeResponseHeaders(
+  init: {
+    status: number
+    code?: string
+    requestId?: string
+    traceId?: string
+    apiVersion?: string
+    rateLimitLimit?: number
+    rateLimitRemaining?: number
+    rateLimitReset?: number
+    detail?: string
+    problem?: GenesisProblemDetails
+    validationDetail?: GenesisValidationErrorItem[]
+  },
+  res?: Response,
+): typeof init {
+  if (!res) return init
+  const m = parseGenesisResponseMeta(res)
+  return {
+    ...init,
+    requestId: init.requestId ?? m.requestId ?? undefined,
+    traceId: m.traceId ?? undefined,
+    apiVersion: m.apiVersion ?? undefined,
+    rateLimitLimit: m.rateLimitLimit ?? undefined,
+    rateLimitRemaining: m.rateLimitRemaining ?? undefined,
+    rateLimitReset: m.rateLimitReset ?? undefined,
+  }
+}
+
+function toApiError(status: number, body: unknown, res?: Response): GenesisApiError {
   if (isProblemDetails(body)) {
     const p = body
-    return new GenesisApiError(p.title || `Request failed (${status})`, {
-      status: p.status,
-      code: p.code,
-      requestId: p.request_id,
-      detail: p.detail,
-      problem: p,
-    })
+    const code = extractErrorCode(body, p) ?? p.code
+    return new GenesisApiError(
+      p.title || `Request failed (${status})`,
+      mergeResponseHeaders(
+        {
+          status: p.status,
+          code,
+          requestId: p.request_id,
+          detail: p.detail,
+          problem: p,
+        },
+        res,
+      ),
+    )
   }
   if (isValidationErrorBody(body)) {
     const first = body.detail[0]
     const msg = first?.msg || 'Validation failed'
-    return new GenesisApiError(msg, {
-      status,
-      validationDetail: body.detail,
-      detail: JSON.stringify(body.detail),
-    })
+    return new GenesisApiError(
+      msg,
+      mergeResponseHeaders(
+        {
+          status,
+          code: extractErrorCode(body) ?? 'validation_failed',
+          validationDetail: body.detail,
+          detail: JSON.stringify(body.detail),
+        },
+        res,
+      ),
+    )
   }
   const fallback =
     body && typeof body === 'object' && 'message' in body && typeof (body as { message?: unknown }).message === 'string'
       ? String((body as { message: string }).message)
       : `HTTP ${status}`
-  return new GenesisApiError(fallback, { status, detail: typeof body === 'object' ? JSON.stringify(body) : String(body) })
+  const code = extractErrorCode(body)
+  return new GenesisApiError(
+    fallback,
+    mergeResponseHeaders(
+      {
+        status,
+        code,
+        detail: typeof body === 'object' ? JSON.stringify(body) : String(body),
+      },
+      res,
+    ),
+  )
 }
 
 export interface GenesisRequestOptions extends Omit<RequestInit, 'body'> {
@@ -145,10 +209,20 @@ export async function genesisRequestJson<T>(options: GenesisRequestOptions): Pro
   const payload = await readJsonBody(res)
 
   if (!res.ok) {
-    throw toApiError(res.status, payload)
+    throw toApiError(res.status, payload, res)
   }
 
   return payload as T
+}
+
+/** For custom `fetch` callers (e.g. multipart upload): same error shape as {@link genesisRequestJson}. */
+export function assertGenesisJsonOk(res: Response, payload: unknown): void {
+  if (!res.ok) throw toApiError(res.status, payload, res)
+}
+
+/** For raw `fetch` (binary, custom Accept): throw the same {@link GenesisApiError} as JSON helpers. */
+export function throwGenesisFetchError(res: Response, payload: unknown): never {
+  throw toApiError(res.status, payload, res)
 }
 
 export async function genesisGetJson<TData>(path: string, init?: Omit<GenesisRequestOptions, 'path' | 'method' | 'body'>) {

@@ -1,4 +1,4 @@
-/** Shapes from GET `/api/v1/{business_id}/dashboard` (and legacy `GET /api/v1/businesses/{id}/dashboard`). */
+/** Shapes from GET `/api/v1/businesses/{id}/dashboard` (legacy: `/api/v1/{business_id}/dashboard`). */
 
 export interface DashboardRecentActivityItem {
   activity_id: string

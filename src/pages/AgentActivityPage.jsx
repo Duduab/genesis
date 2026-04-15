@@ -5,13 +5,13 @@ import { useAgentActivityListQuery } from '../hooks/useAgentActivityListQuery'
 import { loadPersistedGenesisBusinesses } from '../dashboard/genesisBusinessStorage'
 import { mapPersistedBusinessToEntityView } from '../dashboard/mapPersistedBusinessToEntityView'
 import { getAgentPresentation } from '../config/agentPresentation'
+import { normalizeGenesisActivityStatus } from '../constants/genesisApiEnums'
 import {
   ChevronDown,
   ChevronRight,
   CheckCircle2,
   AlertCircle,
   XCircle,
-  Clock,
   Activity,
   Filter,
   Code2,
@@ -22,12 +22,17 @@ import {
 
 const ENTITY_ALL = '__all__'
 
-const statusConfig = {
-  Completed: { style: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20', icon: CheckCircle2, tKey: 'activity.statusSuccess' },
-  'Awaiting Action': { style: 'bg-amber-50 text-amber-700 ring-emerald-600/20', icon: AlertCircle, tKey: 'activity.statusPending' },
-  Failed: { style: 'bg-red-50 text-red-700 ring-red-600/20', icon: XCircle, tKey: 'activity.statusError' },
-  'In Progress': { style: 'bg-blue-50 text-blue-700 ring-blue-600/20', icon: Clock, tKey: 'activity.statusInProgress' },
-  'Not Started': { style: 'bg-surface-100 text-surface-500 ring-surface-400/20', icon: Clock, tKey: 'activity.statusNotStarted' },
+/** API activity status enum: `completed` | `pending_approval` | `error` */
+const ACTIVITY_STATUS_ICONS = {
+  completed: CheckCircle2,
+  pending_approval: AlertCircle,
+  error: XCircle,
+}
+
+const ACTIVITY_STATUS_STYLE = {
+  completed: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+  pending_approval: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+  error: 'bg-red-50 text-red-700 ring-red-600/20',
 }
 
 function startOfDay(d) {
@@ -51,21 +56,9 @@ function formatActivityTime(d, locale) {
   return d.toLocaleTimeString(tag, { hour: 'numeric', minute: '2-digit' })
 }
 
-function mapApiStatusToDisplay(raw) {
-  const u = String(raw || '').toLowerCase()
-  if (u === 'completed') return 'Completed'
-  if (u === 'error') return 'Failed'
-  if (u === 'pending_approval') return 'Awaiting Action'
-  if (u === 'in_progress') return 'In Progress'
-  return 'Not Started'
-}
-
 function mapStatusFilterToApi(statusFilter) {
-  if (statusFilter === 'Completed') return 'completed'
-  if (statusFilter === 'Failed') return 'error'
-  if (statusFilter === 'Awaiting Action') return 'pending_approval'
-  if (statusFilter === 'In Progress') return 'in_progress'
-  return undefined
+  if (!statusFilter || statusFilter === 'all') return undefined
+  return statusFilter
 }
 
 function mapActivityItemToRow(row, businessName, locale) {
@@ -79,7 +72,7 @@ function mapActivityItemToRow(row, businessName, locale) {
     dateKey: dateKeyFromDate(displayDate),
     entity: businessName || '—',
     action: row.description || row.action,
-    status: mapApiStatusToDisplay(row.status),
+    status: normalizeGenesisActivityStatus(row.status),
     payload: row,
     sortAt: sortBase,
     source: 'api',
@@ -116,8 +109,9 @@ function SelectDropdown({ value, onChange, options, label, t }) {
 function TimelineItem({ item, t }) {
   const [expanded, setExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
-  const st = statusConfig[item.status] ?? statusConfig['Not Started']
-  const StatusIcon = st.icon
+  const stKey = normalizeGenesisActivityStatus(item.status)
+  const StatusIcon = ACTIVITY_STATUS_ICONS[stKey] ?? ACTIVITY_STATUS_ICONS.pending_approval
+  const stStyle = ACTIVITY_STATUS_STYLE[stKey] ?? ACTIVITY_STATUS_STYLE.pending_approval
   const agentInfo = getAgentPresentation(item.agent)
   const agentLabel = agentInfo.tKey ? t(agentInfo.tKey) : agentInfo.label
 
@@ -155,10 +149,10 @@ function TimelineItem({ item, t }) {
 
             <div className="flex shrink-0 items-center gap-2.5">
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${st.style}`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${stStyle}`}
               >
                 <StatusIcon className="h-3 w-3" />
-                {t(st.tKey)}
+                {t(`enums.activityStatus.${stKey}`)}
               </span>
               <span className="hidden whitespace-nowrap text-xs text-surface-400 sm:inline">{item.time}</span>
             </div>
@@ -208,7 +202,7 @@ export default function AgentActivityPage() {
   const { activeBusinessId, activeViewModel } = useActiveBusiness()
   const [agentFilter, setAgentFilter] = useState('all')
   const [entityFilter, setEntityFilter] = useState(ENTITY_ALL)
-  const [statusFilter, setStatusFilter] = useState('All')
+  const [statusFilter, setStatusFilter] = useState('all')
 
   const { businessId, businessName } = useMemo(() => {
     const list = loadPersistedGenesisBusinesses()
@@ -266,7 +260,7 @@ export default function AgentActivityPage() {
   const filtered = apiTimelineItems.filter((item) => {
     const matchAgent = agentFilter === 'all' || item.agent === agentFilter
     const matchEntity = entityFilter === ENTITY_ALL || item.entity === entityFilter
-    const matchStatus = statusFilter === 'All' || item.status === statusFilter
+    const matchStatus = statusFilter === 'all' || item.status === statusFilter
     return matchAgent && matchEntity && matchStatus
   })
 
@@ -283,9 +277,9 @@ export default function AgentActivityPage() {
   }, [filtered])
 
   const totalActions = apiTimelineItems.length
-  const completedCount = apiTimelineItems.filter((d) => d.status === 'Completed').length
-  const pendingCount = apiTimelineItems.filter((d) => d.status === 'Awaiting Action' || d.status === 'Not Started').length
-  const failedCount = apiTimelineItems.filter((d) => d.status === 'Failed').length
+  const completedCount = apiTimelineItems.filter((d) => d.status === 'completed').length
+  const pendingCount = apiTimelineItems.filter((d) => d.status === 'pending_approval').length
+  const failedCount = apiTimelineItems.filter((d) => d.status === 'error').length
 
   return (
     <div key={businessId ?? 'none'} className="mx-auto max-w-5xl">
@@ -360,12 +354,10 @@ export default function AgentActivityPage() {
             value={statusFilter}
             onChange={setStatusFilter}
             options={[
-              { value: 'All', tKey: 'activity.all' },
-              { value: 'Completed', tKey: 'activity.statusSuccess' },
-              { value: 'In Progress', tKey: 'activity.statusInProgress' },
-              { value: 'Not Started', tKey: 'activity.statusNotStarted' },
-              { value: 'Awaiting Action', tKey: 'activity.statusPending' },
-              { value: 'Failed', tKey: 'activity.statusError' },
+              { value: 'all', tKey: 'activity.all' },
+              { value: 'completed', tKey: 'enums.activityStatus.completed' },
+              { value: 'pending_approval', tKey: 'enums.activityStatus.pending_approval' },
+              { value: 'error', tKey: 'enums.activityStatus.error' },
             ]}
             t={t}
           />

@@ -1,6 +1,5 @@
 import { getGenesisApiBaseUrl } from '../../config/genesisEnv'
-import { genesisGetJson, genesisPutJson, genesisRequestJson, resolveGenesisBearerToken } from './client'
-import { GenesisApiError } from './errors'
+import { assertGenesisJsonOk, genesisGetJson, genesisPutJson, genesisRequestJson, resolveGenesisBearerToken } from './client'
 import type { GenesisEnvelopeSingle } from './types'
 import type { GenesisMeProfile, UpdateMyProfileBody } from '../../types/genesisMeProfile'
 
@@ -51,13 +50,7 @@ export async function uploadMyAvatar(file: File): Promise<string> {
   const res = await fetch(url, { method: 'POST', body: form, headers })
   const payload = (await res.json().catch(() => null)) as Record<string, unknown> | null
 
-  if (!res.ok) {
-    const msg =
-      payload && typeof payload === 'object' && 'title' in payload
-        ? String((payload as { title?: string }).title || `HTTP ${res.status}`)
-        : `HTTP ${res.status}`
-    throw new GenesisApiError(msg, { status: res.status, detail: JSON.stringify(payload) })
-  }
+  assertGenesisJsonOk(res, payload)
 
   const data = payload?.data as { avatar_url?: string } | undefined
   const avatarUrl = data?.avatar_url

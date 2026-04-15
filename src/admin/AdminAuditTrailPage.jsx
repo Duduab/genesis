@@ -2,10 +2,129 @@ import { useQuery } from '@tanstack/react-query'
 import { useCallback, useMemo, useState } from 'react'
 import { exportAuditTrailCsv, fetchAuditTrail, fetchAuditTrailById } from '../api/genesis/auditTrailApi'
 import { isGenesisApiError } from '../api/genesis/errors'
+import { useI18n } from '../i18n/I18nContext'
 
 const defaultLimit = 25
 
+function labelFromKey(key) {
+  return String(key || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function AuditValueView({ value, depth = 0, t }) {
+  if (value == null) return <span className="text-surface-500">—</span>
+  if (typeof value === 'string') {
+    return <span className="break-words font-mono text-xs text-surface-800 dark:text-surface-200">{value}</span>
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return <span className="font-mono text-xs text-surface-800 dark:text-surface-200">{String(value)}</span>
+  }
+  if (Array.isArray(value)) {
+    if (depth >= 5) {
+      return (
+        <span className="text-xs text-surface-500">
+          {t('admin.auditValue.arrayItems').replaceAll('{{count}}', String(value.length))}
+        </span>
+      )
+    }
+    if (value.length === 0) return <span className="text-xs text-surface-500">{t('admin.auditValue.emptyList')}</span>
+    return (
+      <ul className="list-inside list-disc space-y-1 text-xs text-surface-800 dark:text-surface-200">
+        {value.slice(0, 40).map((item, i) => (
+          <li key={i}>
+            <AuditValueView value={item} depth={depth + 1} t={t} />
+          </li>
+        ))}
+        {value.length > 40 ? (
+          <li className="text-surface-500">{t('admin.auditValue.more').replaceAll('{{count}}', String(value.length - 40))}</li>
+        ) : null}
+      </ul>
+    )
+  }
+  if (typeof value === 'object') {
+    const entries = Object.entries(value)
+    if (depth >= 5) {
+      return (
+        <span className="text-xs text-surface-500">
+          {t('admin.auditValue.objectKeys').replaceAll('{{count}}', String(entries.length))}
+        </span>
+      )
+    }
+    if (entries.length === 0) return <span className="text-xs text-surface-500">{t('admin.auditValue.emptyObject')}</span>
+    return (
+      <dl className="space-y-2 border-l-2 border-surface-200 pl-3 dark:border-surface-700">
+        {entries.map(([k, v]) => (
+          <div key={k}>
+            <dt className="text-xs font-medium text-surface-500">{k}</dt>
+            <dd className="mt-0.5">
+              <AuditValueView value={v} depth={depth + 1} t={t} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
+  return <span className="text-xs text-surface-500">—</span>
+}
+
+const AUDIT_DETAIL_ORDERED_KEYS = [
+  'audit_id',
+  'request_id',
+  'created_at',
+  'user_id',
+  'user_email',
+  'user_role',
+  'method',
+  'path',
+  'action',
+  'resource_type',
+  'resource_id',
+  'response_status',
+  'ip_address',
+]
+
+function AuditEntryDetailPanel({ detail, t }) {
+  if (!detail || typeof detail !== 'object') return null
+  return (
+    <div className="space-y-6">
+      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {AUDIT_DETAIL_ORDERED_KEYS.map((key) => {
+          const val = detail[key]
+          if (val == null || val === '') return null
+          const fieldLabel = t(`admin.auditFields.${key}`)
+          return (
+            <div key={key}>
+              <dt className="text-xs font-medium uppercase tracking-wide text-surface-500 dark:text-surface-400">
+                {fieldLabel.startsWith('admin.') ? labelFromKey(key) : fieldLabel}
+              </dt>
+              <dd className="mt-0.5 break-all text-sm text-surface-900 dark:text-surface-100">{String(val)}</dd>
+            </div>
+          )
+        })}
+      </dl>
+      {detail.request_body != null ? (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-surface-500 dark:text-surface-400">{t('admin.auditDetail.requestBody')}</h3>
+          <div className="mt-2 rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+            <AuditValueView value={detail.request_body} t={t} />
+          </div>
+        </div>
+      ) : null}
+      {detail.response_body != null ? (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-surface-500 dark:text-surface-400">{t('admin.auditDetail.responseBody')}</h3>
+          <div className="mt-2 rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+            <AuditValueView value={detail.response_body} t={t} />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export default function AdminAuditTrailPage() {
+  const { t } = useI18n()
   const [userId, setUserId] = useState('')
   const [action, setAction] = useState('')
   const [resourceType, setResourceType] = useState('')
@@ -79,15 +198,15 @@ export default function AdminAuditTrailPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">Audit trail</h1>
-          <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">Sensitive actions: who, what, when, from where.</p>
+          <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">{t('admin.auditPage.title')}</h1>
+          <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">{t('admin.auditPage.subtitle')}</p>
         </div>
         <button
           type="button"
           onClick={onExport}
           className="rounded-lg border border-surface-200 bg-white px-4 py-2 text-sm font-medium text-surface-800 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-100 dark:hover:bg-surface-800"
         >
-          Export CSV
+          {t('admin.auditPage.exportCsv')}
         </button>
       </div>
 
@@ -98,17 +217,27 @@ export default function AdminAuditTrailPage() {
           applyFilters()
         }}
       >
-        <Field label="User ID" value={userId} onChange={setUserId} />
-        <Field label="Action" value={action} onChange={setAction} />
-        <Field label="Resource type" value={resourceType} onChange={setResourceType} />
-        <Field label="Resource ID" value={resourceId} onChange={setResourceId} />
-        <Field label="HTTP method" value={method} onChange={setMethod} placeholder="GET, POST…" />
-        <Field label="Status code" value={statusCode} onChange={setStatusCode} placeholder="422" />
-        <Field label="From (ISO date)" value={from} onChange={setFrom} />
-        <Field label="To (ISO date)" value={to} onChange={setTo} />
+        <Field label={t('admin.auditPage.filterUserId')} value={userId} onChange={setUserId} />
+        <Field label={t('admin.auditPage.filterAction')} value={action} onChange={setAction} />
+        <Field label={t('admin.auditPage.filterResourceType')} value={resourceType} onChange={setResourceType} />
+        <Field label={t('admin.auditPage.filterResourceId')} value={resourceId} onChange={setResourceId} />
+        <Field
+          label={t('admin.auditPage.filterHttpMethod')}
+          value={method}
+          onChange={setMethod}
+          placeholder={t('admin.auditPage.filterHttpMethodPlaceholder')}
+        />
+        <Field
+          label={t('admin.auditPage.filterStatusCode')}
+          value={statusCode}
+          onChange={setStatusCode}
+          placeholder={t('admin.auditPage.filterStatusPlaceholder')}
+        />
+        <Field label={t('admin.auditPage.filterFromIso')} value={from} onChange={setFrom} />
+        <Field label={t('admin.auditPage.filterToIso')} value={to} onChange={setTo} />
         <div className="flex items-end sm:col-span-2 lg:col-span-4">
           <button type="submit" className="rounded-lg bg-genesis-600 px-4 py-2 text-sm font-semibold text-white hover:bg-genesis-700">
-            Apply filters
+            {t('admin.auditPage.applyFilters')}
           </button>
         </div>
       </form>
@@ -120,16 +249,16 @@ export default function AdminAuditTrailPage() {
       ) : null}
 
       <div className="overflow-x-auto rounded-xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
-        <table className="min-w-full text-left text-sm">
+        <table className="min-w-full text-start text-sm">
           <thead className="border-b border-surface-200 bg-surface-50 text-xs uppercase text-surface-500 dark:border-surface-800 dark:bg-surface-800/50 dark:text-surface-400">
             <tr>
-              <th className="px-3 py-2">When</th>
-              <th className="px-3 py-2">User</th>
-              <th className="px-3 py-2">Action</th>
-              <th className="px-3 py-2">Method</th>
-              <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2">Resource</th>
-              <th className="px-3 py-2">IP</th>
+              <th className="px-3 py-2">{t('admin.auditPage.colWhen')}</th>
+              <th className="px-3 py-2">{t('admin.auditPage.colUser')}</th>
+              <th className="px-3 py-2">{t('admin.auditPage.colAction')}</th>
+              <th className="px-3 py-2">{t('admin.auditPage.colMethod')}</th>
+              <th className="px-3 py-2">{t('admin.auditPage.colStatus')}</th>
+              <th className="px-3 py-2">{t('admin.auditPage.colResource')}</th>
+              <th className="px-3 py-2">{t('admin.auditPage.colIp')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-100 dark:divide-surface-800">
@@ -154,8 +283,8 @@ export default function AdminAuditTrailPage() {
             ))}
           </tbody>
         </table>
-        {listQ.isLoading ? <p className="px-3 py-4 text-sm text-surface-500">Loading…</p> : null}
-        {!listQ.isLoading && items.length === 0 ? <p className="px-3 py-4 text-sm text-surface-500">No rows.</p> : null}
+        {listQ.isLoading ? <p className="px-3 py-4 text-sm text-surface-500">{t('common.loading')}</p> : null}
+        {!listQ.isLoading && items.length === 0 ? <p className="px-3 py-4 text-sm text-surface-500">{t('admin.auditPage.noRows')}</p> : null}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -165,10 +294,10 @@ export default function AdminAuditTrailPage() {
           onClick={() => setOffset((o) => Math.max(0, o - defaultLimit))}
           className="rounded-lg border border-surface-200 px-3 py-2 text-sm disabled:opacity-40 dark:border-surface-700"
         >
-          Previous
+          {t('common.previous')}
         </button>
         <span className="text-xs text-surface-500">
-          Offset {offset} · limit {defaultLimit}
+          {t('admin.paginationMeta').replaceAll('{{offset}}', String(offset)).replaceAll('{{limit}}', String(defaultLimit))}
         </span>
         <button
           type="button"
@@ -176,7 +305,7 @@ export default function AdminAuditTrailPage() {
           onClick={() => setOffset((o) => o + defaultLimit)}
           className="rounded-lg border border-surface-200 px-3 py-2 text-sm disabled:opacity-40 dark:border-surface-700"
         >
-          Next
+          {t('common.next')}
         </button>
       </div>
 
@@ -191,22 +320,18 @@ export default function AdminAuditTrailPage() {
         >
           <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-xl dark:border-surface-800 dark:bg-surface-900">
             <div className="flex items-center justify-between border-b border-surface-200 px-4 py-3 dark:border-surface-800">
-              <h2 className="text-sm font-semibold text-surface-900 dark:text-surface-50">Audit entry</h2>
+              <h2 className="text-sm font-semibold text-surface-900 dark:text-surface-50">{t('admin.auditPage.auditEntry')}</h2>
               <button
                 type="button"
                 onClick={() => setDetailId(null)}
                 className="rounded-lg px-2 py-1 text-sm text-surface-600 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800"
               >
-                Close
+                {t('common.close')}
               </button>
             </div>
             <div className="max-h-[calc(90vh-52px)] overflow-auto p-4">
               {detailQ.isLoading ? <p className="text-sm text-surface-500">Loading…</p> : null}
-              {detailQ.data?.data ? (
-                <pre className="whitespace-pre-wrap break-all text-xs leading-relaxed text-surface-800 dark:text-surface-200">
-                  {JSON.stringify(detailQ.data.data, null, 2)}
-                </pre>
-              ) : null}
+              {detailQ.data?.data ? <AuditEntryDetailPanel detail={detailQ.data.data} /> : null}
               {detailQ.error ? (
                 <p className="text-sm text-red-600">{isGenesisApiError(detailQ.error) ? detailQ.error.message : String(detailQ.error)}</p>
               ) : null}

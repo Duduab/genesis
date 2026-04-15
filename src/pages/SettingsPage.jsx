@@ -209,7 +209,7 @@ function ProfileContent() {
       setFormError('')
     },
     onError: (e) => {
-      setFormError(isGenesisApiError(e) ? e.userFacingMessage(t('profile.saveError')) : t('profile.saveError'))
+      setFormError(isGenesisApiError(e) ? e.userFacingMessage(t('profile.saveError'), t) : t('profile.saveError'))
     },
   })
 
@@ -233,7 +233,7 @@ function ProfileContent() {
       qc.invalidateQueries({ queryKey: ['users-me'] })
     },
     onError: (e) => {
-      setPasswordError(isGenesisApiError(e) ? e.userFacingMessage(t('profile.passwordError')) : t('profile.passwordError'))
+      setPasswordError(isGenesisApiError(e) ? e.userFacingMessage(t('profile.passwordError'), t) : t('profile.passwordError'))
     },
   })
 
@@ -267,7 +267,7 @@ function ProfileContent() {
       setAvatar(url)
       await qc.invalidateQueries({ queryKey: ['users-me'] })
     } catch (err) {
-      setFormError(isGenesisApiError(err) ? err.userFacingMessage(t('profile.avatarUploadError')) : t('profile.avatarUploadError'))
+      setFormError(isGenesisApiError(err) ? err.userFacingMessage(t('profile.avatarUploadError'), t) : t('profile.avatarUploadError'))
     } finally {
       setAvatarBusy(false)
     }
@@ -314,7 +314,7 @@ function ProfileContent() {
       <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-6 text-sm text-amber-900">
         <p className="font-semibold">{t('profile.loadError')}</p>
         <p className="mt-1 text-xs text-amber-800/90">
-          {isGenesisApiError(profileQ.error) ? profileQ.error.userFacingMessage(t('profile.loadError')) : String(profileQ.error)}
+          {isGenesisApiError(profileQ.error) ? profileQ.error.userFacingMessage(t('profile.loadError'), t) : String(profileQ.error)}
         </p>
         <button
           type="button"
@@ -625,7 +625,7 @@ function NotificationsContent() {
       setTimeout(() => setSaved(false), 2000)
     },
     onError: (e) => {
-      setSaveError(isGenesisApiError(e) ? e.userFacingMessage(t('notifications.prefsSaveError')) : t('notifications.prefsSaveError'))
+      setSaveError(isGenesisApiError(e) ? e.userFacingMessage(t('notifications.prefsSaveError'), t) : t('notifications.prefsSaveError'))
     },
   })
 
@@ -729,7 +729,7 @@ function NotificationsContent() {
           <div>
             <p className="font-semibold text-red-900">{t('notifications.loadPrefsError')}</p>
             <p className="mt-1 text-sm text-red-800/90">
-              {isGenesisApiError(prefsQ.error) ? prefsQ.error.userFacingMessage(t('notifications.loadPrefsError')) : String(prefsQ.error)}
+              {isGenesisApiError(prefsQ.error) ? prefsQ.error.userFacingMessage(t('notifications.loadPrefsError'), t) : String(prefsQ.error)}
             </p>
             <button
               type="button"
@@ -916,7 +916,7 @@ function BillingContent() {
       setUpgradeError('')
     },
     onError: (e) => {
-      setUpgradeError(isGenesisApiError(e) ? e.userFacingMessage(t('billing.upgradeError')) : t('billing.upgradeError'))
+      setUpgradeError(isGenesisApiError(e) ? e.userFacingMessage(t('billing.upgradeError'), t) : t('billing.upgradeError'))
     },
   })
 
@@ -1010,7 +1010,7 @@ function BillingContent() {
           <div>
             <p className="font-semibold text-red-900">{t('billing.loadError')}</p>
             <p className="mt-1 text-sm text-red-800/90">
-              {isGenesisApiError(bundleQ.error) ? bundleQ.error.userFacingMessage(t('billing.loadError')) : String(bundleQ.error)}
+              {isGenesisApiError(bundleQ.error) ? bundleQ.error.userFacingMessage(t('billing.loadError'), t) : String(bundleQ.error)}
             </p>
             <button
               type="button"
@@ -1330,7 +1330,7 @@ function GuardrailsContent() {
     },
     onError: (e) => {
       setSaveError(
-        isGenesisApiError(e) ? e.userFacingMessage(t('settings.guardrailsSaveError')) : t('settings.guardrailsSaveError'),
+        isGenesisApiError(e) ? e.userFacingMessage(t('settings.guardrailsSaveError'), t) : t('settings.guardrailsSaveError'),
       )
     },
   })
@@ -1371,7 +1371,7 @@ function GuardrailsContent() {
           <div>
             <p className="font-semibold text-red-900">{t('settings.guardrailsLoadError')}</p>
             <p className="mt-1 text-sm text-red-800/90">
-              {isGenesisApiError(grQ.error) ? grQ.error.userFacingMessage(t('settings.guardrailsLoadError')) : String(grQ.error)}
+              {isGenesisApiError(grQ.error) ? grQ.error.userFacingMessage(t('settings.guardrailsLoadError'), t) : String(grQ.error)}
             </p>
             <button
               type="button"

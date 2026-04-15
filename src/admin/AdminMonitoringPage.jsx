@@ -41,6 +41,90 @@ function fmtUsd(v) {
   return n.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
 }
 
+/** Some admin GETs return `{ data: T, meta }`; unwrap to `T` when present. */
+function unwrapEnvelope(payload) {
+  if (!payload || typeof payload !== 'object') return null
+  const inner = payload.data
+  if (inner != null && typeof inner === 'object' && !Array.isArray(inner)) return inner
+  return payload
+}
+
+function labelFromKey(key) {
+  return String(key || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function ObjectKeyTable({ rows, valueClassName = 'tabular-nums' }) {
+  if (!rows.length) {
+    return <p className="mt-2 text-xs text-surface-500 dark:text-surface-400">No rows.</p>
+  }
+  return (
+    <div className="mt-2 overflow-x-auto rounded-lg border border-surface-200 dark:border-surface-700">
+      <table className="min-w-full text-start text-sm">
+        <thead className="border-b border-surface-200 bg-surface-50 text-xs uppercase text-surface-500 dark:border-surface-800 dark:bg-surface-800/50 dark:text-surface-400">
+          <tr>
+            <th className="px-3 py-2">Key</th>
+            <th className="px-3 py-2">Value</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-surface-100 dark:divide-surface-800">
+          {rows.map(([k, v]) => (
+            <tr key={k} className="text-surface-800 dark:text-surface-200">
+              <td className="px-3 py-2 font-mono text-xs">{k}</td>
+              <td className={`px-3 py-2 text-sm ${valueClassName}`}>{v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function AgentMetricsDetailPanel({ raw }) {
+  const row = unwrapEnvelope(raw)
+  if (!row || typeof row !== 'object') {
+    return <p className="mt-2 text-sm text-surface-500 dark:text-surface-400">No detail.</p>
+  }
+  const modelsUsed =
+    row.models_used && typeof row.models_used === 'object' && !Array.isArray(row.models_used) ? row.models_used : null
+  const scalarEntries = Object.entries(row).filter(
+    ([k, v]) => k !== 'models_used' && v != null && typeof v !== 'object',
+  )
+  const modelRows = modelsUsed
+    ? Object.entries(modelsUsed).map(([k, v]) => [k, typeof v === 'object' ? '—' : String(v)])
+    : []
+
+  return (
+    <div className="mt-3 space-y-4">
+      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {scalarEntries.map(([key, val]) => (
+          <div key={key}>
+            <dt className="text-xs font-medium uppercase tracking-wide text-surface-500 dark:text-surface-400">
+              {labelFromKey(key)}
+            </dt>
+            <dd className="mt-0.5 font-mono text-sm text-surface-900 dark:text-surface-100">
+              {key === 'success_rate' && typeof val === 'number'
+                ? `${(val * 100).toFixed(1)}%`
+                : key === 'total_cost_usd'
+                  ? fmtUsd(val)
+                  : typeof val === 'number'
+                    ? fmtNum(val)
+                    : String(val)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {modelRows.length > 0 ? (
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-surface-500 dark:text-surface-400">Models used</p>
+          <ObjectKeyTable rows={modelRows} />
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export default function AdminMonitoringPage() {
   const [selectedAgentId, setSelectedAgentId] = useState(null)
   const [businessId, setBusinessId] = useState('')
@@ -86,6 +170,18 @@ export default function AdminMonitoringPage() {
   const errorRateLabel =
     totalAgents > 0 ? `${(((degradedOrStuck) / totalAgents) * 100).toFixed(0)}% agents not healthy` : '—'
 
+  const costDetail = useMemo(() => (costQ.data ? unwrapEnvelope(costQ.data) : null), [costQ.data])
+  const costByAgentRows = useMemo(() => {
+    const m = costDetail?.cost_by_agent
+    if (!m || typeof m !== 'object') return []
+    return Object.entries(m).map(([k, v]) => [k, fmtUsd(v)])
+  }, [costDetail])
+  const tokenUsageRows = useMemo(() => {
+    const m = costDetail?.token_usage_by_agent
+    if (!m || typeof m !== 'object') return []
+    return Object.entries(m).map(([k, v]) => [k, fmtNum(v)])
+  }, [costDetail])
+
   return (
     <div className="space-y-8">
       <div>
@@ -120,7 +216,7 @@ export default function AdminMonitoringPage() {
       <section>
         <h2 className="mb-3 text-sm font-semibold text-surface-800 dark:text-surface-200">Agent status</h2>
         <div className="overflow-x-auto rounded-xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
-          <table className="min-w-full text-left text-sm">
+          <table className="min-w-full text-start text-sm">
             <thead className="border-b border-surface-200 bg-surface-50 text-xs uppercase text-surface-500 dark:border-surface-800 dark:bg-surface-800/50 dark:text-surface-400">
               <tr>
                 <th className="px-3 py-2">Status</th>
@@ -163,7 +259,7 @@ export default function AdminMonitoringPage() {
       <section>
         <h2 className="mb-3 text-sm font-semibold text-surface-800 dark:text-surface-200">Agent metrics</h2>
         <div className="overflow-x-auto rounded-xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
-          <table className="min-w-full text-left text-sm">
+          <table className="min-w-full text-start text-sm">
             <thead className="border-b border-surface-200 bg-surface-50 text-xs uppercase text-surface-500 dark:border-surface-800 dark:bg-surface-800/50 dark:text-surface-400">
               <tr>
                 <th className="px-3 py-2">Agent</th>
@@ -203,9 +299,7 @@ export default function AdminMonitoringPage() {
           <div className="mt-4 rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-900">
             <h3 className="text-sm font-semibold text-surface-900 dark:text-surface-50">Drill-down: {selectedAgentId}</h3>
             {agentDetailQ.isLoading ? <p className="mt-2 text-sm text-surface-500">Loading detail…</p> : null}
-            {agentDetailQ.data ? (
-              <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-white p-3 text-xs dark:bg-surface-950">{JSON.stringify(agentDetailQ.data, null, 2)}</pre>
-            ) : null}
+            {agentDetailQ.data ? <AgentMetricsDetailPanel raw={agentDetailQ.data} /> : null}
             {agentDetailQ.error ? (
               <p className="mt-2 text-sm text-red-600">{isGenesisApiError(agentDetailQ.error) ? agentDetailQ.error.message : String(agentDetailQ.error)}</p>
             ) : null}
@@ -237,24 +331,24 @@ export default function AdminMonitoringPage() {
           </div>
         </div>
         {costQ.isLoading ? <p className="mt-3 text-sm text-surface-500">Loading cost…</p> : null}
-        {costQ.data ? (
+        {costDetail ? (
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
               <p className="text-xs font-medium text-surface-500">Totals</p>
               <p className="mt-1 text-sm text-surface-800 dark:text-surface-200">
-                LLM (USD): <span className="font-mono">{String(costQ.data.total_llm_cost_usd ?? '—')}</span>
+                LLM (USD): <span className="font-mono">{fmtUsd(costDetail.total_llm_cost_usd)}</span>
               </p>
               <p className="mt-1 text-sm text-surface-800 dark:text-surface-200">
-                Budget spent (ILS): <span className="font-mono">{String(costQ.data.total_budget_spent_ils ?? '—')}</span>
+                Budget spent (ILS): <span className="font-mono">{fmtNum(costDetail.total_budget_spent_ils)}</span>
               </p>
             </div>
             <div className="rounded-xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
               <p className="text-xs font-medium text-surface-500">Cost by agent</p>
-              <pre className="mt-2 max-h-48 overflow-auto text-xs">{JSON.stringify(costQ.data.cost_by_agent ?? {}, null, 2)}</pre>
+              <ObjectKeyTable rows={costByAgentRows} />
             </div>
             <div className="rounded-xl border border-surface-200 bg-white p-4 lg:col-span-2 dark:border-surface-800 dark:bg-surface-900">
               <p className="text-xs font-medium text-surface-500">Token usage by agent</p>
-              <pre className="mt-2 max-h-48 overflow-auto text-xs">{JSON.stringify(costQ.data.token_usage_by_agent ?? {}, null, 2)}</pre>
+              <ObjectKeyTable rows={tokenUsageRows} />
             </div>
           </div>
         ) : null}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import DashboardLayout from './layouts/DashboardLayout'
 import ActiveEntities from './components/ActiveEntities'
 import RecentAgentActivity from './components/RecentAgentActivity'
@@ -11,6 +11,7 @@ import MyEntitiesPage from './pages/MyEntitiesPage'
 import LegalCompliancePage from './pages/LegalCompliancePage'
 import SettingsPage from './pages/SettingsPage'
 import AgentActivityPage from './pages/AgentActivityPage'
+import AgentApprovalsPage from './pages/AgentApprovalsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import RegisterStep2 from './pages/RegisterStep2'
@@ -21,14 +22,17 @@ import LandingPage from './pages/LandingPage'
 import DashboardHeader from './components/DashboardHeader'
 import LiveRevenueFlowChart from './components/LiveRevenueFlowChart'
 import BusinessMilestonesSection from './components/BusinessMilestonesSection'
-import { Activity, Building2, ShieldCheck, TrendingUp, MessageSquareText, Trophy, Clock, DollarSign, CheckCircle2, AlertTriangle, ArrowDownRight } from 'lucide-react'
+import BusinessStagesSection from './components/BusinessStagesSection'
+import { Activity, Building2, ShieldCheck, TrendingUp, Trophy, Clock, DollarSign, CheckCircle2, AlertTriangle, ArrowDownRight } from 'lucide-react'
 import { useI18n } from './i18n/I18nContext'
 import { useRouter } from './router'
 import { useAuth } from './auth/AuthContext'
 import { useActiveBusiness } from './context/ActiveBusinessContext'
 import { useDashboardOverviewQuery } from './hooks/useDashboardOverviewQuery'
+import { usePendingAgentApprovalsQuery } from './hooks/usePendingAgentApprovalsQuery'
 import { useNotifications } from './hooks/useNotifications'
 import ApprovalBanner from './components/ApprovalBanner'
+import { useTheme } from './theme/ThemeContext'
 import { formatNisFull } from './utils/formatNis'
 import { AdminAuthProvider } from './context/AdminAuthContext'
 import AdminApp from './admin/AdminApp.jsx'
@@ -95,6 +99,10 @@ function DashboardPage() {
 
       <div className="mt-8 animate-slide-up-fade" style={{ animationDelay: '120ms' }}>
         <BusinessMilestonesSection />
+      </div>
+
+      <div className="mt-8 animate-slide-up-fade" style={{ animationDelay: '150ms' }}>
+        <BusinessStagesSection />
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -269,7 +277,13 @@ function DashboardPage() {
   )
 }
 
+const ORCHESTRATOR_FAB_LIGHT = '/orchestrator-fab.png'
+/** Bump `v` when replacing the file so browsers do not keep an old cached PNG. */
+const ORCHESTRATOR_FAB_DARK = '/orchestrator-fab-dark.png?v=500w'
+
 export default function App() {
+  const { t } = useI18n()
+  const { dark } = useTheme()
   const { page, navigate } = useRouter()
   const { isAuthenticated } = useAuth()
   const { activeBusinessId } = useActiveBusiness()
@@ -277,18 +291,32 @@ export default function App() {
     enabled: isAuthenticated && Boolean(activeBusinessId),
   })
   const { items: notifItems, isItemUnread } = useNotifications(false, { enabled: isAuthenticated })
+  const pendingApprovalsQ = usePendingAgentApprovalsQuery({ enabled: isAuthenticated })
   const pendingBadge = useMemo(() => {
+    if (pendingApprovalsQ.isSuccess) {
+      return pendingApprovalsQ.data?.items?.length ?? 0
+    }
     if (activeBusinessId && overview?.pending_approvals != null) {
       return Math.max(0, Math.floor(Number(overview.pending_approvals)))
     }
     return notifItems.filter((n) => n.type === 'approval_required' && isItemUnread(n)).length
-  }, [activeBusinessId, overview, notifItems, isItemUnread])
+  }, [pendingApprovalsQ.isSuccess, pendingApprovalsQ.data, activeBusinessId, overview, notifItems, isItemUnread])
 
   const [chatOpen, setChatOpen] = useState(false)
   const [addBusinessOpen, setAddBusinessOpen] = useState(false)
 
   const openChat = () => setChatOpen(true)
   const openAddBusiness = () => setAddBusinessOpen(true)
+
+  const orchestratorFabSrc = dark ? ORCHESTRATOR_FAB_DARK : ORCHESTRATOR_FAB_LIGHT
+  const onOrchestratorFabError = useCallback(
+    (e) => {
+      if (dark && e.currentTarget.src.includes('orchestrator-fab-dark')) {
+        e.currentTarget.src = ORCHESTRATOR_FAB_LIGHT
+      }
+    },
+    [dark],
+  )
 
   if (page === 'admin') {
     return (
@@ -319,22 +347,56 @@ export default function App() {
         return <LegalCompliancePage />
       case 'activity':
         return <AgentActivityPage />
+      case 'approvals':
+        return <AgentApprovalsPage />
       case 'settings':
         return <SettingsPage />
       case 'dashboard':
+        return <DashboardPage />
       default:
         return <DashboardPage />
     }
   }
+
+  const orchestratorFab = (
+    <button
+      type="button"
+      onClick={openChat}
+      aria-label={t('chat.openOrchestratorFab')}
+      className={`pointer-events-auto fixed bottom-0 left-2 z-50 mb-[env(safe-area-inset-bottom,0px)] flex aspect-square w-[min(200px,68vw)] max-w-[200px] shrink-0 items-end justify-center border-0 bg-transparent p-0 shadow-none outline-none transition-transform hover:scale-[1.03] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-genesis-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-50 dark:focus-visible:ring-offset-surface-950 sm:left-3 ${
+        chatOpen ? 'pointer-events-none opacity-0' : 'opacity-100'
+      }`}
+    >
+      <img
+        key={orchestratorFabSrc}
+        src={orchestratorFabSrc}
+        alt=""
+        width={500}
+        height={500}
+        sizes="(max-width: 640px) 68vw, 200px"
+        className="h-full w-full object-contain object-bottom select-none dark:drop-shadow-[0_0_22px_rgba(34,211,238,0.22)]"
+        decoding="async"
+        draggable={false}
+        fetchPriority="high"
+        onError={onOrchestratorFabError}
+      />
+      {pendingBadge > 0 ? (
+        <span className="absolute end-0 top-0 z-10 flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white ring-2 ring-white dark:ring-surface-900">
+          {pendingBadge > 9 ? '9+' : pendingBadge}
+        </span>
+      ) : null}
+    </button>
+  )
 
   return (
     <DashboardLayout
       activePage={page}
       topSlot={
         pendingBadge > 0 ? (
-          <ApprovalBanner count={pendingBadge} onReview={() => setChatOpen(true)} />
+          <ApprovalBanner count={pendingBadge} onReview={() => navigate('/approvals')} />
         ) : null
       }
+      floatingActions={orchestratorFab}
     >
       <div key={page} className="animate-fade-in">
         {renderPage()}
@@ -343,21 +405,6 @@ export default function App() {
       <OrchestratorChat open={chatOpen} onClose={() => setChatOpen(false)} />
 
       <AddBusinessWizardModal open={addBusinessOpen} onClose={() => setAddBusinessOpen(false)} />
-
-      <button
-        type="button"
-        onClick={openChat}
-        className={`btn-authora-gradient btn-authora-gradient--on-dark fixed bottom-6 end-6 z-40 flex h-14 w-14 items-center justify-center rounded-2xl transition-all hover:scale-105 active:scale-95 animate-glow-pulse ${
-          chatOpen ? 'pointer-events-none opacity-0' : 'opacity-100'
-        }`}
-      >
-        <MessageSquareText className="h-6 w-6" />
-        {pendingBadge > 0 ? (
-          <span className="absolute -end-0.5 -top-0.5 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white ring-2 ring-white">
-            {pendingBadge > 9 ? '9+' : pendingBadge}
-          </span>
-        ) : null}
-      </button>
     </DashboardLayout>
   )
 }

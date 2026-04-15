@@ -1,5 +1,9 @@
 /** Business resource as returned by POST/GET `/api/v1/businesses` (`data` envelope). */
 
+/**
+ * Pipeline stage row. `status` uses API stage enums (`NOT_STARTED`, `IN_PROGRESS`, …);
+ * see `GENESIS_STAGE_STATUSES` in `src/constants/genesisApiEnums.ts`.
+ */
 export interface GenesisBusinessStage {
   stage_id: string
   business_id: string
@@ -23,6 +27,7 @@ export interface GenesisBusinessApiData {
   business_id: string
   business_type: string
   target_location: string
+  /** API business lifecycle enum; see `GENESIS_BUSINESS_STATUSES` in `src/constants/genesisApiEnums.ts`. */
   global_status: string
   total_budget_ils: number
   locked_budget_ils: number

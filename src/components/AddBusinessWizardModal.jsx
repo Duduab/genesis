@@ -29,6 +29,7 @@ import {
   RATIONALE_COUNT,
 } from '../config/locationInsightBundles'
 import { submitBusinessRegistration } from '../api/submitBusinessRegistration'
+import { isGenesisApiError } from '../api/genesis/errors'
 import { saveDashboardBusinessProfile } from '../dashboard/dashboardBusinessProfileStorage'
 import { upsertPersistedGenesisBusiness } from '../dashboard/genesisBusinessStorage'
 import {
@@ -224,14 +225,17 @@ export default function AddBusinessWizardModal({ open, onClose }) {
     try {
       const payload = buildModalPayload(s1, t, user)
       const created = await submitBusinessRegistration(payload)
-      if (created?.data) {
-        upsertPersistedGenesisBusiness(created.data, s1.licenseType)
-      }
+      upsertPersistedGenesisBusiness(created.data, s1.licenseType)
       saveDashboardBusinessProfile(payload.business)
       clearModalWizardStorage()
       onClose?.()
-    } catch {
-      setSubmitErr(t('createBusiness.step5.error_registration_failed'))
+    } catch (e) {
+      const msg = isGenesisApiError(e)
+        ? e.userFacingMessage(t('createBusiness.step5.error_registration_failed'), t)
+        : e instanceof Error
+          ? e.message
+          : t('createBusiness.step5.error_registration_failed')
+      setSubmitErr(msg)
     } finally {
       setSubmitting(false)
     }

@@ -14,6 +14,9 @@ const DEFAULT_GENESIS_API_BASE_URL = 'https://genesis-api-242231160010.me-west1.
 /** Staging dev token from backend guide (entrepreneur role). Override via env in production. */
 const DEV_FALLBACK_BEARER_TOKEN = 'dev-entrepreneur-user1'
 
+/** Staging dev token with admin role — required for `/api/v1/audit-trail`, `/api/v1/users`, monitoring admin routes. */
+const DEV_FALLBACK_ADMIN_BEARER_TOKEN = 'dev-admin-test'
+
 export function getGenesisApiBaseUrl(): string {
   const raw = import.meta.env.VITE_GENESIS_API_BASE_URL
   const fromEnv = typeof raw === 'string' ? raw.trim().replace(/\/$/, '') : ''
@@ -28,10 +31,16 @@ export function getGenesisApiBearerToken(): string {
   return ''
 }
 
-/** Optional admin JWT for `/admin` monitoring & audit APIs (e.g. staging `dev-admin-test`). */
+/**
+ * Admin/staging JWT for `/admin` routes (`audit-trail`, `users`, monitoring).
+ * In `npm run dev`, defaults to {@link DEV_FALLBACK_ADMIN_BEARER_TOKEN} when unset so admin pages work
+ * even if Firebase supplies an entrepreneur-only JWT. Production: set `VITE_GENESIS_ADMIN_BEARER_TOKEN` or rely on an admin Firebase user.
+ */
 export function getGenesisAdminApiBearerToken(): string {
   const raw = import.meta.env.VITE_GENESIS_ADMIN_BEARER_TOKEN
-  return typeof raw === 'string' ? raw.trim() : ''
+  if (typeof raw === 'string' && raw.trim()) return raw.trim()
+  if (import.meta.env.DEV) return DEV_FALLBACK_ADMIN_BEARER_TOKEN
+  return ''
 }
 
 export function getFirebaseWebConfig(): {
