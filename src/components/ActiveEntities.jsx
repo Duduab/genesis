@@ -40,7 +40,7 @@ export default function ActiveEntities() {
           </p>
         </div>
         <Link
-          to="/entities"
+          to="/businesses"
           className="group flex items-center gap-1 text-sm font-medium text-genesis-600 transition-colors hover:text-genesis-700"
         >
           {t('entities.manageEntity')}

@@ -6,6 +6,8 @@ import {
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
 import type { DashboardBusinessProfile } from '../dashboard/dashboardBusinessProfileStorage'
 import { formatNisFull } from '../utils/formatNis'
+import { useDashboardStatsQuery } from '../hooks/useDashboardStatsQuery'
+import { normalizeDashboardStats } from '../utils/normalizeDashboardStats'
 
 function hashProfile(b: DashboardBusinessProfile): number {
   const s = `${b.categoryId}-${b.subTypeId}-${b.budgetNis}-${b.expectedMonthlyRevenueNis}`
@@ -165,7 +167,8 @@ function KpiCard({
 
 export default function DashboardHeader() {
   const { t, locale } = useI18n()
-  const { activeBusiness } = useActiveBusiness()
+  const { activeBusiness, activeBusinessId } = useActiveBusiness()
+  const statsQ = useDashboardStatsQuery(activeBusinessId, { enabled: Boolean(activeBusinessId) })
 
   const profile = useMemo(
     () => loadEffectiveBusinessProfileWithActive(t, activeBusiness),
@@ -206,72 +209,88 @@ export default function DashboardHeader() {
     }
   }, [profile, seed, locale])
 
+  const apiCards = useMemo(() => {
+    const n = normalizeDashboardStats(statsQ.data)
+    return n?.length ? n.slice(0, 5) : null
+  }, [statsQ.data])
+
+  const fallbackSlots = useMemo(
+    () => [
+      {
+        label: t('dashboard.kpi_analysis'),
+        value: `${kpis.profitPct}%`,
+        sublabel: interpolate(t('dashboard.kpi.analysis.vsMarket'), { delta: String(kpis.marketDelta) }),
+        gaugePct: clamp(40 + (seed % 45), 35, 95),
+        linearPct: clamp(48 + (seed % 40), 40, 95),
+        goalLabel: t('dashboard.kpi.common.goalTrack'),
+        bars: kpis.barsAnalysis,
+      },
+      {
+        label: t('dashboard.kpi_revenue'),
+        value: kpis.revenueFormatted,
+        sublabel: t('dashboard.kpi.revenue.sublabel'),
+        gaugePct: kpis.revenueGauge,
+        linearPct: kpis.revenueLinear,
+        goalLabel: t('dashboard.kpi.common.currentVsGoal'),
+        bars: kpis.barsRevenue,
+      },
+      {
+        label: t('dashboard.kpi_employees'),
+        value: kpis.employees,
+        sublabel: t('dashboard.kpi.employees.status'),
+        gaugePct: kpis.empGauge,
+        linearPct: kpis.empGauge,
+        goalLabel: t('dashboard.kpi.common.capacityTrack'),
+        bars: kpis.barsEmp,
+      },
+      {
+        label: t('dashboard.kpi_budget'),
+        value: kpis.budgetFormatted,
+        sublabel: interpolate(t('dashboard.kpi.budget.utilized'), { pct: String(kpis.budgetUsedPct) }),
+        gaugePct: kpis.budgetUsedPct,
+        linearPct: kpis.budgetUsedPct,
+        goalLabel: t('dashboard.kpi.common.spentVsPlan'),
+        bars: kpis.barsBudget,
+      },
+      {
+        label: t('dashboard.kpi_setup_progress'),
+        value: interpolate(t('dashboard.kpi.setup.tasksValue'), { count: kpis.setupTasks }),
+        sublabel: t('dashboard.kpi.setup.sublabel'),
+        gaugePct: kpis.setupPct,
+        linearPct: kpis.setupPct,
+        goalLabel: t('dashboard.kpi.common.launchProgress'),
+        bars: kpis.barsSetup,
+      },
+    ],
+    [kpis, seed, t],
+  )
+
+  const themes: Theme[] = ['purple', 'green', 'cyan', 'orange', 'blue']
+
   return (
     <div className="mb-8 animate-fade-in">
       <h2 className="text-sm font-bold text-surface-800 dark:text-surface-100">{t('dashboard.kpi.sectionTitle')}</h2>
       <p className="mt-0.5 text-xs text-surface-500 dark:text-surface-400">{t('dashboard.kpi.sectionSubtitle')}</p>
 
       <div className="mt-4 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:auto-rows-fr sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:items-stretch lg:grid-cols-5 [&::-webkit-scrollbar]:hidden">
-        <div className="flex h-full min-h-[268px] w-full min-w-[85vw] snap-center sm:min-h-0 sm:min-w-0">
-          <KpiCard
-            theme="purple"
-            label={t('dashboard.kpi_analysis')}
-            value={`${kpis.profitPct}%`}
-            sublabel={interpolate(t('dashboard.kpi.analysis.vsMarket'), { delta: String(kpis.marketDelta) })}
-            gaugePct={clamp(40 + (seed % 45), 35, 95)}
-            bars={kpis.barsAnalysis}
-            linearPct={clamp(48 + (seed % 40), 40, 95)}
-            goalLabel={t('dashboard.kpi.common.goalTrack')}
-          />
-        </div>
-        <div className="flex h-full min-h-[268px] w-full min-w-[85vw] snap-center sm:min-h-0 sm:min-w-0">
-          <KpiCard
-            theme="green"
-            label={t('dashboard.kpi_revenue')}
-            value={kpis.revenueFormatted}
-            sublabel={t('dashboard.kpi.revenue.sublabel')}
-            gaugePct={kpis.revenueGauge}
-            bars={kpis.barsRevenue}
-            linearPct={kpis.revenueLinear}
-            goalLabel={t('dashboard.kpi.common.currentVsGoal')}
-          />
-        </div>
-        <div className="flex h-full min-h-[268px] w-full min-w-[85vw] snap-center sm:min-h-0 sm:min-w-0">
-          <KpiCard
-            theme="cyan"
-            label={t('dashboard.kpi_employees')}
-            value={kpis.employees}
-            sublabel={t('dashboard.kpi.employees.status')}
-            gaugePct={kpis.empGauge}
-            bars={kpis.barsEmp}
-            linearPct={kpis.empGauge}
-            goalLabel={t('dashboard.kpi.common.capacityTrack')}
-          />
-        </div>
-        <div className="flex h-full min-h-[268px] w-full min-w-[85vw] snap-center sm:min-h-0 sm:min-w-0">
-          <KpiCard
-            theme="orange"
-            label={t('dashboard.kpi_budget')}
-            value={kpis.budgetFormatted}
-            sublabel={interpolate(t('dashboard.kpi.budget.utilized'), { pct: String(kpis.budgetUsedPct) })}
-            gaugePct={kpis.budgetUsedPct}
-            bars={kpis.barsBudget}
-            linearPct={kpis.budgetUsedPct}
-            goalLabel={t('dashboard.kpi.common.spentVsPlan')}
-          />
-        </div>
-        <div className="flex h-full min-h-[268px] w-full min-w-[85vw] snap-center sm:min-h-0 sm:min-w-0">
-          <KpiCard
-            theme="blue"
-            label={t('dashboard.kpi_setup_progress')}
-            value={interpolate(t('dashboard.kpi.setup.tasksValue'), { count: kpis.setupTasks })}
-            sublabel={t('dashboard.kpi.setup.sublabel')}
-            gaugePct={kpis.setupPct}
-            bars={kpis.barsSetup}
-            linearPct={kpis.setupPct}
-            goalLabel={t('dashboard.kpi.common.launchProgress')}
-          />
-        </div>
+        {themes.map((theme, i) => {
+          const api = apiCards?.[i]
+          const fb = fallbackSlots[i]
+          return (
+            <div key={theme + String(i)} className="flex h-full min-h-[268px] w-full min-w-[85vw] snap-center sm:min-h-0 sm:min-w-0">
+              <KpiCard
+                theme={theme}
+                label={api?.label ?? fb.label}
+                value={api?.value ?? fb.value}
+                sublabel={api?.sublabel ?? fb.sublabel}
+                gaugePct={api != null ? clamp(api.gaugePct, 0, 100) : fb.gaugePct}
+                bars={fb.bars}
+                linearPct={api != null ? clamp(api.linearPct, 0, 100) : fb.linearPct}
+                goalLabel={api?.goalLabel ?? fb.goalLabel}
+              />
+            </div>
+          )
+        })}
       </div>
     </div>
   )

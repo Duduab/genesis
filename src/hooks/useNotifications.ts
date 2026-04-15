@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchNotifications } from '../api/genesis/notificationsApi'
 import type { GenesisNotificationItem } from '../types/notification'
+import { POLL_MS_DASHBOARD, refetchIntervalWithVisibilityAndBackoff } from '../lib/genesisPolling'
 
-export function useNotifications(open: boolean): {
+const NOTIFICATIONS_QUERY_KEY = ['notifications'] as const
+
+export function useNotifications(open: boolean, options?: { enabled?: boolean }): {
   items: GenesisNotificationItem[]
   loading: boolean
   error: string | null
@@ -12,43 +16,23 @@ export function useNotifications(open: boolean): {
   markRead: (notificationId: string) => void
   markAllRead: () => void
 } {
-  const [tick, setTick] = useState(0)
-  const [items, setItems] = useState<GenesisNotificationItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const qc = useQueryClient()
   const [localRead, setLocalRead] = useState<Set<string>>(() => new Set())
 
-  const refetch = useCallback(() => setTick((n) => n + 1), [])
+  const queryEnabled = options?.enabled !== false
 
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    setError(null)
-    ;(async () => {
-      try {
-        const data = await fetchNotifications()
-        if (!cancelled) {
-          setItems(data.items)
-          setError(null)
-        }
-      } catch {
-        if (!cancelled) {
-          setItems([])
-          setError('topHeader.notificationsLoadFailed')
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [tick])
+  const q = useQuery({
+    queryKey: NOTIFICATIONS_QUERY_KEY,
+    queryFn: fetchNotifications,
+    enabled: queryEnabled,
+    refetchInterval: queryEnabled ? refetchIntervalWithVisibilityAndBackoff(POLL_MS_DASHBOARD) : false,
+  })
 
-  useEffect(() => {
-    if (!open) return
-    setTick((n) => n + 1)
-  }, [open])
+  const refetch = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY })
+  }, [qc])
+
+  const items = q.data?.items ?? []
 
   const isUnread = useCallback(
     (n: GenesisNotificationItem) => !n.read && !localRead.has(n.notification_id),
@@ -71,5 +55,18 @@ export function useNotifications(open: boolean): {
     })
   }, [items])
 
-  return { items, loading, error, effectiveUnread, isItemUnread: isUnread, refetch, markRead, markAllRead }
+  useEffect(() => {
+    if (open) refetch()
+  }, [open, refetch])
+
+  return {
+    items,
+    loading: q.isLoading || q.isFetching,
+    error: q.isError ? 'topHeader.notificationsLoadFailed' : null,
+    effectiveUnread,
+    isItemUnread: isUnread,
+    refetch,
+    markRead,
+    markAllRead,
+  }
 }

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useI18n } from '../i18n/I18nContext'
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
-import { useBusinessAgents } from '../hooks/useBusinessAgents'
+import { useAgentActivityListQuery } from '../hooks/useAgentActivityListQuery'
 import { loadPersistedGenesisBusinesses } from '../dashboard/genesisBusinessStorage'
 import { mapPersistedBusinessToEntityView } from '../dashboard/mapPersistedBusinessToEntityView'
 import { getAgentPresentation } from '../config/agentPresentation'
@@ -22,48 +22,9 @@ import {
 
 const ENTITY_ALL = '__all__'
 
-/** Static orchestrator-only audit entries (all other agents come from the API). */
-const ORCHESTRATOR_ACTIVITY = [
-  {
-    id: 101,
-    at: '2026-03-16T10:31:00Z',
-    agent: 'orchestrator',
-    entity: 'Apex Dynamics Ltd.',
-    action: 'Dispatched GovReg-Agent and TaxFin-Agent for new company setup',
-    status: 'Completed',
-    payload: {
-      type: 'orchestration',
-      action: 'parallel_dispatch',
-      agents_dispatched: ['GovReg-Agent', 'TaxFin-Agent'],
-      tasks: ['company_registration', 'vat_registration'],
-      entity: 'Apex Dynamics Ltd.',
-      triggered_by: 'user_chat',
-      session_id: 'SESS-2026-0316-1030',
-    },
-  },
-  {
-    id: 102,
-    at: '2026-03-16T07:55:00Z',
-    agent: 'orchestrator',
-    entity: 'Alpha Tech Ltd.',
-    action: 'Morning compliance check — all entities passed',
-    status: 'Completed',
-    payload: {
-      type: 'compliance_sweep',
-      entities_checked: 6,
-      passed: 6,
-      failed: 0,
-      warnings: 1,
-      warning_details: [{ entity: 'Nova Digital Solutions', issue: 'VAT registration pending > 30 days' }],
-      duration_ms: 1850,
-      next_scheduled: '2026-03-17T07:55:00Z',
-    },
-  },
-]
-
 const statusConfig = {
   Completed: { style: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20', icon: CheckCircle2, tKey: 'activity.statusSuccess' },
-  'Awaiting Action': { style: 'bg-amber-50 text-amber-700 ring-amber-600/20', icon: AlertCircle, tKey: 'activity.statusPending' },
+  'Awaiting Action': { style: 'bg-amber-50 text-amber-700 ring-emerald-600/20', icon: AlertCircle, tKey: 'activity.statusPending' },
   Failed: { style: 'bg-red-50 text-red-700 ring-red-600/20', icon: XCircle, tKey: 'activity.statusError' },
   'In Progress': { style: 'bg-blue-50 text-blue-700 ring-blue-600/20', icon: Clock, tKey: 'activity.statusInProgress' },
   'Not Started': { style: 'bg-surface-100 text-surface-500 ring-surface-400/20', icon: Clock, tKey: 'activity.statusNotStarted' },
@@ -90,58 +51,39 @@ function formatActivityTime(d, locale) {
   return d.toLocaleTimeString(tag, { hour: 'numeric', minute: '2-digit' })
 }
 
-function formatHumanLastAction(raw) {
-  if (!raw || typeof raw !== 'string') return '—'
-  return raw
-    .split('_')
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ')
+function mapApiStatusToDisplay(raw) {
+  const u = String(raw || '').toLowerCase()
+  if (u === 'completed') return 'Completed'
+  if (u === 'error') return 'Failed'
+  if (u === 'pending_approval') return 'Awaiting Action'
+  if (u === 'in_progress') return 'In Progress'
+  return 'Not Started'
 }
 
-function mapApiAgentStatus(raw) {
-  const u = String(raw || '').toUpperCase()
-  const m = {
-    SUCCESS: 'Completed',
-    IN_PROGRESS: 'In Progress',
-    NOT_STARTED: 'Not Started',
-    FAILED: 'Failed',
-    PENDING: 'Awaiting Action',
+function mapStatusFilterToApi(statusFilter) {
+  if (statusFilter === 'Completed') return 'completed'
+  if (statusFilter === 'Failed') return 'error'
+  if (statusFilter === 'Awaiting Action') return 'pending_approval'
+  if (statusFilter === 'In Progress') return 'in_progress'
+  return undefined
+}
+
+function mapActivityItemToRow(row, businessName, locale) {
+  const completed = new Date(row.created_at)
+  const sortBase = Number.isNaN(completed.getTime()) ? Date.now() : completed.getTime()
+  const displayDate = Number.isNaN(completed.getTime()) ? new Date() : completed
+  return {
+    id: row.activity_id,
+    agent: row.agent_id,
+    time: Number.isNaN(completed.getTime()) ? '—' : formatActivityTime(completed, locale),
+    dateKey: dateKeyFromDate(displayDate),
+    entity: businessName || '—',
+    action: row.description || row.action,
+    status: mapApiStatusToDisplay(row.status),
+    payload: row,
+    sortAt: sortBase,
+    source: 'api',
   }
-  return m[u] || 'Not Started'
-}
-
-function mapApiAgentsToActivity(apiAgents, businessName, locale) {
-  return apiAgents.map((row, i) => {
-    const completed = row.completed_at ? new Date(row.completed_at) : null
-    const sortBase = completed?.getTime() ?? Date.now() - i * 60_000
-    const displayDate = completed ?? new Date()
-    return {
-      id: `api-${row.agent_id}`,
-      agent: row.agent_id,
-      time: completed ? formatActivityTime(completed, locale) : '—',
-      dateKey: dateKeyFromDate(displayDate),
-      entity: businessName || '—',
-      action: formatHumanLastAction(row.last_action),
-      status: mapApiAgentStatus(row.status),
-      payload: row,
-      sortAt: sortBase,
-      source: 'api',
-    }
-  })
-}
-
-function orchestratorToTimelineItems(locale) {
-  return ORCHESTRATOR_ACTIVITY.map((raw) => {
-    const d = new Date(raw.at)
-    return {
-      ...raw,
-      time: formatActivityTime(d, locale),
-      dateKey: dateKeyFromDate(d),
-      sortAt: d.getTime(),
-      source: 'orchestrator',
-    }
-  })
 }
 
 function SelectDropdown({ value, onChange, options, label, t }) {
@@ -282,28 +224,27 @@ export default function AgentActivityPage() {
     return { businessId: id, businessName: name }
   }, [activeBusinessId, activeViewModel, locale])
 
-  const { agents: apiAgents, loading: agentsLoading, error: agentsError } = useBusinessAgents(businessId)
-
-  const orchestratorItems = useMemo(() => orchestratorToTimelineItems(locale), [locale])
-
-  const apiTimelineItems = useMemo(
-    () => mapApiAgentsToActivity(apiAgents, businessName, locale),
-    [apiAgents, businessName, locale],
+  const statusApi = mapStatusFilterToApi(statusFilter)
+  const { data: activityPayload, isLoading, isError, refetch } = useAgentActivityListQuery(
+    {
+      business_id: businessId,
+      agent: agentFilter === 'all' ? undefined : agentFilter,
+      status: statusApi,
+    },
+    { enabled: Boolean(businessId), limit: 200 },
   )
 
-  const allActivity = useMemo(() => {
-    const merged = [...orchestratorItems, ...apiTimelineItems]
-    merged.sort((a, b) => (b.sortAt ?? 0) - (a.sortAt ?? 0))
-    return merged
-  }, [orchestratorItems, apiTimelineItems])
+  const apiItems = useMemo(() => activityPayload?.items ?? [], [activityPayload?.items])
+
+  const apiTimelineItems = useMemo(
+    () => apiItems.map((row) => mapActivityItemToRow(row, businessName, locale)),
+    [apiItems, businessName, locale],
+  )
 
   const agentFilterOptions = useMemo(() => {
-    const opts = [
-      { value: 'all', tKey: 'activity.allAgents' },
-      { value: 'orchestrator', tKey: 'activity.agentOrchestrator' },
-    ]
-    const seen = new Set(['orchestrator'])
-    for (const row of apiAgents) {
+    const opts = [{ value: 'all', tKey: 'activity.allAgents' }]
+    const seen = new Set()
+    for (const row of apiItems) {
       if (seen.has(row.agent_id)) continue
       seen.add(row.agent_id)
       const meta = getAgentPresentation(row.agent_id)
@@ -314,21 +255,15 @@ export default function AgentActivityPage() {
       })
     }
     return opts
-  }, [apiAgents])
+  }, [apiItems])
 
   const entityOptions = useMemo(() => {
-    const names = [...new Set(allActivity.map((a) => a.entity).filter(Boolean))]
+    const names = [...new Set(apiTimelineItems.map((a) => a.entity).filter(Boolean))]
     names.sort()
     return [ENTITY_ALL, ...names]
-  }, [allActivity])
+  }, [apiTimelineItems])
 
-  useEffect(() => {
-    setAgentFilter('all')
-    setEntityFilter(ENTITY_ALL)
-    setStatusFilter('All')
-  }, [businessId])
-
-  const filtered = allActivity.filter((item) => {
+  const filtered = apiTimelineItems.filter((item) => {
     const matchAgent = agentFilter === 'all' || item.agent === agentFilter
     const matchEntity = entityFilter === ENTITY_ALL || item.entity === entityFilter
     const matchStatus = statusFilter === 'All' || item.status === statusFilter
@@ -347,13 +282,13 @@ export default function AgentActivityPage() {
     return acc
   }, [filtered])
 
-  const totalActions = allActivity.length
-  const completedCount = allActivity.filter((d) => d.status === 'Completed').length
-  const pendingCount = allActivity.filter((d) => d.status === 'Awaiting Action' || d.status === 'Not Started').length
-  const failedCount = allActivity.filter((d) => d.status === 'Failed').length
+  const totalActions = apiTimelineItems.length
+  const completedCount = apiTimelineItems.filter((d) => d.status === 'Completed').length
+  const pendingCount = apiTimelineItems.filter((d) => d.status === 'Awaiting Action' || d.status === 'Not Started').length
+  const failedCount = apiTimelineItems.filter((d) => d.status === 'Failed').length
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div key={businessId ?? 'none'} className="mx-auto max-w-5xl">
       <div className="animate-fade-in">
         <h1 className="text-2xl font-bold text-surface-900">{t('activity.title')}</h1>
         <p className="mt-1 text-sm text-surface-500">{t('activity.subtitle')}</p>
@@ -364,9 +299,12 @@ export default function AgentActivityPage() {
         ) : null}
       </div>
 
-      {agentsError && businessId ? (
+      {isError && businessId ? (
         <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
-          {t(agentsError)}
+          {t('activity.loadActivityFailed')}
+          <button type="button" className="ms-2 font-semibold text-genesis-700 underline" onClick={() => refetch()}>
+            {t('common.retry')}
+          </button>
         </div>
       ) : null}
 
@@ -435,7 +373,7 @@ export default function AgentActivityPage() {
       </div>
 
       <div className="mt-6">
-        {agentsLoading && businessId ? (
+        {isLoading && businessId ? (
           <div className="mb-6 flex items-center gap-2 rounded-lg border border-surface-200 bg-white px-4 py-3 text-sm text-surface-600">
             <Loader2 className="h-4 w-4 animate-spin text-genesis-600" aria-hidden />
             {t('activity.loadingAgents')}

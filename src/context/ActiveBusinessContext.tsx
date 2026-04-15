@@ -15,9 +15,11 @@ import {
 } from '../dashboard/genesisBusinessStorage'
 import {
   GENESIS_ACTIVE_BUSINESS_CHANGED_EVENT,
+  GENESIS_ACTIVE_BUSINESS_ID_KEY,
   readActiveBusinessId,
   writeActiveBusinessId,
 } from '../dashboard/activeBusinessStorage'
+import { useRouter } from '../router'
 import {
   mapPersistedBusinessToEntityView,
   type GenesisEntityViewModel,
@@ -44,10 +46,21 @@ function resolveRow(
 
 export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
   const { locale } = useI18n()
+  const { pathBusinessId } = useRouter()
   const [activeBusinessId, setActiveBusinessId] = useState<string | null>(() => readActiveBusinessId())
   const [listTick, setListTick] = useState(0)
 
   const bumpList = useCallback(() => setListTick((n) => n + 1), [])
+
+  useEffect(() => {
+    if (!pathBusinessId) return
+    const list = loadPersistedGenesisBusinesses()
+    if (!list.some((b) => b.businessId === pathBusinessId)) return
+    if (pathBusinessId !== readActiveBusinessId()) {
+      writeActiveBusinessId(pathBusinessId)
+      setActiveBusinessId(pathBusinessId)
+    }
+  }, [pathBusinessId])
 
   useEffect(() => {
     const onCustom = () => bumpList()

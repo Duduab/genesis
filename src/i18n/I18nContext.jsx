@@ -11,7 +11,7 @@ function getNestedValue(obj, path) {
 }
 
 export function I18nProvider({ children }) {
-  const [locale, setLocale] = useState(() => localStorage.getItem('genesis-locale') || 'en')
+  const [locale, setLocale] = useState(() => localStorage.getItem('genesis-locale') || 'he')
   const dir = locale === 'he' ? 'rtl' : 'ltr'
 
   useEffect(() => {

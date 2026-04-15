@@ -96,13 +96,19 @@ export interface GenesisRequestOptions extends Omit<RequestInit, 'body'> {
   idempotencyKey?: string
   /** When false, omit Authorization (rare). */
   auth?: boolean
+  /** When set, used as Bearer for this request instead of the configured provider / env token. */
+  bearerToken?: string | null
 }
 
 /**
  * Low-level JSON request. Throws {@link GenesisApiError} on error responses.
  */
+export async function resolveGenesisBearerToken(): Promise<string | null> {
+  return resolveBearerToken()
+}
+
 export async function genesisRequestJson<T>(options: GenesisRequestOptions): Promise<T> {
-  const { path, body, idempotencyKey, auth = true, headers: initHeaders, ...rest } = options
+  const { path, body, idempotencyKey, auth = true, bearerToken, headers: initHeaders, ...rest } = options
   const url = resolveGenesisRequestUrl(path)
 
   const run = async (bearerOverride: string | null) => {
@@ -112,7 +118,10 @@ export async function genesisRequestJson<T>(options: GenesisRequestOptions): Pro
       headers.set('Content-Type', 'application/json')
     }
     if (auth) {
-      const token = bearerOverride ?? (await resolveBearerToken())
+      let token: string | null = null
+      if (bearerOverride?.trim()) token = bearerOverride.trim()
+      else if (bearerToken != null && String(bearerToken).trim()) token = String(bearerToken).trim()
+      else token = await resolveBearerToken()
       if (token) headers.set('Authorization', `Bearer ${token}`)
     }
     if (idempotencyKey) headers.set('Idempotency-Key', idempotencyKey)

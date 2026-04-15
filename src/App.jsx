@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import DashboardLayout from './layouts/DashboardLayout'
 import ActiveEntities from './components/ActiveEntities'
 import RecentAgentActivity from './components/RecentAgentActivity'
@@ -26,17 +26,51 @@ import { useI18n } from './i18n/I18nContext'
 import { useRouter } from './router'
 import { useAuth } from './auth/AuthContext'
 import { useActiveBusiness } from './context/ActiveBusinessContext'
-
-const statsMeta = [
-  { tKey: 'dashboard.statAgents', value: '3', changeTKey: 'dashboard.statChangeWeek', icon: Activity, color: 'text-emerald-600 bg-emerald-50' },
-  { tKey: 'dashboard.statEntities', value: '12', changeTKey: 'dashboard.statChangeMonth', icon: Building2, color: 'text-genesis-600 bg-genesis-50' },
-  { tKey: 'dashboard.statCompliance', value: '98%', changeTKey: 'dashboard.statChangeExcellent', icon: ShieldCheck, color: 'text-amber-600 bg-amber-50' },
-  { tKey: 'dashboard.statRevenue', value: '+24%', changeTKey: 'dashboard.statChangeVsQuarter', icon: TrendingUp, color: 'text-blue-600 bg-blue-50' },
-]
+import { useDashboardOverviewQuery } from './hooks/useDashboardOverviewQuery'
+import { useNotifications } from './hooks/useNotifications'
+import ApprovalBanner from './components/ApprovalBanner'
+import { formatNisFull } from './utils/formatNis'
+import { AdminAuthProvider } from './context/AdminAuthContext'
+import AdminApp from './admin/AdminApp.jsx'
 
 function DashboardPage() {
-  const { t } = useI18n()
-  const { activeViewModel } = useActiveBusiness()
+  const { t, locale } = useI18n()
+  const { activeViewModel, activeBusinessId } = useActiveBusiness()
+  const { data: overview } = useDashboardOverviewQuery(activeBusinessId, { enabled: Boolean(activeBusinessId) })
+
+  const statsMeta = useMemo(() => {
+    const fmt = (n) => (n == null || Number.isNaN(Number(n)) ? '—' : String(n))
+    return [
+      {
+        tKey: 'dashboard.statAgents',
+        value: fmt(overview?.active_agents),
+        changeTKey: 'dashboard.statChangeWeek',
+        icon: Activity,
+        color: 'text-emerald-600 bg-emerald-50',
+      },
+      {
+        tKey: 'dashboard.statEntities',
+        value: fmt(overview?.total_businesses),
+        changeTKey: 'dashboard.statChangeMonth',
+        icon: Building2,
+        color: 'text-genesis-600 bg-genesis-50',
+      },
+      {
+        tKey: 'dashboard.statCompliance',
+        value: overview?.progress_percent != null ? `${Math.round(overview.progress_percent)}%` : '—',
+        changeTKey: 'dashboard.statChangeExcellent',
+        icon: ShieldCheck,
+        color: 'text-amber-600 bg-amber-50',
+      },
+      {
+        tKey: 'dashboard.statRevenue',
+        value: overview?.monthly_cost_ils != null ? formatNisFull(overview.monthly_cost_ils, locale) : '—',
+        changeTKey: 'dashboard.statChangeVsQuarter',
+        icon: TrendingUp,
+        color: 'text-blue-600 bg-blue-50',
+      },
+    ]
+  }, [overview, locale])
   const welcomeTitle =
     activeViewModel != null
       ? t('dashboard.welcomeManaged').replaceAll('{{name}}', activeViewModel.name)
@@ -90,7 +124,7 @@ function DashboardPage() {
           <ActiveEntities />
         </div>
         <div className="lg:col-span-2">
-          <RecentAgentActivity />
+          <RecentAgentActivity feed={overview?.recent_activity ?? null} homeBusinessName={activeViewModel?.name ?? ''} />
         </div>
       </div>
 
@@ -101,7 +135,7 @@ function DashboardPage() {
         <div className="lg:col-span-3">
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
             <WeeklyTasksChart />
-            <EntityStatusChart />
+            <EntityStatusChart statusCounts={overview?.status_counts ?? null} />
           </div>
         </div>
       </div>
@@ -238,11 +272,31 @@ function DashboardPage() {
 export default function App() {
   const { page, navigate } = useRouter()
   const { isAuthenticated } = useAuth()
+  const { activeBusinessId } = useActiveBusiness()
+  const { data: overview } = useDashboardOverviewQuery(activeBusinessId, {
+    enabled: isAuthenticated && Boolean(activeBusinessId),
+  })
+  const { items: notifItems, isItemUnread } = useNotifications(false, { enabled: isAuthenticated })
+  const pendingBadge = useMemo(() => {
+    if (activeBusinessId && overview?.pending_approvals != null) {
+      return Math.max(0, Math.floor(Number(overview.pending_approvals)))
+    }
+    return notifItems.filter((n) => n.type === 'approval_required' && isItemUnread(n)).length
+  }, [activeBusinessId, overview, notifItems, isItemUnread])
+
   const [chatOpen, setChatOpen] = useState(false)
   const [addBusinessOpen, setAddBusinessOpen] = useState(false)
 
   const openChat = () => setChatOpen(true)
   const openAddBusiness = () => setAddBusinessOpen(true)
+
+  if (page === 'admin') {
+    return (
+      <AdminAuthProvider>
+        <AdminApp />
+      </AdminAuthProvider>
+    )
+  }
 
   if (page === 'landing') return <LandingPage />
   if (page === 'login') return <LoginPage />
@@ -274,7 +328,14 @@ export default function App() {
   }
 
   return (
-    <DashboardLayout activePage={page}>
+    <DashboardLayout
+      activePage={page}
+      topSlot={
+        pendingBadge > 0 ? (
+          <ApprovalBanner count={pendingBadge} onReview={() => setChatOpen(true)} />
+        ) : null
+      }
+    >
       <div key={page} className="animate-fade-in">
         {renderPage()}
       </div>
@@ -284,15 +345,18 @@ export default function App() {
       <AddBusinessWizardModal open={addBusinessOpen} onClose={() => setAddBusinessOpen(false)} />
 
       <button
+        type="button"
         onClick={openChat}
         className={`btn-authora-gradient btn-authora-gradient--on-dark fixed bottom-6 end-6 z-40 flex h-14 w-14 items-center justify-center rounded-2xl transition-all hover:scale-105 active:scale-95 animate-glow-pulse ${
           chatOpen ? 'pointer-events-none opacity-0' : 'opacity-100'
         }`}
       >
         <MessageSquareText className="h-6 w-6" />
-        <span className="absolute -end-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-white">
-          2
-        </span>
+        {pendingBadge > 0 ? (
+          <span className="absolute -end-0.5 -top-0.5 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white ring-2 ring-white">
+            {pendingBadge > 9 ? '9+' : pendingBadge}
+          </span>
+        ) : null}
       </button>
     </DashboardLayout>
   )

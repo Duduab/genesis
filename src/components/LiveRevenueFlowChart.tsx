@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useI18n } from '../i18n/I18nContext'
 import { useTheme } from '../theme/ThemeContext'
+import { useActiveBusiness } from '../context/ActiveBusinessContext'
 import { loadEffectiveBusinessProfile } from '../dashboard/loadEffectiveBusinessProfile'
 import { formatNisFull } from '../utils/formatNis'
 import type { RevenueHistoryPoint } from '../types/revenueChart'
+import { useDashboardRevenueChartQuery } from '../hooks/useDashboardRevenueChartQuery'
+import { normalizeDashboardRevenueChart } from '../utils/normalizeDashboardRevenueChart'
 
 function interpolate(template: string, vars: Record<string, string>) {
   return Object.entries(vars).reduce((acc, [k, v]) => acc.replaceAll(`{{${k}}}`, v), template)
@@ -41,10 +45,21 @@ type Props = {
   revenueHistory?: RevenueHistoryPoint[]
 }
 
+function compactAxisNis(n: number): string {
+  if (!Number.isFinite(n)) return ''
+  const a = Math.abs(n)
+  if (a >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (a >= 10_000) return `${Math.round(n / 1000)}k`
+  return String(Math.round(n))
+}
+
 export default function LiveRevenueFlowChart({ revenueHistory }: Props) {
   void revenueHistory
   const { dark } = useTheme()
   const { t, locale, dir } = useI18n()
+  const { activeBusinessId } = useActiveBusiness()
+  const revenueQ = useDashboardRevenueChartQuery(activeBusinessId, { enabled: Boolean(activeBusinessId) })
+  const chartSeries = useMemo(() => normalizeDashboardRevenueChart(revenueQ.data ?? null), [revenueQ.data])
 
   const wave = useMemo(
     () =>
@@ -137,6 +152,98 @@ export default function LiveRevenueFlowChart({ revenueHistory }: Props) {
   const dOrange = anchoredWavePath(chartW, vbH, ampBase * 0.75, 3 * 0.95, tPhase * -0.82 + 3.1, -10 - (seed % 4), waveSamples)
 
   const peakSub = interpolate(t('dashboard.liveChart.peakSub'), { delta: metrics.deltaStr })
+
+  if (chartSeries && chartSeries.points.length >= 2) {
+    const lineData = chartSeries.points.map((p) => ({
+      name: p.label || '—',
+      income: p.income,
+      expenses: p.expenses,
+      profit: p.profit,
+    }))
+    const last = chartSeries.points[chartSeries.points.length - 1]
+    const summaryFormatted = formatNisFull(last?.profit ?? 0, locale)
+
+    return (
+      <div
+        dir={dir}
+        className={
+          dark
+            ? 'relative mb-8 min-h-[min(380px,72vw)] w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#030308] via-[#0a0614] to-[#150a24] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+            : 'relative mb-8 min-h-[min(380px,72vw)] w-full overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white via-slate-50 to-slate-100/95 shadow-sm'
+        }
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            opacity: dark ? 0.22 : 0.45,
+            backgroundImage: dark
+              ? `linear-gradient(rgba(148,163,184,0.12) 1px, transparent 1px),
+               linear-gradient(90deg, rgba(148,163,184,0.12) 1px, transparent 1px)`
+              : `linear-gradient(rgba(15,23,42,0.07) 1px, transparent 1px),
+               linear-gradient(90deg, rgba(15,23,42,0.07) 1px, transparent 1px)`,
+            backgroundSize: '22px 22px',
+          }}
+        />
+        <div className="relative z-10 px-2 pb-2 pt-12 sm:px-4 sm:pt-14">
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={lineData} margin={{ top: 8, right: 8, left: 4, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={dark ? 'rgba(148,163,184,0.2)' : '#e4e7ef'} />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 9, fill: dark ? '#e2e8f0' : '#475569' }}
+                interval={0}
+                angle={-20}
+                textAnchor="end"
+                height={52}
+              />
+              <YAxis
+                tick={{ fontSize: 10, fill: dark ? '#94a3b8' : '#64748b' }}
+                tickFormatter={(v) => compactAxisNis(Number(v))}
+                width={48}
+              />
+              <Tooltip
+                formatter={(value: number | string) => [formatNisFull(Number(value), locale), '']}
+                contentStyle={{ borderRadius: 10, fontSize: 12 }}
+              />
+              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
+              <Line
+                type="monotone"
+                dataKey="income"
+                name={t('dashboard.liveChart.legendRevenue')}
+                stroke={wave.cyanLine}
+                strokeWidth={2}
+                dot={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="expenses"
+                name={t('chart.manual')}
+                stroke={wave.purpleLine}
+                strokeWidth={2}
+                dot={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="profit"
+                name={t('dashboard.metrics.moneyGenesisLabel')}
+                stroke={wave.orangeLine}
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="relative z-10 px-4 pb-4 text-center text-xs text-surface-500 dark:text-surface-400">
+          {t('dashboard.liveChart.averageTitle')}:{' '}
+          <span className="font-semibold text-surface-800 dark:text-surface-200">{summaryFormatted}</span>
+          {revenueQ.isFetching ? (
+            <span className="ms-2 inline-block h-3 w-3 animate-pulse rounded-full bg-genesis-500/80 align-middle" aria-hidden />
+          ) : null}
+        </div>
+        <span className="sr-only">{t('dashboard.liveChart.a11yTitle')}</span>
+      </div>
+    )
+  }
 
   return (
     <div

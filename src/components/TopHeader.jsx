@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   Search,
   Settings,
@@ -11,11 +12,15 @@ import {
   Building2,
   Info,
   Loader2,
+  FileText,
+  Sparkles,
 } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { useRouter, Link } from '../router'
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
 import { useNotifications } from '../hooks/useNotifications'
+import { fetchGlobalSearch } from '../api/genesis/searchApi'
+import { isGenesisApiError } from '../api/genesis/errors'
 
 const mockUser = {
   name: 'David Abrahams',
@@ -38,6 +43,29 @@ function notifVisual(type) {
   }
 }
 
+function useDebouncedValue(value, delayMs) {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebounced(value), delayMs)
+    return () => window.clearTimeout(id)
+  }, [value, delayMs])
+  return debounced
+}
+
+function activityOrDocTitle(row) {
+  if (!row || typeof row !== 'object') return '—'
+  return (
+    row.title ||
+    row.name ||
+    row.summary ||
+    row.description ||
+    row.activity_type ||
+    row.agent_id ||
+    String(row.document_id || row.activity_id || row.business_id || '') ||
+    '—'
+  )
+}
+
 function formatNotifTime(iso, locale, t) {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
@@ -49,6 +77,81 @@ function formatNotifTime(iso, locale, t) {
   }
   const tag = locale === 'he' ? 'he-IL' : 'en-US'
   return d.toLocaleString(tag, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
+
+function GlobalSearchResults({ payload, loading, errorText, t, onNavigate }) {
+  const groups = useMemo(
+    () => [
+      { key: 'businesses', label: t('topHeader.searchGroupBusinesses'), Icon: Building2, items: payload?.businesses ?? [] },
+      { key: 'documents', label: t('topHeader.searchGroupDocuments'), Icon: FileText, items: payload?.documents ?? [] },
+      { key: 'activity', label: t('topHeader.searchGroupActivity'), Icon: Sparkles, items: payload?.activity ?? [] },
+    ],
+    [payload, t],
+  )
+
+  const total = useMemo(() => groups.reduce((n, g) => n + g.items.length, 0), [groups])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-8 text-sm text-surface-500">
+        <Loader2 className="h-5 w-5 shrink-0 animate-spin text-genesis-600" aria-hidden />
+        <span>{t('topHeader.searchLoading')}</span>
+      </div>
+    )
+  }
+
+  if (errorText) {
+    return <p className="px-3 py-4 text-sm text-amber-800 dark:text-amber-200">{errorText}</p>
+  }
+
+  if (total === 0) {
+    return <p className="px-3 py-6 text-center text-sm text-surface-500">{t('topHeader.searchEmpty')}</p>
+  }
+
+  return (
+    <div className="max-h-[min(70vh,28rem)] overflow-y-auto py-1">
+      {groups.map(({ key, label, Icon, items }) => {
+        if (!items.length) return null
+        return (
+          <div key={key} className="border-b border-surface-100 last:border-0 dark:border-surface-800">
+            <div className="sticky top-0 z-10 flex items-center gap-2 bg-surface-50/95 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-surface-500 backdrop-blur-sm dark:bg-surface-900/95 dark:text-surface-400">
+              <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              {label}
+            </div>
+            <ul className="py-0.5" role="list">
+              {items.map((row, idx) => (
+                <li key={`${key}-${row.business_id || row.document_id || row.activity_id || idx}`}>
+                  <button
+                    type="button"
+                    className="flex w-full flex-col items-start gap-0.5 px-3 py-2.5 text-start text-sm transition-colors hover:bg-genesis-50/80 dark:hover:bg-surface-800/80"
+                    onClick={() => onNavigate(key, row)}
+                  >
+                    {key === 'businesses' ? (
+                      <>
+                        <span className="font-medium text-surface-900 dark:text-surface-100">
+                          {row.entrepreneur_name || row.company_name || row.business_id}
+                        </span>
+                        <span className="text-xs text-surface-500">
+                          {[row.business_type, row.global_status].filter(Boolean).join(' · ') || '—'}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-medium text-surface-900 dark:text-surface-100">{activityOrDocTitle(row)}</span>
+                        {row.business_id ? (
+                          <span className="font-mono text-[11px] text-surface-400">business · {String(row.business_id).slice(0, 10)}…</span>
+                        ) : null}
+                      </>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 function NotificationPanel({
@@ -181,8 +284,13 @@ function NotificationPanel({
 export default function TopHeader({ onMenuClick }) {
   const { t, locale } = useI18n()
   const { navigate } = useRouter()
-  const { activeViewModel } = useActiveBusiness()
+  const { activeViewModel, enterBusiness } = useActiveBusiness()
   const [notifOpen, setNotifOpen] = useState(false)
+  const [globalSearchInput, setGlobalSearchInput] = useState('')
+  const [searchDismissed, setSearchDismissed] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const searchWrapRef = useRef(null)
+  const debouncedSearch = useDebouncedValue(globalSearchInput, 320)
 
   const {
     items: notifItems,
@@ -194,12 +302,84 @@ export default function TopHeader({ onMenuClick }) {
     markAllRead,
   } = useNotifications(notifOpen)
 
+  const searchEnabled = debouncedSearch.trim().length >= 1
+  const globalSearchQ = useQuery({
+    queryKey: ['globalSearch', debouncedSearch.trim()],
+    queryFn: () => fetchGlobalSearch({ q: debouncedSearch.trim() }),
+    enabled: searchEnabled,
+    staleTime: 30_000,
+  })
+
+  const showDesktopPanel = globalSearchInput.trim().length >= 1 && !searchDismissed
+
+  useEffect(() => {
+    if (globalSearchInput.trim()) setSearchDismissed(false)
+  }, [globalSearchInput])
+
+  useEffect(() => {
+    if (!showDesktopPanel) return
+    function onDoc(e) {
+      if (searchWrapRef.current && !searchWrapRef.current.contains(e.target)) {
+        setSearchDismissed(true)
+      }
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [showDesktopPanel])
+
+  useEffect(() => {
+    if (!showDesktopPanel && !mobileSearchOpen) return
+    function onKey(e) {
+      if (e.key === 'Escape') {
+        setSearchDismissed(true)
+        setMobileSearchOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showDesktopPanel, mobileSearchOpen])
+
+  const handleSearchNavigate = useCallback(
+    (groupKey, row) => {
+      setSearchDismissed(true)
+      setGlobalSearchInput('')
+      setMobileSearchOpen(false)
+      if (groupKey === 'businesses' && row?.business_id) {
+        enterBusiness(row.business_id)
+        navigate(`/businesses/${row.business_id}`)
+        return
+      }
+      if (groupKey === 'documents') {
+        if (row?.business_id) enterBusiness(row.business_id)
+        navigate('/legal')
+        return
+      }
+      if (groupKey === 'activity') {
+        if (row?.business_id) enterBusiness(row.business_id)
+        navigate('/activity')
+      }
+    },
+    [enterBusiness, navigate],
+  )
+
+  const searchErrorText = globalSearchQ.isError
+    ? isGenesisApiError(globalSearchQ.error)
+      ? globalSearchQ.error.userFacingMessage(t('topHeader.searchError'))
+      : t('topHeader.searchError')
+    : null
+
+  const searchDebouncePending =
+    globalSearchInput.trim().length >= 1 && debouncedSearch.trim() !== globalSearchInput.trim()
+  const searchLoading =
+    searchDebouncePending || globalSearchQ.isPending || (globalSearchQ.isFetching && !globalSearchQ.data)
+
   const handleSettingsClick = () => {
     navigate('/settings')
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-surface-200 bg-surface-50/90 px-4 backdrop-blur-md sm:px-6">
+    <>
+      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-surface-200 bg-surface-50/90 px-4 backdrop-blur-md sm:px-6">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -209,13 +389,35 @@ export default function TopHeader({ onMenuClick }) {
           <Menu className="h-5 w-5" />
         </button>
 
-        <div className="relative hidden sm:block">
+        <div className="relative hidden sm:block" ref={searchWrapRef}>
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
           <input
             type="text"
             placeholder={t('topHeader.searchPlaceholder')}
-            className="h-10 w-72 rounded-lg border border-surface-200 bg-surface-50 ps-10 pe-4 text-sm text-surface-700 placeholder:text-surface-400 outline-none transition-all focus:border-genesis-400 focus:ring-2 focus:ring-genesis-100 lg:w-96"
+            autoComplete="off"
+            value={globalSearchInput}
+            onChange={(e) => setGlobalSearchInput(e.target.value)}
+            onFocus={() => setSearchDismissed(false)}
+            aria-expanded={showDesktopPanel}
+            aria-haspopup="listbox"
+            aria-controls="global-search-results"
+            className="h-10 w-72 rounded-lg border border-surface-200 bg-surface-50 ps-10 pe-4 text-sm text-surface-700 placeholder:text-surface-400 outline-none transition-all focus:border-genesis-400 focus:ring-2 focus:ring-genesis-100 lg:w-96 dark:bg-surface-900 dark:text-surface-100 dark:border-surface-700"
           />
+          {showDesktopPanel ? (
+            <div
+              id="global-search-results"
+              role="listbox"
+              className="animate-slide-up-fade absolute start-0 top-full z-50 mt-1 w-[min(100vw-2rem,28rem)] overflow-hidden rounded-xl border border-surface-200 bg-white shadow-xl dark:border-surface-800 dark:bg-surface-900"
+            >
+              <GlobalSearchResults
+                payload={globalSearchQ.data?.data}
+                loading={searchLoading}
+                errorText={searchErrorText}
+                t={t}
+                onNavigate={handleSearchNavigate}
+              />
+            </div>
+          ) : null}
         </div>
 
         {activeViewModel ? (
@@ -234,7 +436,12 @@ export default function TopHeader({ onMenuClick }) {
       <div className="flex items-center gap-1.5">
         <button
           type="button"
+          onClick={() => {
+            setMobileSearchOpen(true)
+            setSearchDismissed(false)
+          }}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-surface-500 hover:bg-surface-100 hover:text-surface-700 sm:hidden"
+          aria-label={t('topHeader.searchPlaceholder')}
         >
           <Search className="h-5 w-5" />
         </button>
@@ -293,5 +500,55 @@ export default function TopHeader({ onMenuClick }) {
         </button>
       </div>
     </header>
+
+      {mobileSearchOpen ? (
+        <div
+          className="fixed inset-0 z-[60] flex flex-col bg-white sm:hidden dark:bg-surface-950"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('topHeader.searchMobileTitle')}
+        >
+          <div className="flex shrink-0 items-center gap-2 border-b border-surface-200 px-3 py-3 dark:border-surface-800">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileSearchOpen(false)
+                setGlobalSearchInput('')
+                setSearchDismissed(true)
+              }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800"
+              aria-label={t('topHeader.searchMobileClose')}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
+              <input
+                type="search"
+                placeholder={t('topHeader.searchPlaceholder')}
+                autoComplete="off"
+                value={globalSearchInput}
+                onChange={(e) => setGlobalSearchInput(e.target.value)}
+                autoFocus
+                className="h-10 w-full rounded-lg border border-surface-200 bg-surface-50 ps-10 pe-3 text-sm text-surface-700 outline-none focus:border-genesis-400 focus:ring-2 focus:ring-genesis-100 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-100"
+              />
+            </div>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto border-t border-surface-100 dark:border-surface-800">
+            {globalSearchInput.trim().length >= 1 ? (
+              <GlobalSearchResults
+                payload={globalSearchQ.data?.data}
+                loading={searchLoading}
+                errorText={searchErrorText}
+                t={t}
+                onNavigate={handleSearchNavigate}
+              />
+            ) : (
+              <p className="px-4 py-8 text-center text-sm text-surface-500">{t('topHeader.searchMobileHint')}</p>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 }

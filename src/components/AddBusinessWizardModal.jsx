@@ -246,7 +246,7 @@ export default function AddBusinessWizardModal({ open, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#030712]/75 p-3 backdrop-blur-md sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="add-business-modal-title"
@@ -255,54 +255,64 @@ export default function AddBusinessWizardModal({ open, onClose }) {
       }}
     >
       <div
-        className="flex max-h-[min(90vh,880px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#1a0a2e] via-[#12081f] to-[#050208] shadow-2xl sm:max-w-xl"
+        className="animate-fade-in relative flex max-h-[min(94vh,980px)] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-white/[0.14] bg-gradient-to-br from-[#221038] via-[#150a22] to-[#050208] shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_28px_90px_-24px_rgba(0,0,0,0.85),0_0_140px_-30px_rgba(124,58,237,0.42),0_0_90px_-35px_rgba(34,211,238,0.18)] ring-2 ring-violet-500/15 sm:max-w-3xl lg:max-w-[56rem]"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(139,92,246,0.18),transparent)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-15%,rgba(167,139,250,0.22),transparent_55%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_65%_45%_at_100%_100%,rgba(34,211,238,0.1),transparent_50%)]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-        <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-200/70">
+        <header className="relative z-10 flex shrink-0 items-center justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-8 sm:py-6">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-violet-300/80 sm:text-xs">
               {interpolate(t('createBusiness.modalProgress'), { current: String(step), total: '4' })}
             </p>
-            <h2 id="add-business-modal-title" className="truncate text-base font-bold text-white sm:text-lg">
+            <h2
+              id="add-business-modal-title"
+              className="mt-1.5 truncate text-xl font-bold tracking-tight text-white sm:text-2xl lg:text-[1.65rem] lg:leading-tight"
+            >
               {t('createBusiness.modalTitle')}
             </h2>
+            <p className="mt-1 hidden text-sm text-white/45 sm:block">{t('createBusiness.modalTitleSub')}</p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={toggleLocale}
-              className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-semibold text-white/80 transition-colors hover:bg-white/10 sm:text-xs"
+              className="rounded-xl border border-white/20 bg-white/[0.07] px-3 py-2 text-[11px] font-semibold text-white/90 shadow-inner shadow-white/5 transition-all hover:border-white/30 hover:bg-white/10 sm:text-xs"
             >
               {locale === 'en' ? '🇮🇱 עברית' : '🇺🇸 English'}
             </button>
             <button
               type="button"
               onClick={() => onClose?.()}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 text-white/75 transition-all hover:border-white/25 hover:bg-white/10 hover:text-white sm:h-11 sm:w-11"
               aria-label={t('createBusiness.modalClose')}
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </header>
 
-        <div className="relative z-10 flex gap-1 px-4 pt-3 sm:px-5">
+        <div className="relative z-10 flex gap-1.5 px-5 pt-4 sm:px-8 sm:pt-5">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className={`h-1 flex-1 rounded-full ${i <= step ? 'bg-gradient-to-r from-cyan-400 to-violet-500' : 'bg-white/10'}`}
+              className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
+                i <= step
+                  ? 'bg-gradient-to-r from-cyan-400 via-violet-400 to-fuchsia-500 shadow-[0_0_12px_rgba(167,139,250,0.5)]'
+                  : 'bg-white/[0.08]'
+              }`}
             />
           ))}
         </div>
 
-        <div className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5">
+        <div className="relative z-10 min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-7 lg:py-8">
           {step === 1 && (
             <div className="space-y-6">
               <section>
-                <h3 className="mb-3 text-sm font-semibold text-white/90">{t('createBusiness.categoriesHeading')}</h3>
-                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <h3 className="mb-4 text-base font-semibold text-white sm:text-lg">{t('createBusiness.categoriesHeading')}</h3>
+                <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
                   {BUSINESS_CATEGORIES.map((cat) => {
                     const a = ACCENT_DARK[cat.accent] ?? ACCENT_DARK.cyan
                     const isOn = categoryId === cat.id
@@ -311,12 +321,12 @@ export default function AddBusinessWizardModal({ open, onClose }) {
                         key={cat.id}
                         type="button"
                         onClick={() => selectCategory(cat.id)}
-                        className={`flex flex-col items-center gap-2 rounded-xl border bg-white/[0.04] px-2 py-4 text-center transition-all sm:py-5 ${
+                        className={`flex flex-col items-center gap-2.5 rounded-2xl border bg-white/[0.05] px-2 py-5 text-center transition-all sm:gap-3 sm:py-6 lg:py-7 ${
                           isOn ? `${a.ring} ring-2` : a.idle
                         }`}
                       >
-                        <CategoryIcon name={cat.iconName} className="h-7 w-7 text-white/85 sm:h-8 sm:w-8" />
-                        <span className="text-[11px] font-medium leading-tight text-white/90 sm:text-xs">
+                        <CategoryIcon name={cat.iconName} className="h-8 w-8 text-white/90 sm:h-9 sm:w-9 lg:h-10 lg:w-10" />
+                        <span className="text-xs font-medium leading-tight text-white/90 sm:text-[13px]">
                           {t(cat.i18nKey)}
                         </span>
                       </button>
@@ -554,18 +564,18 @@ export default function AddBusinessWizardModal({ open, onClose }) {
         </div>
 
         {submitErr ? (
-          <p className="relative z-10 border-t border-red-500/20 bg-red-950/40 px-4 py-2 text-center text-xs text-red-200 sm:px-5">
+          <p className="relative z-10 border-t border-red-500/20 bg-red-950/40 px-5 py-3 text-center text-sm text-red-200 sm:px-8">
             {submitErr}
           </p>
         ) : null}
 
-        <footer className="relative z-10 flex shrink-0 gap-2 border-t border-white/10 bg-[#0c0814]/80 px-4 py-3 sm:gap-3 sm:px-5">
+        <footer className="relative z-10 flex shrink-0 gap-3 border-t border-white/10 bg-[#0a0612]/90 px-5 py-4 backdrop-blur-sm sm:gap-4 sm:px-8 sm:py-5">
           {step === 1 && (
             <button
               type="button"
               onClick={handleStep1Next}
               disabled={!canProceedStep1}
-              className="btn-authora-gradient flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-[#020617] transition-all active:scale-[0.99] disabled:pointer-events-none disabled:opacity-45"
+              className="btn-authora-gradient flex h-12 w-full items-center justify-center rounded-xl text-base font-semibold text-[#020617] shadow-[0_8px_32px_-8px_rgba(34,211,238,0.45)] transition-all active:scale-[0.99] disabled:pointer-events-none disabled:opacity-45"
             >
               {t('createBusiness.nextStepButton')}
             </button>
@@ -575,7 +585,7 @@ export default function AddBusinessWizardModal({ open, onClose }) {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm font-semibold text-white/90 transition-colors hover:bg-white/10"
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white/90 transition-colors hover:bg-white/10 sm:text-base"
               >
                 <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                 {t('createBusiness.step2.back_button')}
@@ -583,7 +593,7 @@ export default function AddBusinessWizardModal({ open, onClose }) {
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                className="btn-authora-gradient flex flex-[2] items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#020617] transition-all active:scale-[0.99]"
+                className="btn-authora-gradient flex h-12 flex-[2] items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-[#020617] shadow-[0_8px_32px_-8px_rgba(34,211,238,0.45)] transition-all active:scale-[0.99] sm:text-base"
               >
                 <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
                 {t('createBusiness.step2.continue_payment_button')}
@@ -595,7 +605,7 @@ export default function AddBusinessWizardModal({ open, onClose }) {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/70 bg-transparent px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-white/70 bg-transparent px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:text-base"
               >
                 <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                 {t('createBusiness.step3.btn_back')}
@@ -603,7 +613,7 @@ export default function AddBusinessWizardModal({ open, onClose }) {
               <button
                 type="button"
                 onClick={() => setStep(4)}
-                className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2.5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(16,185,129,0.35)] transition-all hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99]"
+                className="flex h-12 flex-[2] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 text-sm font-semibold text-white shadow-[0_0_28px_rgba(16,185,129,0.4)] transition-all hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] sm:text-base"
               >
                 <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
                 {t('createBusiness.step3.btn_continue_location')}
@@ -616,7 +626,7 @@ export default function AddBusinessWizardModal({ open, onClose }) {
                 type="button"
                 onClick={() => setStep(3)}
                 disabled={submitting}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/70 bg-transparent px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-white/70 bg-transparent px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10 disabled:opacity-50 sm:text-base"
               >
                 <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                 {t('createBusiness.step4.btn_back')}
@@ -625,7 +635,7 @@ export default function AddBusinessWizardModal({ open, onClose }) {
                 type="button"
                 onClick={handleFinish}
                 disabled={submitting}
-                className="btn-authora-gradient flex flex-[2] items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#020617] transition-all active:scale-[0.99] disabled:opacity-60"
+                className="btn-authora-gradient flex h-12 flex-[2] items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-[#020617] shadow-[0_8px_32px_-8px_rgba(34,211,238,0.45)] transition-all active:scale-[0.99] disabled:opacity-60 sm:text-base"
               >
                 {submitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

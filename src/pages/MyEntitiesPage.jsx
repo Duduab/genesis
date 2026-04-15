@@ -75,7 +75,7 @@ function EntityCard({ entity, t, onManageBusiness, onEditBusiness, onDeleteBusin
 
   return (
     <div
-      className={`group flex flex-col overflow-hidden rounded-xl border bg-white shadow-sm transition-all hover:border-genesis-200 hover:shadow-lg ${
+      className={`group flex h-full min-h-0 flex-col overflow-hidden rounded-xl border bg-white shadow-sm transition-all hover:border-genesis-200 hover:shadow-lg ${
         isWorkspaceActive ? 'border-genesis-400 ring-2 ring-genesis-200' : 'border-surface-200'
       }`}
     >
@@ -213,7 +213,7 @@ function CreateEntityCard({ onClick, t }) {
     <button
       type="button"
       onClick={onClick}
-      className="group flex min-h-[340px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-surface-300 bg-white/50 p-8 transition-all hover:border-genesis-400 hover:bg-genesis-50/30 hover:shadow-md active:scale-[0.99]"
+      className="group flex h-full w-full min-h-[374px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-surface-300 bg-white/50 p-8 text-center transition-all hover:border-genesis-400 hover:bg-genesis-50/30 hover:shadow-md active:scale-[0.99]"
     >
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-dashed border-surface-300 transition-all group-hover:border-genesis-400 group-hover:bg-genesis-100">
         <Plus className="h-7 w-7 text-surface-400 transition-colors group-hover:text-genesis-600" />
@@ -355,7 +355,11 @@ export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
         ) : (
           <>
             {entities.map((entity, i) => (
-              <div key={entity.key} className="animate-slide-up-fade" style={{ animationDelay: `${i * 75}ms` }}>
+              <div
+                key={entity.key}
+                className="h-full min-h-0 animate-slide-up-fade"
+                style={{ animationDelay: `${i * 75}ms` }}
+              >
                 <EntityCard
                   entity={entity}
                   t={t}
@@ -367,7 +371,10 @@ export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
                 />
               </div>
             ))}
-            <div className="animate-slide-up-fade" style={{ animationDelay: `${entities.length * 75}ms` }}>
+            <div
+              className="h-full min-h-0 animate-slide-up-fade"
+              style={{ animationDelay: `${entities.length * 75}ms` }}
+            >
               <CreateEntityCard onClick={onAddBusiness ?? onOpenChat} t={t} />
             </div>
           </>

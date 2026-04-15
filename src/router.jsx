@@ -2,27 +2,53 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 
 const RouterContext = createContext()
 
-function getPage() {
-  const path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '')
-  return path || 'landing'
+function looksLikeUuid(s) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(s || ''))
+}
+
+export function parseRoute() {
+  const raw = window.location.pathname.replace(/^\//, '').replace(/\/$/, '')
+  const path = raw || 'landing'
+  if (path === 'admin' || path.startsWith('admin/')) {
+    if (path === 'admin') {
+      return { page: 'admin', pathBusinessId: null, adminRoute: 'home' }
+    }
+    const rest = path.slice('admin/'.length)
+    const seg = rest.split('/')[0] || ''
+    if (seg === 'monitoring') return { page: 'admin', pathBusinessId: null, adminRoute: 'monitoring' }
+    if (seg === 'audit') return { page: 'admin', pathBusinessId: null, adminRoute: 'audit' }
+    if (seg === 'users') return { page: 'admin', pathBusinessId: null, adminRoute: 'users' }
+    return { page: 'admin', pathBusinessId: null, adminRoute: 'home' }
+  }
+  if (path === 'businesses' || path === 'entities') {
+    return { page: 'entities', pathBusinessId: null, adminRoute: null }
+  }
+  if (path.startsWith('businesses/')) {
+    const id = path.slice('businesses/'.length).split('/')[0] || ''
+    const pathBusinessId = looksLikeUuid(id) ? id : null
+    return { page: 'entities', pathBusinessId, adminRoute: null }
+  }
+  return { page: path, pathBusinessId: null, adminRoute: null }
 }
 
 export function RouterProvider({ children }) {
-  const [page, setPage] = useState(getPage)
+  const [route, setRoute] = useState(parseRoute)
 
   useEffect(() => {
-    const onPop = () => setPage(getPage())
+    const onPop = () => setRoute(parseRoute())
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
   const navigate = useCallback((to) => {
     window.history.pushState(null, '', to)
-    setPage(getPage())
+    setRoute(parseRoute())
   }, [])
 
   return (
-    <RouterContext.Provider value={{ page, navigate }}>
+    <RouterContext.Provider
+      value={{ page: route.page, pathBusinessId: route.pathBusinessId, adminRoute: route.adminRoute ?? null, navigate }}
+    >
       {children}
     </RouterContext.Provider>
   )

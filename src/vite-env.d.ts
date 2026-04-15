@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_API_KEY?: string
   readonly VITE_FIREBASE_AUTH_DOMAIN?: string
   readonly VITE_FIREBASE_PROJECT_ID?: string
+  /** When true, show legacy demo rows in Mission Control (default off). */
+  readonly VITE_GENESIS_SHOW_DEMO_UI?: string
 }
 
 interface ImportMeta {

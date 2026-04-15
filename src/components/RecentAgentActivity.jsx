@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { CheckCircle2, AlertTriangle, Info, Clock, ArrowRight } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { Link } from '../router'
+import { getAgentPresentation } from '../config/agentPresentation'
 
 const activityVariants = {
   success: {
@@ -33,59 +35,58 @@ const tagMap = {
   inProgress: 'activity.tagInProgress',
 }
 
-const activities = [
-  {
-    agent: 'GovReg-Agent',
-    action: 'Generated Articles of Association',
-    entity: 'Acme Technologies Ltd.',
-    time: '3 min ago',
-    variant: 'success',
-    tag: 'completed',
-  },
-  {
-    agent: 'TaxFin-Agent',
-    action: 'Awaiting your lease agreement',
-    entity: 'Nova Digital Solutions',
-    time: '12 min ago',
-    variant: 'warning',
-    tag: 'actionRequired',
-  },
-  {
-    agent: 'OpsHR-Agent',
-    action: 'Found 3 candidate profiles',
-    entity: 'Meridian Consulting LLC',
-    time: '28 min ago',
-    variant: 'info',
-    tag: 'newResults',
-  },
-  {
-    agent: 'GovReg-Agent',
-    action: 'Submitted annual report to registrar',
-    entity: 'Acme Technologies Ltd.',
-    time: '1 hr ago',
-    variant: 'success',
-    tag: 'completed',
-  },
-  {
-    agent: 'TaxFin-Agent',
-    action: 'VAT registration filed — pending approval',
-    entity: 'Nova Digital Solutions',
-    time: '2 hrs ago',
-    variant: 'info',
-    tag: 'inProgress',
-  },
-  {
-    agent: 'OpsHR-Agent',
-    action: 'Employee onboarding checklist ready',
-    entity: 'Quantum Ventures Inc.',
-    time: '4 hrs ago',
-    variant: 'success',
-    tag: 'completed',
-  },
-]
+function formatRelative(iso, locale, t) {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const diffMs = Date.now() - d.getTime()
+  if (diffMs < 60_000) return t('topHeader.justNow')
+  if (diffMs < 3_600_000) {
+    const m = Math.max(1, Math.floor(diffMs / 60_000))
+    return t('topHeader.minutesAgo').replaceAll('{{n}}', String(m))
+  }
+  const tag = locale === 'he' ? 'he-IL' : 'en-US'
+  return d.toLocaleString(tag, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
 
-export default function RecentAgentActivity() {
-  const { t } = useI18n()
+function mapFeedToRows(feed, homeBusinessName, locale, t) {
+  return feed.slice(0, 8).map((item, idx) => {
+    const st = String(item.status || '').toLowerCase()
+    let variant = 'info'
+    let tag = 'inProgress'
+    if (st === 'completed' || st === 'success') {
+      variant = 'success'
+      tag = 'completed'
+    } else if (st === 'error') {
+      variant = 'warning'
+      tag = 'actionRequired'
+    } else if (st.includes('pending') || st.includes('approval')) {
+      variant = 'warning'
+      tag = 'actionRequired'
+    }
+    const agentInfo = getAgentPresentation(item.agent_id)
+    const agentLabel = agentInfo.tKey ? t(agentInfo.tKey) : item.agent_id
+    return {
+      key: `${item.activity_id}-${idx}`,
+      agent: agentLabel,
+      action: item.description || item.action,
+      entity: homeBusinessName || item.business_id || '—',
+      time: formatRelative(item.created_at, locale, t),
+      variant,
+      tag,
+    }
+  })
+}
+
+export default function RecentAgentActivity({ feed = null, homeBusinessName = '' }) {
+  const { t, locale } = useI18n()
+
+  const rows = useMemo(() => {
+    if (Array.isArray(feed) && feed.length > 0) {
+      return mapFeedToRows(feed, homeBusinessName, locale, t)
+    }
+    return []
+  }, [feed, homeBusinessName, locale, t])
+
   return (
     <div className="flex h-full flex-col rounded-xl border border-surface-200 bg-white shadow-sm">
       <div className="flex items-center justify-between border-b border-surface-100 px-6 py-4">
@@ -103,42 +104,46 @@ export default function RecentAgentActivity() {
       </div>
 
       <ul className="flex-1 divide-y divide-surface-100 overflow-y-auto">
-        {activities.map((item, idx) => {
-          const v = activityVariants[item.variant]
-          const Icon = v.icon
-          return (
-            <li
-              key={idx}
-              className="group flex gap-3.5 px-5 py-3.5 transition-colors hover:bg-surface-50/60"
-            >
-              <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-4 ${v.ring} bg-white`}>
-                <Icon className={`h-4 w-4 ${v.iconColor}`} />
-              </div>
+        {rows.length === 0 ? (
+          <li className="px-5 py-8 text-center text-sm text-surface-400">{t('activity.noActivity')}</li>
+        ) : (
+          rows.map((item) => {
+            const v = activityVariants[item.variant]
+            const Icon = v.icon
+            return (
+              <li
+                key={item.key}
+                className="group flex gap-3.5 px-5 py-3.5 transition-colors hover:bg-surface-50/60"
+              >
+                <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-4 ${v.ring} bg-white`}>
+                  <Icon className={`h-4 w-4 ${v.iconColor}`} />
+                </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm leading-snug text-surface-800">
-                    <span className="font-semibold">{item.agent}:</span>{' '}
-                    <span className="text-surface-600">{item.action}</span>
-                  </p>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${v.badge}`}
-                  >
-                    {t(tagMap[item.tag])}
-                  </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm leading-snug text-surface-800">
+                      <span className="font-semibold">{item.agent}:</span>{' '}
+                      <span className="text-surface-600">{item.action}</span>
+                    </p>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${v.badge}`}
+                    >
+                      {t(tagMap[item.tag])}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-surface-400">
+                    <span className="truncate">{item.entity}</span>
+                    <span className="text-surface-300">·</span>
+                    <span className="flex shrink-0 items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {item.time}
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-1 flex items-center gap-2 text-xs text-surface-400">
-                  <span className="truncate">{item.entity}</span>
-                  <span className="text-surface-300">·</span>
-                  <span className="flex shrink-0 items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {item.time}
-                  </span>
-                </div>
-              </div>
-            </li>
-          )
-        })}
+              </li>
+            )
+          })
+        )}
       </ul>
     </div>
   )

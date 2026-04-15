@@ -45,14 +45,18 @@ export default function LoginPage() {
     }
   }, [t])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    const result = login(username, password)
-    if (result.success) {
-      navigate('/dashboard')
-    } else {
-      setError(t('auth.login.invalidCredentials'))
+    try {
+      const result = await login(username, password)
+      if (result.success) {
+        navigate('/dashboard')
+      } else {
+        setError(t('auth.login.invalidCredentials'))
+      }
+    } catch {
+      setError(t('auth.login.firebaseError'))
     }
   }
 
@@ -92,7 +96,11 @@ export default function LoginPage() {
 
             <div className="mt-8 flex flex-col gap-4">
               {/* WhatsApp */}
-              <button type="button" onClick={() => navigate('/dashboard')} className="group flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-[#25D366] text-sm font-semibold text-white shadow-lg shadow-[#25D366]/25 transition-all hover:bg-[#20BD5A] hover:shadow-[#25D366]/35 active:scale-[0.98]">
+              <button
+                type="button"
+                onClick={() => setError(t('auth.login.providerUnavailable'))}
+                className="group flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-[#25D366] text-sm font-semibold text-white shadow-lg shadow-[#25D366]/25 transition-all hover:bg-[#20BD5A] hover:shadow-[#25D366]/35 active:scale-[0.98]"
+              >
                 <WhatsAppIcon className="h-5 w-5" />
                 {t('auth.login.continueWhatsApp')}
               </button>
@@ -106,7 +114,11 @@ export default function LoginPage() {
               </div>
 
               {/* Google */}
-              <button type="button" onClick={() => navigate('/dashboard')} className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-surface-200 bg-white text-sm font-medium text-surface-700 transition-all hover:bg-surface-50 hover:shadow-sm active:scale-[0.98]">
+              <button
+                type="button"
+                onClick={() => setError(t('auth.login.providerUnavailable'))}
+                className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-surface-200 bg-white text-sm font-medium text-surface-700 transition-all hover:bg-surface-50 hover:shadow-sm active:scale-[0.98]"
+              >
                 <GoogleIcon className="h-4.5 w-4.5" />
                 {t('auth.login.signInGoogle')}
               </button>

@@ -15,7 +15,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   const { t } = useI18n()
   const navItems = [
     { label: t('sidebar.dashboard'), icon: LayoutDashboard, href: '/dashboard', key: 'dashboard' },
-    { label: t('sidebar.myEntities'), icon: Building2, href: '/entities', key: 'entities' },
+    { label: t('sidebar.myEntities'), icon: Building2, href: '/businesses', key: 'entities' },
     { label: t('sidebar.agentActivity'), icon: Activity, href: '/activity', key: 'activity' },
     { label: t('sidebar.legalCompliance'), icon: ShieldCheck, href: '/legal', key: 'legal' },
     { label: t('sidebar.settings'), icon: Settings, href: '/settings', key: 'settings' },

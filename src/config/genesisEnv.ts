@@ -3,6 +3,10 @@
  *
  * Default API origin is staging Cloud Run. Override with `VITE_GENESIS_API_BASE_URL` for another environment.
  * The browser calls this origin directly; the API must allow your frontend origin (CORS).
+ *
+ * **Stack note (Mission Control):** the System Design Document names “Next.js”; this repository ships a
+ * **Vite + React** SPA that follows the same REST-only, polling, Firebase-JWT, and Hebrew-first behaviors.
+ * Landing + multi-step registration are client acquisition flows outside the core six Mission Control screens.
  */
 
 const DEFAULT_GENESIS_API_BASE_URL = 'https://genesis-api-242231160010.me-west1.run.app'
@@ -22,6 +26,12 @@ export function getGenesisApiBearerToken(): string {
   if (fromEnv) return fromEnv
   if (import.meta.env.DEV) return DEV_FALLBACK_BEARER_TOKEN
   return ''
+}
+
+/** Optional admin JWT for `/admin` monitoring & audit APIs (e.g. staging `dev-admin-test`). */
+export function getGenesisAdminApiBearerToken(): string {
+  const raw = import.meta.env.VITE_GENESIS_ADMIN_BEARER_TOKEN
+  return typeof raw === 'string' ? raw.trim() : ''
 }
 
 export function getFirebaseWebConfig(): {

@@ -2,8 +2,25 @@
   "footer": {
     "poweredBy": "Powered by"
   },
+  "common": {
+    "retry": "Retry"
+  },
+  "approvalBanner": {
+    "title": "Approvals pending",
+    "subtitle": "You have {{count}} decision(s) waiting before agents can continue.",
+    "review": "Review in chat"
+  },
   "topHeader": {
     "searchPlaceholder": "Search entities, agents, documents…",
+    "searchGroupBusinesses": "Businesses",
+    "searchGroupDocuments": "Documents",
+    "searchGroupActivity": "Activity",
+    "searchLoading": "Searching…",
+    "searchEmpty": "No matches for this search.",
+    "searchError": "Search could not be completed.",
+    "searchMobileTitle": "Search",
+    "searchMobileClose": "Close search",
+    "searchMobileHint": "Type at least one character to search.",
     "activeBusinessChip": "{{name}}",
     "roleAdministrator": "Administrator",
     "notifications": "Notifications",
@@ -208,6 +225,7 @@
     "statusInProgress": "In Progress",
     "statusNotStarted": "Not started",
     "loadAgentsFailed": "Could not load business agents. Try again later.",
+    "loadActivityFailed": "Could not load agent activity. Try again.",
     "loadingAgents": "Loading agents…",
     "agentNegotiation": "Negotiation-Agent",
     "agentSpatial": "Spatial-Agent",
@@ -274,6 +292,7 @@
     "loadingDocuments": "Loading documents…",
     "loadDocumentsFailed": "Could not load legal documents. Check your connection and try again.",
     "catContract": "Contracts",
+    "catDeal": "Deal",
     "catLicensing": "Licensing",
     "statusApproved": "Approved",
     "statusPending": "Pending",
@@ -339,7 +358,15 @@
     "lowRisk": "Low Risk",
     "highRisk": "High Risk",
     "aboveThreshold": "will be sent to you for approval in the Action Center.",
-    "anythingAbove": "Anything above"
+    "anythingAbove": "Anything above",
+    "guardrailsLoading": "Loading agent guardrails…",
+    "guardrailsLoadError": "Could not load guardrails.",
+    "guardrailsRetry": "Try again",
+    "guardrailsSaveError": "Could not save guardrails. Please try again.",
+    "guardrailsSaving": "Saving…",
+    "guardrailsIlsHint": "Limits are stored in ILS on the server. USD/EUR amounts are converted approximately when you save.",
+    "maxBudgetPerStage": "Max budget per stage (₪)",
+    "maxMessagesDefault": "Default max messages per agent"
   },
   "profile": {
     "avatar": {
@@ -377,7 +404,24 @@
       "twoFactorDesc": "Add an extra layer of security. When enabled, you'll need to enter a verification code from your authenticator app each time you sign in.",
       "twoFactorEnabled": "Enabled — authenticator app configured",
       "twoFactorDisabled": "Disabled — your account is less secure"
-    }
+    },
+    "loading": "Loading your profile…",
+    "loadError": "Could not load your profile.",
+    "retry": "Try again",
+    "saveError": "Could not save your changes. Please try again.",
+    "avatarUploadError": "Could not upload your photo. Try a smaller image or a different format.",
+    "emailReadOnly": "Email is managed by your sign-in provider and cannot be changed here.",
+    "twoFaSaving": "Updating two-factor authentication…",
+    "passwordModalTitle": "Change password",
+    "passwordNew": "New password",
+    "passwordConfirm": "Confirm new password",
+    "passwordSave": "Update password",
+    "passwordCancel": "Cancel",
+    "passwordMismatch": "Passwords do not match.",
+    "passwordSuccess": "Password updated.",
+    "passwordShort": "Password must be at least 12 characters.",
+    "passwordError": "Could not update password. Please try again.",
+    "passwordSaving": "Saving…"
   },
   "notifications": {
     "channels": {
@@ -400,9 +444,26 @@
       "legalDocDesc": "Alerts when a new contract, agreement, or legal filing is ready and awaiting your digital signature.",
       "billing": "Monthly billing summary",
       "billingDesc": "Receive a monthly overview of your Genesis subscription charges, token usage, and payment receipts."
-    }
+    },
+    "loadingPrefs": "Loading notification preferences…",
+    "loadPrefsError": "Could not load notification preferences.",
+    "retryPrefs": "Try again",
+    "prefsSaveError": "Could not save notification preferences.",
+    "prefsSaving": "Saving notification preferences…",
+    "whatsappLocalHint": "Stored on this device only (not synced to the server yet)."
   },
   "billing": {
+    "loading": "Loading billing…",
+    "loadError": "Could not load billing information.",
+    "retry": "Try again",
+    "upgradeTitle": "Upgrade plan",
+    "upgradeDesc": "Choose a higher plan tier. Your subscription will update according to your organization’s billing rules.",
+    "upgradePlanLabel": "Target plan",
+    "upgradeConfirm": "Confirm upgrade",
+    "upgradeCancel": "Cancel",
+    "upgradeSubmitting": "Upgrading…",
+    "upgradeClose": "Close",
+    "upgradeError": "Could not upgrade the plan. Please try again.",
     "plan": { "title": "Current Plan", "desc": "Your active Genesis subscription", "name": "Genesis Pro", "price": "$79/month", "status": "Active", "renews": "Renews on April 1, 2026", "features": ["Up to 5 AI agents", "Unlimited entities", "Priority support", "Advanced compliance tools"], "upgrade": "Upgrade Plan", "manage": "Manage Subscription" },
     "usage": { "title": "AI Token Usage", "desc": "Current billing period consumption", "used": "68,420", "limit": "100,000", "unit": "tokens", "period": "March 2026", "percent": "68%", "resetDate": "Resets April 1, 2026" },
     "payment": { "title": "Payment Method", "desc": "Manage your billing payment method", "cardType": "Visa", "cardLast4": "4242", "cardExpiry": "08/27", "update": "Update Method", "default": "Default" },
@@ -427,6 +488,17 @@
     "reviewActions": "Review Actions",
     "paused": "Paused",
     "assistantSubtitle": "AI-powered business management assistant",
+    "selectBusiness": "Select a business from My Businesses to use chat.",
+    "loadFailed": "Could not load messages. Try again in a moment.",
+    "tabMessages": "Messages",
+    "tabTimeline": "Timeline",
+    "pollingPaused": "Updates paused after 30s with no new messages, or the business setup is complete.",
+    "approvalDecideFailed": "Could not submit approval (operators only).",
+    "timelineLoadFailed": "Could not load timeline.",
+    "infoRequestHint": "Reply using the box below.",
+    "approvalFallbackTitle": "Approval required",
+    "timelineStage": "Stage",
+    "timelineChat": "Chat",
     "approvedMessage": "You approved this action. The agent is now executing.",
     "rejectedMessage": "You rejected this action. The agent has been notified."
   },
@@ -562,7 +634,9 @@
       "createAccount": "Create an account",
       "or": "or",
       "rememberMe": "Remember me",
-      "signInEmail": "Sign in with Email"
+      "signInEmail": "Sign in with Email",
+      "firebaseError": "Sign-in failed. Check your email and password.",
+      "providerUnavailable": "This sign-in method is not available yet. Use email and password."
     },
     "register": {
       "title": "Join Genesis",
@@ -592,6 +666,31 @@
       "stat2Value": "1.2M",
       "stat3Label": "Compliance Score",
       "stat3Value": "99.8%"
+    },
+    "adminLogin": {
+      "title": "Administrator access",
+      "subtitle": "Sign in to the Genesis operations console",
+      "invalidCredentials": "Invalid administrator credentials. Please try again.",
+      "usernamePlaceholder": "Administrator username",
+      "passwordPlaceholder": "Administrator password",
+      "signIn": "Sign in to console",
+      "credentialHint": "Console access",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "apiNote": "Monitoring and audit data require an admin-scoped API token (e.g. VITE_GENESIS_ADMIN_BEARER_TOKEN) or a JWT with admin access.",
+      "backToApp": "Return to application",
+      "heroImageAlt": "Operations overview",
+      "consoleLogoAlt": "Genesis admin"
+    },
+    "adminHero": {
+      "headline": "Operations\nCommand Center",
+      "subtext": "Monitor system health, audit trails, and user management from one secure place.",
+      "stat1Label": "Admin surfaces",
+      "stat1Value": "4",
+      "stat2Label": "Observability focus",
+      "stat2Value": "Real-time",
+      "stat3Label": "Access model",
+      "stat3Value": "Role-based"
     }
   },
   "createBusiness": {
@@ -599,6 +698,7 @@
     "title": "Create New Business",
     "stepProgress": "Step 1 of 5",
     "modalTitle": "Add a new business",
+    "modalTitleSub": "Guided setup with market insights tailored to your choices.",
     "modalProgress": "Step {{current}} of {{total}}",
     "modalClose": "Close",
     "modalSubmit": "Create business",

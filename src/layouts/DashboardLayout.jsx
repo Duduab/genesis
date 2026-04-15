@@ -3,7 +3,7 @@ import Sidebar from '../components/Sidebar'
 import TopHeader from '../components/TopHeader'
 import { useI18n } from '../i18n/I18nContext'
 
-export default function DashboardLayout({ children, activePage }) {
+export default function DashboardLayout({ children, activePage, topSlot = null }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const { t } = useI18n()
@@ -22,6 +22,7 @@ export default function DashboardLayout({ children, activePage }) {
         <TopHeader onMenuClick={() => setMobileOpen(true)} />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          {topSlot}
           {children}
 
           <footer className="mt-12 flex items-center justify-center gap-2 border-t border-surface-200 pb-4 pt-6">

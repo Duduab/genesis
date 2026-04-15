@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchBusinessMilestones } from '../api/genesis/businessMilestonesApi'
 import type { BusinessMilestoneApiRow } from '../types/businessMilestone'
+import { POLL_MS_DASHBOARD, refetchIntervalWithVisibilityAndBackoff } from '../lib/genesisPolling'
 
 export function useBusinessMilestones(businessId: string | null): {
   milestones: BusinessMilestoneApiRow[]
@@ -8,46 +10,24 @@ export function useBusinessMilestones(businessId: string | null): {
   error: string | null
   refetch: () => void
 } {
-  const [tick, setTick] = useState(0)
-  const [milestones, setMilestones] = useState<BusinessMilestoneApiRow[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const qc = useQueryClient()
+  const id = businessId?.trim() || null
 
-  const refetch = useCallback(() => setTick((n) => n + 1), [])
+  const q = useQuery({
+    queryKey: ['business-milestones', id],
+    queryFn: () => fetchBusinessMilestones(id!),
+    enabled: Boolean(id),
+    refetchInterval: refetchIntervalWithVisibilityAndBackoff(POLL_MS_DASHBOARD),
+  })
 
-  useEffect(() => {
-    if (!businessId?.trim()) {
-      setMilestones([])
-      setLoading(false)
-      setError(null)
-      return
-    }
+  const refetch = useCallback(() => {
+    if (id) void qc.invalidateQueries({ queryKey: ['business-milestones', id] })
+  }, [qc, id])
 
-    let cancelled = false
-    setLoading(true)
-    setError(null)
-
-    ;(async () => {
-      try {
-        const rows = await fetchBusinessMilestones(businessId)
-        if (!cancelled) {
-          setMilestones(rows)
-          setError(null)
-        }
-      } catch {
-        if (!cancelled) {
-          setMilestones([])
-          setError('dashboard.milestones.error')
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [businessId, tick])
-
-  return { milestones, loading, error, refetch }
+  return {
+    milestones: q.data ?? [],
+    loading: Boolean(id) && (q.isLoading || q.isFetching),
+    error: q.isError ? 'dashboard.milestones.error' : null,
+    refetch,
+  }
 }

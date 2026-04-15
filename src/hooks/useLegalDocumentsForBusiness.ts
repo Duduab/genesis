@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchLegalDocumentsForBusiness } from '../api/genesis/legalDocumentsApi'
 import type { LegalDocumentsListPayload } from '../types/legalDocument'
+import { POLL_MS_DASHBOARD, refetchIntervalWithVisibilityAndBackoff } from '../lib/genesisPolling'
 
 export function useLegalDocumentsForBusiness(businessId: string | null): {
   data: LegalDocumentsListPayload | null
@@ -8,46 +10,24 @@ export function useLegalDocumentsForBusiness(businessId: string | null): {
   error: string | null
   refetch: () => void
 } {
-  const [tick, setTick] = useState(0)
-  const [data, setData] = useState<LegalDocumentsListPayload | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const qc = useQueryClient()
+  const id = businessId?.trim() || null
 
-  const refetch = useCallback(() => setTick((n) => n + 1), [])
+  const q = useQuery({
+    queryKey: ['legal-documents', id],
+    queryFn: () => fetchLegalDocumentsForBusiness(id!),
+    enabled: Boolean(id),
+    refetchInterval: refetchIntervalWithVisibilityAndBackoff(POLL_MS_DASHBOARD),
+  })
 
-  useEffect(() => {
-    if (!businessId?.trim()) {
-      setData(null)
-      setLoading(false)
-      setError(null)
-      return
-    }
+  const refetch = useCallback(() => {
+    if (id) void qc.invalidateQueries({ queryKey: ['legal-documents', id] })
+  }, [qc, id])
 
-    let cancelled = false
-    setLoading(true)
-    setError(null)
-
-    ;(async () => {
-      try {
-        const payload = await fetchLegalDocumentsForBusiness(businessId)
-        if (!cancelled) {
-          setData(payload)
-          setError(null)
-        }
-      } catch {
-        if (!cancelled) {
-          setData(null)
-          setError('legal.loadDocumentsFailed')
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [businessId, tick])
-
-  return { data, loading, error, refetch }
+  return {
+    data: q.data ?? null,
+    loading: Boolean(id) && (q.isLoading || q.isFetching),
+    error: q.isError ? 'legal.loadDocumentsFailed' : null,
+    refetch,
+  }
 }

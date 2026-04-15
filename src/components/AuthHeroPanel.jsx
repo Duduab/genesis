@@ -100,12 +100,12 @@ export default function AuthHeroPanel() {
       {/* Content overlay */}
       <div className="relative z-10 flex flex-1 flex-col justify-between px-12 py-14 xl:px-16">
         <div className="flex items-center gap-3">
-          <img
+          {/* <img
             src="/logos/logo-primary.png"
             alt="Genesis Technologies"
             className="h-10 w-auto brightness-0 invert opacity-80 object-contain"
             style={{ aspectRatio: 'auto' }}
-          />
+          /> */}
         </div>
 
         <div>

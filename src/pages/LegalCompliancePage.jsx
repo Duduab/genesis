@@ -20,11 +20,13 @@ import {
   AlertCircle,
   File,
   Loader2,
+  Handshake,
 } from 'lucide-react'
 
 const SIDEBAR_CATEGORIES = [
   { key: 'contract', tKey: 'legal.catContract', icon: Landmark },
   { key: 'tax', tKey: 'legal.taxFilings', icon: Receipt },
+  { key: 'deal', tKey: 'legal.catDeal', icon: Handshake },
   { key: 'employment', tKey: 'legal.employment', icon: Briefcase },
   { key: 'licensing', tKey: 'legal.catLicensing', icon: ShieldCheck },
 ]

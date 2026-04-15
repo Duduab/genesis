@@ -2,8 +2,25 @@
   "footer": {
     "poweredBy": "מופעל על ידי"
   },
+  "common": {
+    "retry": "נסה שוב"
+  },
+  "approvalBanner": {
+    "title": "ממתינים לאישורים",
+    "subtitle": "יש {{count}} החלטות שמחכות לך לפני שהסוכנים יוכלו להמשיך.",
+    "review": "פתח בצ׳אט"
+  },
   "topHeader": {
     "searchPlaceholder": "חיפוש ישויות, סוכנים, מסמכים…",
+    "searchGroupBusinesses": "עסקים",
+    "searchGroupDocuments": "מסמכים",
+    "searchGroupActivity": "פעילות",
+    "searchLoading": "מחפש…",
+    "searchEmpty": "אין תוצאות לחיפוש זה.",
+    "searchError": "לא ניתן להשלים את החיפוש.",
+    "searchMobileTitle": "חיפוש",
+    "searchMobileClose": "סגור חיפוש",
+    "searchMobileHint": "הקלידו לפחות תו אחד לחיפוש.",
     "activeBusinessChip": "{{name}}",
     "roleAdministrator": "מנהל מערכת",
     "notifications": "התראות",
@@ -208,6 +225,7 @@
     "statusInProgress": "בתהליך",
     "statusNotStarted": "טרם התחיל",
     "loadAgentsFailed": "לא ניתן לטעון סוכנים. נסה שוב מאוחר יותר.",
+    "loadActivityFailed": "לא ניתן לטעון פעילות סוכנים. נסה שוב.",
     "loadingAgents": "טוען סוכנים…",
     "agentNegotiation": "סוכן משא ומתן",
     "agentSpatial": "סוכן מרחבי",
@@ -274,6 +292,7 @@
     "loadingDocuments": "טוען מסמכים…",
     "loadDocumentsFailed": "לא ניתן לטעון מסמכים משפטיים. בדקו את החיבור ונסו שוב.",
     "catContract": "חוזים",
+    "catDeal": "עסקה",
     "catLicensing": "רישוי",
     "statusApproved": "אושר",
     "statusPending": "ממתין",
@@ -339,7 +358,15 @@
     "lowRisk": "סיכון נמוך",
     "highRisk": "סיכון גבוה",
     "aboveThreshold": "יישלח אליך לאישור במרכז הפעולות.",
-    "anythingAbove": "כל סכום מעל"
+    "anythingAbove": "כל סכום מעל",
+    "guardrailsLoading": "טוען מגבלות סוכן…",
+    "guardrailsLoadError": "לא ניתן לטעון את מגבלות הגזרה.",
+    "guardrailsRetry": "נסה שוב",
+    "guardrailsSaveError": "לא ניתן לשמור את מגבלות הגזרה. נסה שוב.",
+    "guardrailsSaving": "שומר…",
+    "guardrailsIlsHint": "המגבלות נשמרות בשרת בשקלים. סכומים בדולר/יורו מומרים בקירוב בעת השמירה.",
+    "maxBudgetPerStage": "תקציב מקסימלי לשלב (₪)",
+    "maxMessagesDefault": "מקסימום הודעות ברירת מחדל לסוכן"
   },
   "profile": {
     "avatar": {
@@ -377,7 +404,24 @@
       "twoFactorDesc": "הוסף שכבת אבטחה נוספת. כאשר מופעל, תידרש להזין קוד אימות מאפליקציית האימות בכל כניסה למערכת.",
       "twoFactorEnabled": "מופעל — אפליקציית אימות מוגדרת",
       "twoFactorDisabled": "מושבת — החשבון שלך פחות מאובטח"
-    }
+    },
+    "loading": "טוען את הפרופיל…",
+    "loadError": "לא ניתן לטעון את הפרופיל.",
+    "retry": "נסה שוב",
+    "saveError": "לא ניתן לשמור את השינויים. נסה שוב.",
+    "avatarUploadError": "לא ניתן להעלות את התמונה. נסה קובץ קטן יותר או פורמט אחר.",
+    "emailReadOnly": "כתובת הדוא״ל מנוהלת על ידי ספק ההתחברות ולא ניתנת לשינוי כאן.",
+    "twoFaSaving": "מעדכן אימות דו-שלבי…",
+    "passwordModalTitle": "שינוי סיסמה",
+    "passwordNew": "סיסמה חדשה",
+    "passwordConfirm": "אימות סיסמה חדשה",
+    "passwordSave": "עדכן סיסמה",
+    "passwordCancel": "ביטול",
+    "passwordMismatch": "הסיסמאות אינן תואמות.",
+    "passwordSuccess": "הסיסמה עודכנה.",
+    "passwordShort": "הסיסמה חייבת לכלול לפחות 12 תווים.",
+    "passwordError": "לא ניתן לעדכן את הסיסמה. נסה שוב.",
+    "passwordSaving": "שומר…"
   },
   "notifications": {
     "channels": {
@@ -400,9 +444,26 @@
       "legalDocDesc": "התראה כאשר חוזה, הסכם או הגשה משפטית חדשים מוכנים וממתינים לחתימתך הדיגיטלית.",
       "billing": "סיכום חיוב חודשי",
       "billingDesc": "קבל סקירה חודשית של חיובי מנוי Genesis, צריכת טוקנים וקבלות תשלום."
-    }
+    },
+    "loadingPrefs": "טוען העדפות התראות…",
+    "loadPrefsError": "לא ניתן לטעון את העדפות ההתראות.",
+    "retryPrefs": "נסה שוב",
+    "prefsSaveError": "לא ניתן לשמור את העדפות ההתראות.",
+    "prefsSaving": "שומר העדפות התראות…",
+    "whatsappLocalHint": "נשמר במכשיר זה בלבד (עדיין לא מסונכרן לשרת)."
   },
   "billing": {
+    "loading": "טוען חיוב…",
+    "loadError": "לא ניתן לטעון את פרטי החיוב.",
+    "retry": "נסה שוב",
+    "upgradeTitle": "שדרוג מנוי",
+    "upgradeDesc": "בחר רמת מנוי גבוהה יותר. המנוי יתעדכן לפי כללי החיוב של הארגון.",
+    "upgradePlanLabel": "מנוי יעד",
+    "upgradeConfirm": "אשר שדרוג",
+    "upgradeCancel": "ביטול",
+    "upgradeSubmitting": "משדרג…",
+    "upgradeClose": "סגור",
+    "upgradeError": "לא ניתן לשדרג את המנוי. נסה שוב.",
     "plan": { "title": "מנוי נוכחי", "desc": "המנוי הפעיל שלך ב-Genesis", "name": "Genesis Pro", "price": "$79/חודש", "status": "פעיל", "renews": "מתחדש ב-1 באפריל 2026", "features": ["עד 5 סוכני AI", "ישויות ללא הגבלה", "תמיכה בעדיפות", "כלי תאימות מתקדמים"], "upgrade": "שדרג מנוי", "manage": "נהל מנוי" },
     "usage": { "title": "צריכת טוקני AI", "desc": "צריכה בתקופת החיוב הנוכחית", "used": "68,420", "limit": "100,000", "unit": "טוקנים", "period": "מרץ 2026", "percent": "68%", "resetDate": "מתאפס ב-1 באפריל 2026" },
     "payment": { "title": "אמצעי תשלום", "desc": "נהל את אמצעי התשלום לחיוב", "cardType": "Visa", "cardLast4": "4242", "cardExpiry": "08/27", "update": "עדכן אמצעי תשלום", "default": "ברירת מחדל" },
@@ -427,6 +488,17 @@
     "reviewActions": "סקירת פעולות",
     "paused": "מושהה",
     "assistantSubtitle": "עוזר ניהול עסקי מבוסס AI",
+    "selectBusiness": "בחר עסק מ״העסקים שלי״ כדי להשתמש בצ׳אט.",
+    "loadFailed": "לא ניתן לטעון הודעות. נסה שוב בעוד רגע.",
+    "tabMessages": "הודעות",
+    "tabTimeline": "ציר זמן",
+    "pollingPaused": "העדכונים הושהו אחרי 30 שניות ללא הודעות חדשות, או שהקמת העסק הושלמה.",
+    "approvalDecideFailed": "לא ניתן לשלוח אישור (מפעילים בלבד).",
+    "timelineLoadFailed": "לא ניתן לטעון את ציר הזמן.",
+    "infoRequestHint": "השב באמצעות התיבה למטה.",
+    "approvalFallbackTitle": "נדרש אישור",
+    "timelineStage": "שלב",
+    "timelineChat": "צ׳אט",
     "approvedMessage": "אישרת פעולה זו. הסוכן מבצע כעת.",
     "rejectedMessage": "דחית פעולה זו. הסוכן עודכן."
   },
@@ -562,7 +634,9 @@
       "createAccount": "צור חשבון",
       "or": "או",
       "rememberMe": "זכור אותי",
-      "signInEmail": "התחבר עם אימייל"
+      "signInEmail": "התחבר עם אימייל",
+      "firebaseError": "ההתחברות נכשלה. בדוק אימייל וסיסמה.",
+      "providerUnavailable": "שיטת ההתחברות הזו עדיין לא זמינה. השתמש באימייל וסיסמה."
     },
     "register": {
       "title": "הצטרף ל-Genesis",
@@ -592,6 +666,31 @@
       "stat2Value": "1.2M",
       "stat3Label": "ציון תאימות",
       "stat3Value": "99.8%"
+    },
+    "adminLogin": {
+      "title": "כניסת מנהלים",
+      "subtitle": "התחברו לקונסולת התפעול של Genesis",
+      "invalidCredentials": "פרטי מנהל שגויים. נסו שוב.",
+      "usernamePlaceholder": "שם משתמש מנהל",
+      "passwordPlaceholder": "סיסמת מנהל",
+      "signIn": "כניסה לקונסולה",
+      "credentialHint": "גישת קונסולה",
+      "showPassword": "הצג סיסמה",
+      "hidePassword": "הסתר סיסמה",
+      "apiNote": "נתוני ניטור וביקורת דורשים טוקן API עם הרשאות מנהל (למשל VITE_GENESIS_ADMIN_BEARER_TOKEN) או JWT עם הרשאת admin.",
+      "backToApp": "חזרה לאפליקציה",
+      "heroImageAlt": "סקירת תפעול",
+      "consoleLogoAlt": "Genesis ניהול"
+    },
+    "adminHero": {
+      "headline": "תפעול\nמרכז פיקוד",
+      "subtext": "ניטור בריאות המערכת, שביל ביקורת וניהול משתמשים — ממקום מאובטח אחד.",
+      "stat1Label": "מסכי ניהול",
+      "stat1Value": "4",
+      "stat2Label": "מיקוד ניטור",
+      "stat2Value": "בזמן אמת",
+      "stat3Label": "מודל גישה",
+      "stat3Value": "מבוסס-תפקידים"
     }
   },
   "createBusiness": {
@@ -599,6 +698,7 @@
     "title": "יצירת עסק חדש",
     "stepProgress": "שלב 1 מתוך 5",
     "modalTitle": "הוספת עסק חדש",
+    "modalTitleSub": "הגדרה מונחית עם תובנות שוק מותאמות לבחירות שלך.",
     "modalProgress": "שלב {{current}} מתוך {{total}}",
     "modalClose": "סגור",
     "modalSubmit": "צור עסק",
