@@ -677,13 +677,13 @@
       "credentialHint": "Console access",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
-      "apiNote": "Monitoring and audit data require an admin-scoped API token (e.g. VITE_GENESIS_ADMIN_BEARER_TOKEN) or a JWT with admin access.",
+      "apiNote": "Admin users",
       "backToApp": "Return to application",
       "heroImageAlt": "Operations overview",
       "consoleLogoAlt": "Genesis admin"
     },
     "adminHero": {
-      "headline": "Operations\nCommand Center",
+      "headline": "Admin Center",
       "subtext": "Monitor system health, audit trails, and user management from one secure place.",
       "stat1Label": "Admin surfaces",
       "stat1Value": "4",

@@ -112,8 +112,6 @@ export default function AdminLoginPage() {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-xs leading-relaxed text-surface-500">{t('auth.adminLogin.apiNote')}</p>
-
             <p className="mt-6 text-center text-sm text-surface-400">
               <Link to="/dashboard" className="font-semibold text-genesis-600 transition-colors hover:text-genesis-700">
                 {t('auth.adminLogin.backToApp')}

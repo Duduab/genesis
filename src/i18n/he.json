@@ -669,7 +669,7 @@
     },
     "adminLogin": {
       "title": "כניסת מנהלים",
-      "subtitle": "התחברו לקונסולת התפעול של Genesis",
+      "subtitle": "מערכת הניהול של Genesis",
       "invalidCredentials": "פרטי מנהל שגויים. נסו שוב.",
       "usernamePlaceholder": "שם משתמש מנהל",
       "passwordPlaceholder": "סיסמת מנהל",

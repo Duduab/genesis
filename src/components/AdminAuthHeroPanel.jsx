@@ -128,29 +128,16 @@ export default function AdminAuthHeroPanel() {
 
       <div className="relative z-10 flex flex-1 flex-col justify-between px-12 py-14 xl:px-16">
         <div className="flex items-center gap-3">
-          <img
-            src="/logos/logo-specialty.png"
-            alt={t('auth.adminLogin.consoleLogoAlt')}
-            className="h-10 w-auto object-contain opacity-90 brightness-0 invert"
-            style={{ aspectRatio: 'auto' }}
-          />
+
         </div>
 
         <div className="max-w-lg">
-          <div className="mb-8 overflow-hidden rounded-2xl border border-white/15 shadow-[0_24px_80px_rgba(0,0,0,0.35)] ring-1 ring-white/10">
-            <img src={heroImg} alt={t('auth.adminLogin.heroImageAlt')} className="h-44 w-full object-cover sm:h-52" />
-          </div>
-          <h1 className="whitespace-pre-line text-4xl font-bold leading-tight tracking-tight text-white xl:text-5xl">
-            {t('auth.adminHero.headline')}
-          </h1>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-violet-100/85">{t('auth.adminHero.subtext')}</p>
+  
         </div>
 
         <div className="flex gap-8">
           {stats.map((s) => (
             <div key={s.label}>
-              <p className="text-2xl font-bold text-white">{s.value}</p>
-              <p className="mt-0.5 text-xs text-violet-200/75">{s.label}</p>
             </div>
           ))}
         </div>
