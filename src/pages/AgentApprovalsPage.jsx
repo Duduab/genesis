@@ -131,7 +131,7 @@ export default function AgentApprovalsPage() {
       </ul>
 
       {selectedStageId ? (
-        <div className="fixed inset-0 z-[120] flex items-end justify-center p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-[2147483646] flex items-end justify-center p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true">
           <button
             type="button"
             className="absolute inset-0 bg-surface-900/40 backdrop-blur-sm"

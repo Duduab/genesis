@@ -510,7 +510,7 @@ function ProfileContent() {
 
       {passwordOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-[2147483646] flex items-center justify-center bg-black/50 p-4"
           role="dialog"
           aria-modal="true"
           onClick={(ev) => {
@@ -1187,7 +1187,7 @@ function BillingContent() {
       </SectionCard>
 
       {upgradeOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-[2147483646] flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-md rounded-xl border border-surface-200 bg-white p-6 shadow-xl">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-lg font-bold text-surface-900">{t('billing.upgradeTitle')}</h3>

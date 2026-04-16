@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Loader2, Bug, RefreshCw } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { useStageDetailQuery } from '../hooks/useStageDetailQuery'
@@ -9,12 +10,79 @@ import { normalizeGenesisStageStatus } from '../constants/genesisApiEnums'
 import { formatNisFull } from '../utils/formatNis'
 import { isGenesisApiError } from '../api/genesis/errors'
 
-function safeJson(value) {
-  try {
-    return JSON.stringify(value ?? null, null, 2)
-  } catch {
-    return String(value)
+function humanizeFieldKey(key) {
+  if (typeof key !== 'string') return String(key)
+  return key
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^\w/, (c) => c.toUpperCase())
+}
+
+function formatBoolean(value, locale) {
+  if (value) return locale === 'he' ? 'כן' : 'Yes'
+  return locale === 'he' ? 'לא' : 'No'
+}
+
+/** Renders API payloads without raw JSON (lists, labeled fields, plain text). */
+function StructuredPayload({ value, depth = 0, locale, variant = 'light' }) {
+  const maxDepth = 14
+  const isDark = variant === 'dark'
+  const c = {
+    body: isDark ? 'text-emerald-100/95' : 'text-surface-800',
+    muted: isDark ? 'text-emerald-200/50' : 'text-surface-400',
+    label: isDark ? 'text-emerald-200/70' : 'text-surface-400',
+    fade: isDark ? 'text-emerald-200/45' : 'text-surface-500',
+    list: isDark ? 'text-emerald-100/95' : 'text-surface-800',
   }
+  if (depth > maxDepth) {
+    return <span className={c.fade}>…</span>
+  }
+  if (value == null) {
+    return <span className={c.muted}>—</span>
+  }
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return <span className={`whitespace-pre-wrap break-words ${c.body}`}>{value.toISOString()}</span>
+  }
+  const t = typeof value
+  if (t === 'string' || t === 'number') {
+    return <span className={`whitespace-pre-wrap break-words ${c.body}`}>{String(value)}</span>
+  }
+  if (t === 'boolean') {
+    return <span className={c.body}>{formatBoolean(value, locale)}</span>
+  }
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <span className={c.muted}>—</span>
+    return (
+      <ul className={`list-disc space-y-1.5 pl-4 ${c.list}`}>
+        {value.map((item, i) => (
+          <li key={i} className="text-sm">
+            <StructuredPayload value={item} depth={depth + 1} locale={locale} variant={variant} />
+          </li>
+        ))}
+      </ul>
+    )
+  }
+  if (t === 'object') {
+    const keys = Object.keys(value)
+    if (keys.length === 0) return <span className={c.muted}>—</span>
+    return (
+      <dl className="space-y-3">
+        {keys.map((k) => (
+          <div key={k}>
+            <dt className={`text-[11px] font-semibold uppercase tracking-wider ${c.label}`}>
+              {humanizeFieldKey(k)}
+            </dt>
+            <dd className="mt-1 text-sm">
+              <StructuredPayload value={value[k]} depth={depth + 1} locale={locale} variant={variant} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
+  return <span className={c.fade}>—</span>
 }
 
 function formatWhen(iso, locale) {
@@ -54,8 +122,12 @@ export default function StageDetailModal({ open, stageId, businessId, onClose })
 
   if (!open) return null
 
-  return (
-    <div className="fixed inset-0 z-[110] flex items-end justify-center p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true">
+  const overlay = (
+    <div
+      className="fixed inset-0 z-[2147483646] flex items-end justify-center p-0 sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+    >
       <button
         type="button"
         className="absolute inset-0 bg-surface-900/40 backdrop-blur-sm"
@@ -192,17 +264,17 @@ export default function StageDetailModal({ open, stageId, businessId, onClose })
                     <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-surface-400">
                       {t('dashboard.stages.inputs')}
                     </h3>
-                    <pre className="max-h-40 overflow-auto rounded-lg border border-surface-200 bg-surface-50 p-3 font-mono text-[11px] text-surface-800">
-                      {safeJson(d.inputs ?? null)}
-                    </pre>
+                    <div className="max-h-40 overflow-auto rounded-lg border border-surface-200 bg-surface-50 p-3 text-[13px] text-surface-800">
+                      <StructuredPayload value={d.inputs ?? null} locale={locale} />
+                    </div>
                   </div>
                   <div>
                     <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-surface-400">
                       {t('dashboard.stages.outputs')}
                     </h3>
-                    <pre className="max-h-48 overflow-auto rounded-lg border border-surface-200 bg-surface-50 p-3 font-mono text-[11px] text-surface-800">
-                      {safeJson(d.outputs ?? d.response_payload ?? null)}
-                    </pre>
+                    <div className="max-h-48 overflow-auto rounded-lg border border-surface-200 bg-surface-50 p-3 text-[13px] text-surface-800">
+                      <StructuredPayload value={d.outputs ?? d.response_payload ?? null} locale={locale} />
+                    </div>
                   </div>
                 </div>
               ) : null}
@@ -221,9 +293,9 @@ export default function StageDetailModal({ open, stageId, businessId, onClose })
                 </p>
               ) : null}
               {logsQ.data != null && !logsQ.isPending ? (
-                <pre className="max-h-[min(55vh,480px)] overflow-auto rounded-lg border border-surface-200 bg-surface-900 p-3 font-mono text-[11px] text-emerald-100/95">
-                  {safeJson(logsQ.data)}
-                </pre>
+                <div className="max-h-[min(55vh,480px)] overflow-auto rounded-lg border border-surface-200 bg-surface-900 p-3 text-[13px]">
+                  <StructuredPayload value={logsQ.data} locale={locale} variant="dark" />
+                </div>
               ) : null}
             </>
           )}
@@ -231,4 +303,6 @@ export default function StageDetailModal({ open, stageId, businessId, onClose })
       </div>
     </div>
   )
+
+  return typeof document !== 'undefined' ? createPortal(overlay, document.body) : overlay
 }

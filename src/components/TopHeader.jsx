@@ -515,7 +515,7 @@ export default function TopHeader({ onMenuClick }) {
 
       {mobileSearchOpen ? (
         <div
-          className="fixed inset-0 z-[60] flex flex-col bg-white sm:hidden dark:bg-surface-950"
+          className="fixed inset-0 z-[2147483646] flex flex-col bg-white sm:hidden dark:bg-surface-950"
           role="dialog"
           aria-modal="true"
           aria-label={t('topHeader.searchMobileTitle')}

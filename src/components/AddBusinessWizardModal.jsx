@@ -250,7 +250,7 @@ export default function AddBusinessWizardModal({ open, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#030712]/75 p-3 backdrop-blur-md sm:p-6"
+      className="fixed inset-0 z-[2147483646] flex items-center justify-center bg-[#030712]/75 p-3 backdrop-blur-md sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="add-business-modal-title"
