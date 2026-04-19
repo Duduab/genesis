@@ -14,6 +14,7 @@ import {
   Loader2,
   FileText,
   Sparkles,
+  LogOut,
 } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { useRouter, Link } from '../router'
@@ -309,7 +310,7 @@ export default function TopHeader({ onMenuClick }) {
     markAllRead,
   } = useNotifications(notifOpen)
 
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, logout } = useAuth()
   const { data: pendingApprovalsPayload } = usePendingAgentApprovalsQuery({ enabled: isAuthenticated })
   const pendingApprovalCount = pendingApprovalsPayload?.items?.length ?? 0
   const bellBadgeCount = effectiveUnread + pendingApprovalCount
@@ -389,6 +390,13 @@ export default function TopHeader({ onMenuClick }) {
     navigate('/settings')
   }
 
+  const handleLogout = useCallback(async () => {
+    setNotifOpen(false)
+    setMobileSearchOpen(false)
+    await logout()
+    navigate('/login')
+  }, [logout, navigate])
+
   return (
     <>
       <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-surface-200 bg-surface-50/90 px-4 backdrop-blur-md sm:px-6">
@@ -465,6 +473,18 @@ export default function TopHeader({ onMenuClick }) {
         >
           <Settings className="h-[18px] w-[18px]" />
         </button>
+
+        {isAuthenticated ? (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-surface-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+            aria-label={t('topHeader.logout')}
+            title={t('topHeader.logout')}
+          >
+            <LogOut className="h-[18px] w-[18px]" aria-hidden />
+          </button>
+        ) : null}
 
         <div className="relative">
           <button

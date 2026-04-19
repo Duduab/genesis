@@ -185,6 +185,7 @@
     "searchMobileHint": "הקלידו לפחות תו אחד לחיפוש.",
     "activeBusinessChip": "{{name}}",
     "roleAdministrator": "מנהל מערכת",
+    "logout": "התנתקות",
     "notifications": "התראות",
     "markAllRead": "סמן הכל כנקרא",
     "viewAll": "צפה בכל ההתראות",
@@ -213,6 +214,7 @@
     "agentActivity": "פעילות סוכנים",
     "legalCompliance": "משפט ורגולציה",
     "settings": "הגדרות",
+    "logout": "התנתקות",
     "proPlan": "מנוי Pro",
     "agentsUsedOf": "מתוך",
     "agentsUsedLabel": "סוכנים בשימוש"
@@ -725,6 +727,7 @@
   },
   "chat": {
     "openOrchestratorFab": "פתיחת צ'אט המנצח",
+    "openOrchestratorFabDisabled": "הוסף עסק כדי לפתוח את המנצח",
     "orchestratorTitle": "הסוכן הראשי (Orchestrator)",
     "aiTyping": "הסוכן מקליד...",
     "approveSign": "אשר וחתום",

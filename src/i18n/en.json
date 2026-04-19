@@ -185,6 +185,7 @@
     "searchMobileHint": "Type at least one character to search.",
     "activeBusinessChip": "{{name}}",
     "roleAdministrator": "Administrator",
+    "logout": "Log out",
     "notifications": "Notifications",
     "markAllRead": "Mark all read",
     "viewAll": "View All Notifications",
@@ -213,6 +214,7 @@
     "agentActivity": "Agent Activity",
     "legalCompliance": "Legal & Compliance",
     "settings": "Settings",
+    "logout": "Log out",
     "proPlan": "Pro Plan",
     "agentsUsedOf": "of",
     "agentsUsedLabel": "agents used"
@@ -725,6 +727,7 @@
   },
   "chat": {
     "openOrchestratorFab": "Open Orchestrator chat",
+    "openOrchestratorFabDisabled": "Add a business to open the Orchestrator",
     "orchestratorTitle": "Genesis Orchestrator",
     "aiTyping": "AI is typing...",
     "approveSign": "Approve & Sign",

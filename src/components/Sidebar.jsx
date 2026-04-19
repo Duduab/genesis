@@ -8,12 +8,23 @@ import {
   ChevronRight,
   X,
   ClipboardCheck,
+  LogOut,
 } from 'lucide-react'
+import { useCallback } from 'react'
 import { useI18n } from '../i18n/I18nContext'
-import { Link } from '../router'
+import { Link, useRouter } from '../router'
+import { useAuth } from '../auth/AuthContext'
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose, activePage }) {
   const { t } = useI18n()
+  const { navigate } = useRouter()
+  const { logout } = useAuth()
+
+  const handleLogout = useCallback(async () => {
+    onMobileClose?.()
+    await logout()
+    navigate('/login')
+  }, [logout, navigate, onMobileClose])
   const navItems = [
     { label: t('sidebar.dashboard'), icon: LayoutDashboard, href: '/dashboard', key: 'dashboard' },
     { label: t('sidebar.myEntities'), icon: Building2, href: '/businesses', key: 'entities' },
@@ -96,6 +107,21 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                 </li>
               )
             })}
+            <li>
+              <button
+                type="button"
+                onClick={handleLogout}
+                aria-label={t('sidebar.logout')}
+                title={collapsed ? t('sidebar.logout') : undefined}
+                className={`
+                  group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-all hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300
+                  ${collapsed ? 'justify-center' : ''}
+                `}
+              >
+                <LogOut className="h-5 w-5 shrink-0 text-red-500 group-hover:text-red-600 dark:text-red-400" aria-hidden />
+                {!collapsed && <span>{t('sidebar.logout')}</span>}
+              </button>
+            </li>
           </ul>
         </nav>
 

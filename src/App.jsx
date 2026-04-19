@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import DashboardLayout from './layouts/DashboardLayout'
 import ActiveEntities from './components/ActiveEntities'
 import RecentAgentActivity from './components/RecentAgentActivity'
@@ -28,6 +28,7 @@ import { useI18n } from './i18n/I18nContext'
 import { useRouter } from './router'
 import { useAuth } from './auth/AuthContext'
 import { useActiveBusiness } from './context/ActiveBusinessContext'
+import { useOrchestratorBusinessId } from './hooks/useOrchestratorBusinessId'
 import { useDashboardOverviewQuery } from './hooks/useDashboardOverviewQuery'
 import { usePendingAgentApprovalsQuery } from './hooks/usePendingAgentApprovalsQuery'
 import { useNotifications } from './hooks/useNotifications'
@@ -287,6 +288,8 @@ export default function App() {
   const { page, navigate } = useRouter()
   const { isAuthenticated } = useAuth()
   const { activeBusinessId } = useActiveBusiness()
+  const orchestratorBusinessId = useOrchestratorBusinessId()
+  const orchestratorFabEnabled = Boolean(orchestratorBusinessId)
   const { data: overview } = useDashboardOverviewQuery(activeBusinessId, {
     enabled: isAuthenticated && Boolean(activeBusinessId),
   })
@@ -305,8 +308,16 @@ export default function App() {
   const [chatOpen, setChatOpen] = useState(false)
   const [addBusinessOpen, setAddBusinessOpen] = useState(false)
 
-  const openChat = () => setChatOpen(true)
+  const openChat = useCallback(() => {
+    if (!orchestratorBusinessId) return
+    setChatOpen(true)
+  }, [orchestratorBusinessId])
+
   const openAddBusiness = () => setAddBusinessOpen(true)
+
+  useEffect(() => {
+    if (!orchestratorFabEnabled && chatOpen) setChatOpen(false)
+  }, [orchestratorFabEnabled, chatOpen])
 
   const orchestratorFabSrc = dark ? ORCHESTRATOR_FAB_DARK : ORCHESTRATOR_FAB_LIGHT
   const onOrchestratorFabError = useCallback(
@@ -361,10 +372,15 @@ export default function App() {
   const orchestratorFab = (
     <button
       type="button"
+      disabled={!orchestratorFabEnabled}
       onClick={openChat}
-      aria-label={t('chat.openOrchestratorFab')}
-      className={`pointer-events-auto fixed bottom-0 left-2 z-50 mb-[env(safe-area-inset-bottom,0px)] flex aspect-square w-[min(200px,68vw)] max-w-[200px] shrink-0 items-end justify-center border-0 bg-transparent p-0 shadow-none outline-none transition-transform hover:scale-[1.03] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-genesis-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-50 dark:focus-visible:ring-offset-surface-950 sm:left-3 ${
-        chatOpen ? 'pointer-events-none opacity-0' : 'opacity-100'
+      aria-label={orchestratorFabEnabled ? t('chat.openOrchestratorFab') : t('chat.openOrchestratorFabDisabled')}
+      className={`pointer-events-auto fixed bottom-0 left-2 z-50 mb-[env(safe-area-inset-bottom,0px)] flex aspect-square w-[min(200px,68vw)] max-w-[200px] shrink-0 items-end justify-center border-0 bg-transparent p-0 shadow-none outline-none focus-visible:ring-2 focus-visible:ring-genesis-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-50 dark:focus-visible:ring-offset-surface-950 sm:left-3 ${
+        chatOpen
+          ? 'pointer-events-none opacity-0'
+          : orchestratorFabEnabled
+            ? 'opacity-100 transition-transform hover:scale-[1.03] active:scale-[0.98]'
+            : 'cursor-not-allowed opacity-40 grayscale'
       }`}
     >
       <img

@@ -8,7 +8,7 @@ import {
   CheckCheck,
 } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
-import { useActiveBusiness } from '../context/ActiveBusinessContext'
+import { useOrchestratorBusinessId } from '../hooks/useOrchestratorBusinessId'
 import { fetchChatMessages, postChatMessage } from '../api/genesis/businessChatApi'
 import { POLL_MS_INTERACTIVE, refetchIntervalWithVisibilityAndBackoff } from '../lib/genesisPolling'
 import AILoadingIndicator from './AILoadingIndicator'
@@ -76,8 +76,7 @@ function MessageBubble({ message }) {
 
 export default function OrchestratorChat({ open, onClose }) {
   const { t, locale } = useI18n()
-  const { activeBusinessId } = useActiveBusiness()
-  const businessId = activeBusinessId?.trim() || null
+  const businessId = useOrchestratorBusinessId()
   const qc = useQueryClient()
   const [input, setInput] = useState('')
   const scrollRef = useRef(null)
