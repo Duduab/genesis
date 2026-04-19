@@ -6,10 +6,12 @@ import {
   SendHorizonal,
   Minus,
   CheckCheck,
+  Trash2,
 } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { useOrchestratorBusinessId } from '../hooks/useOrchestratorBusinessId'
-import { fetchChatMessages, postChatMessage } from '../api/genesis/businessChatApi'
+import { fetchChatMessages, postChatMessage, clearChatMessages } from '../api/genesis/businessChatApi'
+import { isGenesisApiError } from '../api/genesis/errors'
 import { POLL_MS_INTERACTIVE, refetchIntervalWithVisibilityAndBackoff } from '../lib/genesisPolling'
 import AILoadingIndicator from './AILoadingIndicator'
 
@@ -111,6 +113,26 @@ export default function OrchestratorChat({ open, onClose }) {
     },
   })
 
+  const clearMutation = useMutation({
+    mutationFn: () => clearChatMessages(businessId),
+    onSuccess: async () => {
+      if (businessId) await qc.invalidateQueries({ queryKey: ['chat-messages', businessId] })
+    },
+  })
+
+  const handleClearChat = () => {
+    if (!businessId || messages.length === 0 || clearMutation.isPending) return
+    if (!window.confirm(t('chat.clearChatConfirm'))) return
+    clearMutation.mutate()
+  }
+
+  const clearErrorText =
+    clearMutation.error != null
+      ? isGenesisApiError(clearMutation.error)
+        ? clearMutation.error.userFacingMessage(t('chat.clearChatFailed'), t)
+        : t('chat.clearChatFailed')
+      : null
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -119,8 +141,10 @@ export default function OrchestratorChat({ open, onClose }) {
 
   useEffect(() => {
     if (open) {
+      clearMutation.reset()
       setTimeout(() => inputRef.current?.focus(), 300)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when panel opens
   }, [open])
 
   const handleSend = () => {
@@ -167,18 +191,33 @@ export default function OrchestratorChat({ open, onClose }) {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+            {businessId ? (
+              <button
+                type="button"
+                onClick={handleClearChat}
+                disabled={messages.length === 0 || clearMutation.isPending || sendMutation.isPending}
+                className="flex h-8 shrink-0 items-center gap-1 rounded-lg px-1.5 text-surface-500 transition-colors hover:bg-red-50 hover:text-red-700 disabled:pointer-events-none disabled:opacity-40 dark:hover:bg-red-950/30 dark:hover:text-red-300 sm:px-2"
+                aria-label={t('chat.clearChat')}
+                title={t('chat.clearChat')}
+              >
+                <Trash2 className="h-4 w-4 shrink-0" aria-hidden />
+                <span className="hidden max-w-[7rem] truncate text-[11px] font-semibold sm:inline">{t('chat.clearChat')}</span>
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600"
+              aria-label={t('chat.minimize')}
             >
               <Minus className="h-4 w-4" />
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600"
+              aria-label={t('chat.close')}
             >
               <X className="h-4 w-4" />
             </button>
@@ -200,6 +239,12 @@ export default function OrchestratorChat({ open, onClose }) {
 
           {messagesQuery.isError ? (
             <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-center text-xs text-red-700">{t('chat.loadFailed')}</p>
+          ) : null}
+
+          {clearErrorText ? (
+            <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-center text-xs text-red-700" role="alert">
+              {clearErrorText}
+            </p>
           ) : null}
 
           <div className="flex flex-col gap-4">

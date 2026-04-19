@@ -3,7 +3,7 @@ import type {
   ChatPostQueuedAck,
   ChatTimelineEntry,
 } from '../../types/chatMessage'
-import { genesisGetJson, genesisPostJson } from './client'
+import { genesisGetJson, genesisPostJson, genesisRequestJson } from './client'
 
 function unwrapMessages(envelope: { data?: ChatMessagesPayload | null }): ChatMessagesPayload {
   const d = envelope.data
@@ -57,6 +57,12 @@ export async function postChatMessage(
     throw new Error('Invalid chat post response')
   }
   return { message_id: d.message_id, status: String(d.status ?? 'queued') }
+}
+
+/** DELETE `/api/v1/businesses/{business_id}/chat/messages` — clears the business chat thread (when supported by the API). */
+export async function clearChatMessages(businessId: string): Promise<void> {
+  const bid = encodeURIComponent(businessId.trim())
+  await genesisRequestJson<unknown>({ path: `/api/v1/businesses/${bid}/chat/messages`, method: 'DELETE' })
 }
 
 export type ChatApprovalDecision = 'APPROVE' | 'REJECT'
