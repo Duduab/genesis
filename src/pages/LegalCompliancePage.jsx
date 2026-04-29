@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useI18n } from '../i18n/I18nContext'
-import { useActiveBusiness } from '../context/ActiveBusinessContext'
 import { useLegalDocumentsForBusiness } from '../hooks/useLegalDocumentsForBusiness'
-import { loadPersistedGenesisBusinesses } from '../dashboard/genesisBusinessStorage'
-import { mapPersistedBusinessToEntityView } from '../dashboard/mapPersistedBusinessToEntityView'
+import { useAgentScopedBusinessId } from '../hooks/useAgentScopedBusinessId'
 import { normalizeGenesisDocumentCategory, normalizeGenesisDocumentStatus } from '../constants/genesisApiEnums'
 import { getAgentPresentation } from '../config/agentPresentation'
 import {
@@ -174,30 +172,22 @@ function DocumentRow({ doc, t }) {
 
 export default function LegalCompliancePage() {
   const { t, locale } = useI18n()
-  const { activeBusinessId, activeViewModel } = useActiveBusiness()
+  const { businessId, businessName } = useAgentScopedBusinessId(locale)
   const [activeCategory, setActiveCategory] = useState('all')
   const [search, setSearch] = useState('')
-
-  const { businessId, businessName } = useMemo(() => {
-    const list = loadPersistedGenesisBusinesses()
-    const id = activeBusinessId?.trim() || list[0]?.businessId || null
-    if (!id) return { businessId: null, businessName: '' }
-    let name = ''
-    if (activeBusinessId === id && activeViewModel) {
-      name = activeViewModel.name
-    } else {
-      const row = list.find((b) => b.businessId === id)
-      if (row) name = mapPersistedBusinessToEntityView(row, locale).name
-    }
-    return { businessId: id, businessName: name }
-  }, [activeBusinessId, activeViewModel, locale])
 
   useEffect(() => {
     setActiveCategory('all')
     setSearch('')
   }, [businessId])
 
-  const { data, loading, error } = useLegalDocumentsForBusiness(businessId)
+  const { data, loading, error, refetch } = useLegalDocumentsForBusiness(businessId)
+
+  useEffect(() => {
+    if (!businessId) return
+    void refetch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessId])
 
   const items = data?.items ?? []
   const categoryCounts = data?.category_counts ?? {}

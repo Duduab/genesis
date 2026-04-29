@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { ClipboardCheck, Loader2, X } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
@@ -24,9 +24,14 @@ function rowTitle(row, locale) {
 export default function AgentApprovalsPage() {
   const { t, locale } = useI18n()
   const { enterBusiness } = useActiveBusiness()
-  const { data, isPending, isError, error } = usePendingAgentApprovalsQuery()
+  const { data, isPending, isError, error, refetch } = usePendingAgentApprovalsQuery()
   const [selectedStageId, setSelectedStageId] = useState(null)
   const [notes, setNotes] = useState('')
+
+  useEffect(() => {
+    void refetch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refresh pending list when opening this screen
+  }, [])
 
   const items = data?.items ?? []
 

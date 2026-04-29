@@ -579,7 +579,7 @@
   },
   "settings": {
     "title": "הגדרות",
-    "subtitle": "ניהול חשבון, מגבלות סוכני AI והעדפות אישיות",
+    "subtitle": "V1 ניהול חשבון, מגבלות סוכני AI והעדפות אישיות",
     "tabsProfile": "פרופיל משתמש",
     "tabsGuardrails": "גבולות גזרה (Guardrails)",
     "tabsNotifications": "התראות",

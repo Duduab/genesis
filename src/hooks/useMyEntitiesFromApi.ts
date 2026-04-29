@@ -81,6 +81,17 @@ async function loadMergedEntities(): Promise<{
 
 export const MY_ENTITIES_QUERY_KEY = ['my-entities'] as const
 
+/** Shared subscription so Activity / Legal / orchestrator get business ids before opening My Entities. */
+export function useMyEntitiesMergedQuery(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled !== false
+  return useQuery({
+    queryKey: MY_ENTITIES_QUERY_KEY,
+    queryFn: loadMergedEntities,
+    enabled,
+    refetchInterval: enabled ? refetchIntervalWithVisibilityAndBackoff(POLL_MS_DASHBOARD) : false,
+  })
+}
+
 export function useMyEntitiesFromApi(locale: string): {
   rows: GenesisEntityViewModel[]
   loading: boolean
@@ -89,11 +100,7 @@ export function useMyEntitiesFromApi(locale: string): {
 } {
   const qc = useQueryClient()
 
-  const q = useQuery({
-    queryKey: MY_ENTITIES_QUERY_KEY,
-    queryFn: loadMergedEntities,
-    refetchInterval: refetchIntervalWithVisibilityAndBackoff(POLL_MS_DASHBOARD),
-  })
+  const q = useMyEntitiesMergedQuery({ enabled: true })
 
   const refetch = useCallback(() => {
     void qc.invalidateQueries({ queryKey: MY_ENTITIES_QUERY_KEY })

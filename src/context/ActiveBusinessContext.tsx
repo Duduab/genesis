@@ -54,11 +54,11 @@ export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!pathBusinessId) return
-    const list = loadPersistedGenesisBusinesses()
-    if (!list.some((b) => b.businessId === pathBusinessId)) return
-    if (pathBusinessId !== readActiveBusinessId()) {
-      writeActiveBusinessId(pathBusinessId)
-      setActiveBusinessId(pathBusinessId)
+    const trimmed = pathBusinessId.trim()
+    if (!trimmed) return
+    if (trimmed !== readActiveBusinessId()) {
+      writeActiveBusinessId(trimmed)
+      setActiveBusinessId(trimmed)
     }
   }, [pathBusinessId])
 
@@ -84,11 +84,26 @@ export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
   }, [listTick])
 
   useEffect(() => {
-    const id = readActiveBusinessId()
-    if (!id) return
-    if (!persistedList.some((b) => b.businessId === id)) {
+    if (persistedList.length === 0) {
+      if (readActiveBusinessId() != null) {
+        writeActiveBusinessId(null)
+        setActiveBusinessId(null)
+      }
+      return
+    }
+
+    const stored = readActiveBusinessId()
+    if (stored && !persistedList.some((b) => b.businessId === stored)) {
       writeActiveBusinessId(null)
       setActiveBusinessId(null)
+    }
+
+    if (!readActiveBusinessId()) {
+      const firstId = persistedList[0]?.businessId?.trim()
+      if (firstId) {
+        writeActiveBusinessId(firstId)
+        setActiveBusinessId(firstId)
+      }
     }
   }, [persistedList])
 
@@ -103,10 +118,10 @@ export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
   }, [activeBusiness, locale])
 
   const enterBusiness = useCallback((businessId: string) => {
-    const list = loadPersistedGenesisBusinesses()
-    if (!list.some((b) => b.businessId === businessId)) return
-    writeActiveBusinessId(businessId)
-    setActiveBusinessId(businessId)
+    const id = businessId.trim()
+    if (!id) return
+    writeActiveBusinessId(id)
+    setActiveBusinessId(id)
   }, [])
 
   const clearActiveBusiness = useCallback(() => {

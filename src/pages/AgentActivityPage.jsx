@@ -1,9 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useI18n } from '../i18n/I18nContext'
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
 import { useAgentActivityListQuery } from '../hooks/useAgentActivityListQuery'
-import { loadPersistedGenesisBusinesses } from '../dashboard/genesisBusinessStorage'
-import { mapPersistedBusinessToEntityView } from '../dashboard/mapPersistedBusinessToEntityView'
+import { useAgentScopedBusinessId } from '../hooks/useAgentScopedBusinessId'
 import { getAgentPresentation } from '../config/agentPresentation'
 import { normalizeGenesisActivityStatus } from '../constants/genesisApiEnums'
 import {
@@ -199,24 +198,11 @@ const DATE_SECTION_ORDER = ['today', 'yesterday', 'earlier']
 
 export default function AgentActivityPage() {
   const { t, locale } = useI18n()
-  const { activeBusinessId, activeViewModel } = useActiveBusiness()
+  const { enterBusiness } = useActiveBusiness()
+  const { businessId, businessName } = useAgentScopedBusinessId(locale)
   const [agentFilter, setAgentFilter] = useState('all')
   const [entityFilter, setEntityFilter] = useState(ENTITY_ALL)
   const [statusFilter, setStatusFilter] = useState('all')
-
-  const { businessId, businessName } = useMemo(() => {
-    const list = loadPersistedGenesisBusinesses()
-    const id = activeBusinessId?.trim() || list[0]?.businessId || null
-    if (!id) return { businessId: null, businessName: '' }
-    let name = ''
-    if (activeBusinessId === id && activeViewModel) {
-      name = activeViewModel.name
-    } else {
-      const row = list.find((b) => b.businessId === id)
-      if (row) name = mapPersistedBusinessToEntityView(row, locale).name
-    }
-    return { businessId: id, businessName: name }
-  }, [activeBusinessId, activeViewModel, locale])
 
   const statusApi = mapStatusFilterToApi(statusFilter)
   const { data: activityPayload, isLoading, isError, refetch } = useAgentActivityListQuery(
@@ -227,6 +213,13 @@ export default function AgentActivityPage() {
     },
     { enabled: Boolean(businessId), limit: 200 },
   )
+
+  useEffect(() => {
+    if (!businessId) return
+    void refetch()
+    // Intentionally when businessId changes or tab first gets an id (not on agent/status filter changes).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessId])
 
   const apiItems = useMemo(() => activityPayload?.items ?? [], [activityPayload?.items])
 
