@@ -2,29 +2,22 @@ import { createContext, useContext, useState, useCallback, useRef, useEffect } f
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { configureGenesisApi } from '../api/genesis/client'
 import { getGenesisFirebaseAuth } from './firebaseApp'
+import { displayRoleLabel, roleClaimFromJwt } from './firebaseRoles'
 import { registerGenesisServiceWorker } from './registerOptionalServiceWorker'
 
 const AuthContext = createContext()
 
-const MOCK_USER = {
-  username: 'genesisTechnologies',
-  password: 'Genesis1234',
-  displayName: 'Genesis Technologies',
-  role: 'Administrator',
-  email: 'operations@genesistechnologies.com',
-  phone: '+972527752985',
-}
-
-function normalizeStoredUser(raw) {
-  if (!raw || typeof raw !== 'object') return null
+function firebaseUserToAppUser(fbUser, claims) {
+  const role = roleClaimFromJwt(claims)
   return {
-    displayName: raw.displayName ?? MOCK_USER.displayName,
-    role: raw.role ?? MOCK_USER.role,
-    email: raw.email ?? MOCK_USER.email,
-    username: raw.username ?? MOCK_USER.username,
-    phone: raw.phone ?? MOCK_USER.phone,
-    uid: raw.uid,
-    authSource: raw.authSource ?? 'mock',
+    displayName: fbUser.displayName || fbUser.email || 'User',
+    role: displayRoleLabel(role),
+    roleKey: role,
+    email: fbUser.email || '',
+    username: fbUser.email || fbUser.uid,
+    phone: fbUser.phoneNumber || '',
+    uid: fbUser.uid,
+    authSource: 'firebase',
   }
 }
 
@@ -33,15 +26,7 @@ function isFirebaseAuthAvailable() {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    if (isFirebaseAuthAvailable()) return null
-    try {
-      const stored = sessionStorage.getItem('genesis_user')
-      return stored ? normalizeStoredUser(JSON.parse(stored)) : null
-    } catch {
-      return null
-    }
-  })
+  const [user, setUser] = useState(null)
 
   const [registrationData, setRegistrationData] = useState(null)
   const registrationDataRef = useRef(null)
@@ -78,69 +63,53 @@ export function AuthProvider({ children }) {
         setUser(null)
         return
       }
-      setUser({
-        displayName: fbUser.displayName || fbUser.email || 'User',
-        role: 'Entrepreneur',
-        email: fbUser.email || '',
-        username: fbUser.email || fbUser.uid,
-        phone: fbUser.phoneNumber || '',
-        uid: fbUser.uid,
-        authSource: 'firebase',
-      })
+      void (async () => {
+        try {
+          const idt = await fbUser.getIdTokenResult()
+          setUser(firebaseUserToAppUser(fbUser, idt.claims))
+        } catch {
+          setUser(firebaseUserToAppUser(fbUser, {}))
+        }
+      })()
     })
   }, [])
 
-  const login = useCallback(
-    async (username, password) => {
-      const auth = getGenesisFirebaseAuth()
-      if (auth) {
-        const cred = await signInWithEmailAndPassword(auth, String(username).trim(), password)
-        setUser({
-          displayName: cred.user.displayName || cred.user.email || 'User',
-          role: 'Entrepreneur',
-          email: cred.user.email || '',
-          username: cred.user.email || cred.user.uid,
-          phone: cred.user.phoneNumber || '',
-          uid: cred.user.uid,
-          authSource: 'firebase',
-        })
-        setRegistrationData(null)
-        return { success: true }
-      }
-
-      if (username === MOCK_USER.username && password === MOCK_USER.password) {
-        const userData = {
-          displayName: MOCK_USER.displayName,
-          role: MOCK_USER.role,
-          email: MOCK_USER.email,
-          username: MOCK_USER.username,
-          phone: MOCK_USER.phone,
-          authSource: 'mock',
-        }
-        sessionStorage.setItem('genesis_user', JSON.stringify(userData))
-        setUser(userData)
-        console.log('[Auth] Registration data (Register page inputs):', registrationDataRef.current)
-        setRegistrationData(null)
-        return { success: true }
-      }
-      return { success: false }
-    },
-    [],
-  )
+  const login = useCallback(async (email, password) => {
+    const auth = getGenesisFirebaseAuth()
+    if (!auth) {
+      return { success: false, reason: 'no_firebase' }
+    }
+    try {
+      const cred = await signInWithEmailAndPassword(auth, String(email).trim(), password)
+      const idt = await cred.user.getIdTokenResult(true)
+      setUser(firebaseUserToAppUser(cred.user, idt.claims))
+      setRegistrationData(null)
+      return { success: true }
+    } catch {
+      return { success: false, reason: 'firebase_auth' }
+    }
+  }, [])
 
   const logout = useCallback(async () => {
     const auth = getGenesisFirebaseAuth()
     if (auth?.currentUser) {
       await signOut(auth)
     }
-    sessionStorage.removeItem('genesis_user')
     setUser(null)
     setRegistrationData(null)
   }, [])
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, login, logout, registrationData, setRegistrationData }}
+      value={{
+        user,
+        isAuthenticated: Boolean(user),
+        firebaseConfigured: isFirebaseAuthAvailable(),
+        login,
+        logout,
+        registrationData,
+        setRegistrationData,
+      }}
     >
       {children}
     </AuthContext.Provider>

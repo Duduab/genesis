@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, X } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { updateGenesisBusiness } from '../api/genesis/businessesApi'
 import { loadPersistedGenesisBusinesses, upsertPersistedGenesisBusiness } from '../dashboard/genesisBusinessStorage'
+import { MY_ENTITIES_QUERY_KEY } from '../hooks/useMyEntitiesFromApi'
 
 export default function EditBusinessModal({
   open,
@@ -12,6 +14,7 @@ export default function EditBusinessModal({
   initialCompanyName,
   initialHpNumber,
 }) {
+  const qc = useQueryClient()
   const { t, locale, toggleLocale } = useI18n()
   const [companyName, setCompanyName] = useState('')
   const [hpNumber, setHpNumber] = useState('')
@@ -47,6 +50,7 @@ export default function EditBusinessModal({
       const row = loadPersistedGenesisBusinesses().find((b) => b.businessId === businessId.trim())
       if (row) {
         upsertPersistedGenesisBusiness({ ...row.api, ...data }, row.licenseType)
+        void qc.invalidateQueries({ queryKey: MY_ENTITIES_QUERY_KEY })
       }
       onSaved?.()
       onClose?.()

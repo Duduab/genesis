@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { useRouter, Link } from '../router'
 import { useAuth } from '../auth/AuthContext'
+import { getGenesisFirebaseAuth } from '../auth/firebaseApp'
 import AuthHeroPanel from '../components/AuthHeroPanel'
 
 function WhatsAppIcon({ className }) {
@@ -27,8 +29,8 @@ function GoogleIcon({ className }) {
 export default function LoginPage() {
   const { t, locale, toggleLocale } = useI18n()
   const { navigate } = useRouter()
-  const { login } = useAuth()
-  const [username, setUsername] = useState('')
+  const { login, firebaseConfigured } = useAuth()
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
@@ -48,13 +50,29 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    if (!firebaseConfigured) {
+      setError(t('auth.login.firebaseNotConfigured'))
+      return
+    }
+    const result = await login(email, password)
+    if (result.success) {
+      navigate('/dashboard')
+      return
+    }
+    if (result.reason === 'no_firebase') setError(t('auth.login.firebaseNotConfigured'))
+    else setError(t('auth.login.invalidCredentials'))
+  }
+
+  const handleGoogleSignIn = async () => {
+    setError('')
+    const auth = getGenesisFirebaseAuth()
+    if (!auth) {
+      setError(t('auth.login.firebaseNotConfigured'))
+      return
+    }
     try {
-      const result = await login(username, password)
-      if (result.success) {
-        navigate('/dashboard')
-      } else {
-        setError(t('auth.login.invalidCredentials'))
-      }
+      await signInWithPopup(auth, new GoogleAuthProvider())
+      navigate('/dashboard')
     } catch {
       setError(t('auth.login.firebaseError'))
     }
@@ -116,7 +134,7 @@ export default function LoginPage() {
               {/* Google */}
               <button
                 type="button"
-                onClick={() => setError(t('auth.login.providerUnavailable'))}
+                onClick={() => void handleGoogleSignIn()}
                 className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-surface-200 bg-white text-sm font-medium text-surface-700 transition-all hover:bg-surface-50 hover:shadow-sm active:scale-[0.98]"
               >
                 <GoogleIcon className="h-4.5 w-4.5" />
@@ -140,17 +158,18 @@ export default function LoginPage() {
                 )}
 
                 <div>
-                  <label htmlFor="login-username" className="mb-1.5 block text-xs font-semibold text-surface-600">
-                    {t('auth.login.username')}
+                  <label htmlFor="login-email" className="mb-1.5 block text-xs font-semibold text-surface-600">
+                    {t('auth.login.email')}
                   </label>
                   <div className="relative">
                     <User className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
                     <input
-                      id="login-username"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder={t('auth.login.usernamePlaceholder')}
+                      id="login-email"
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={t('auth.login.emailPlaceholder')}
                       className="h-11 w-full rounded-xl border border-surface-200 bg-surface-50 ps-10 pe-3 text-sm text-surface-700 placeholder:text-surface-400 outline-none transition-all focus:border-genesis-400 focus:bg-white focus:ring-2 focus:ring-genesis-100"
                     />
                   </div>
@@ -170,6 +189,7 @@ export default function LoginPage() {
                     <input
                       id="login-pw"
                       type={showPw ? 'text' : 'password'}
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={t('auth.login.passwordPlaceholder')}

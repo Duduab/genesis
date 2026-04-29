@@ -7,9 +7,13 @@
  * **Stack note (Mission Control):** the System Design Document names “Next.js”; this repository ships a
  * **Vite + React** SPA that follows the same REST-only, polling, Firebase-JWT, and Hebrew-first behaviors.
  * Landing + multi-step registration are client acquisition flows outside the core six Mission Control screens.
+ *
+ * **Auth:** configure `VITE_FIREBASE_*` for Firebase Auth (email/password, Google). API calls send
+ * `Authorization: Bearer <Firebase ID token>` when a user is signed in; optional `VITE_GENESIS_API_BEARER_TOKEN`
+ * supplies a dev token when no Firebase session exists.
  */
 
-const DEFAULT_GENESIS_API_BASE_URL = 'https://genesis-api-242231160010.me-west1.run.app'
+const DEFAULT_GENESIS_API_BASE_URL = 'https://genesis-gateway-svc-242231160010.me-west1.run.app'
 
 /** Staging dev token from backend guide (entrepreneur role). Override via env in production. */
 const DEV_FALLBACK_BEARER_TOKEN = 'dev-entrepreneur-user1'
@@ -43,14 +47,32 @@ export function getGenesisAdminApiBearerToken(): string {
   return ''
 }
 
+/** Public web SDK options (Firebase console / `firebase apps:sdkconfig WEB`). */
 export function getFirebaseWebConfig(): {
   apiKey: string
   authDomain: string
   projectId: string
+  storageBucket: string
+  messagingSenderId?: string
+  appId?: string
+  measurementId?: string
 } | null {
   const apiKey = import.meta.env.VITE_FIREBASE_API_KEY?.trim()
   const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN?.trim()
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID?.trim()
   if (!apiKey || !authDomain || !projectId) return null
-  return { apiKey, authDomain, projectId }
+  const rawBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET?.trim()
+  const storageBucket = rawBucket || `${projectId}.appspot.com`
+  const messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID?.trim()
+  const appId = import.meta.env.VITE_FIREBASE_APP_ID?.trim()
+  const measurementId = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID?.trim()
+  return {
+    apiKey,
+    authDomain,
+    projectId,
+    storageBucket,
+    ...(messagingSenderId ? { messagingSenderId } : {}),
+    ...(appId ? { appId } : {}),
+    ...(measurementId ? { measurementId } : {}),
+  }
 }

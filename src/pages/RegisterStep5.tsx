@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, Phone, User } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { Link, useRouter } from '../router'
@@ -11,6 +12,7 @@ import { saveDashboardBusinessProfile } from '../dashboard/dashboardBusinessProf
 import { upsertPersistedGenesisBusiness } from '../dashboard/genesisBusinessStorage'
 import { clearWizardStorage, loadWizardStep1 } from '../wizard/createBusinessWizardStorage'
 import type { BusinessRegistrationPayload, LicenseTypeId, WizardStep1Persisted } from '../types/business'
+import { MY_ENTITIES_QUERY_KEY } from '../hooks/useMyEntitiesFromApi'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -40,6 +42,7 @@ function buildPayload(
 }
 
 export default function RegisterStep5() {
+  const qc = useQueryClient()
   const { t, locale, toggleLocale } = useI18n()
   const { navigate } = useRouter()
 
@@ -101,6 +104,7 @@ export default function RegisterStep5() {
     try {
       const created = await submitBusinessRegistration(payload)
       upsertPersistedGenesisBusiness(created.data, payload.business.licenseType as LicenseTypeId)
+      void qc.invalidateQueries({ queryKey: MY_ENTITIES_QUERY_KEY })
       saveDashboardBusinessProfile(payload.business)
       clearWizardStorage()
       try {

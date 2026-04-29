@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import * as LucideIcons from 'lucide-react'
 import {
   AlertTriangle,
@@ -38,6 +39,7 @@ import {
   saveModalWizardStep1,
 } from '../wizard/createBusinessWizardStorage'
 import { formatNisFull } from '../utils/formatNis'
+import { MY_ENTITIES_QUERY_KEY } from '../hooks/useMyEntitiesFromApi'
 
 const ACCENT_DARK = {
   cyan: {
@@ -112,6 +114,7 @@ function buildModalPayload(step1, t, user) {
 }
 
 export default function AddBusinessWizardModal({ open, onClose }) {
+  const qc = useQueryClient()
   const { t, locale, toggleLocale } = useI18n()
   const { user } = useAuth()
   const [step, setStep] = useState(1)
@@ -226,6 +229,7 @@ export default function AddBusinessWizardModal({ open, onClose }) {
       const payload = buildModalPayload(s1, t, user)
       const created = await submitBusinessRegistration(payload)
       upsertPersistedGenesisBusiness(created.data, s1.licenseType)
+      void qc.invalidateQueries({ queryKey: MY_ENTITIES_QUERY_KEY })
       saveDashboardBusinessProfile(payload.business)
       clearModalWizardStorage()
       onClose?.()

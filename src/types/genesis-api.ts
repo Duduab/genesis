@@ -8,7 +8,7 @@
  * ```
  *
  * Source URL (see `package.json` → `scripts.gen:api-types`):
- * `https://genesis-api-242231160010.me-west1.run.app/openapi.json`
+ * `https://genesis-gateway-svc-242231160010.me-west1.run.app/openapi.json`
  *
  * If `npm run gen:api-types` fails (TLS/proxy), download the JSON in a browser or with `curl`,
  * save it as `docs/openapi.json`, then:

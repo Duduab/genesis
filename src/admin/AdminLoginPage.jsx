@@ -14,11 +14,16 @@ export default function AdminLoginPage() {
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    const ok = login(username.trim(), password)
-    if (ok) navigate('/admin/monitoring')
+    const result = await login(username.trim(), password)
+    if (result.ok) {
+      navigate('/admin/monitoring')
+      return
+    }
+    if (result.reason === 'no_firebase') setError(t('auth.adminLogin.firebaseNotConfigured'))
+    else if (result.reason === 'forbidden_role') setError(t('auth.adminLogin.insufficientRole'))
     else setError(t('auth.adminLogin.invalidCredentials'))
   }
 
@@ -57,18 +62,18 @@ export default function AdminLoginPage() {
               ) : null}
 
               <div>
-                <label htmlFor="admin-login-username" className="mb-1.5 block text-xs font-semibold text-surface-600">
-                  {t('auth.login.username')}
+                <label htmlFor="admin-login-email" className="mb-1.5 block text-xs font-semibold text-surface-600">
+                  {t('auth.login.email')}
                 </label>
                 <div className="relative">
                   <User className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
                   <input
-                    id="admin-login-username"
-                    type="text"
-                    autoComplete="username"
+                    id="admin-login-email"
+                    type="email"
+                    autoComplete="email"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder={t('auth.adminLogin.usernamePlaceholder')}
+                    placeholder={t('auth.adminLogin.emailPlaceholder')}
                     className="h-11 w-full rounded-xl border border-surface-200 bg-surface-50 ps-10 pe-3 text-sm text-surface-700 placeholder:text-surface-400 outline-none transition-all focus:border-genesis-400 focus:bg-white focus:ring-2 focus:ring-genesis-100"
                   />
                 </div>

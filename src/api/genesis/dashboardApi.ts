@@ -24,6 +24,7 @@ export async function fetchBusinessDashboard(businessId: string): Promise<Dashbo
     } catch (e) {
       lastErr = e
       if (isGenesisApiError(e) && e.status === 404) continue
+      if (isGenesisApiError(e) && (e.status === 401 || e.status === 403)) continue
       throw e
     }
   }
@@ -52,6 +53,7 @@ export async function fetchDashboardRevenueChart(
     } catch (e) {
       lastErr = e
       if (isGenesisApiError(e) && e.status === 404) continue
+      if (isGenesisApiError(e) && (e.status === 401 || e.status === 403)) continue
       throw e
     }
   }
@@ -72,6 +74,7 @@ export async function fetchDashboardStats(businessId: string): Promise<Dashboard
     } catch (e) {
       lastErr = e
       if (isGenesisApiError(e) && e.status === 404) continue
+      if (isGenesisApiError(e) && (e.status === 401 || e.status === 403)) continue
       throw e
     }
   }

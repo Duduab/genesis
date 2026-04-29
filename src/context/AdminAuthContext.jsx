@@ -1,28 +1,60 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { ADMIN_PANEL_PASSWORD, ADMIN_PANEL_USERNAME } from '../config/adminPanelCredentials'
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import { getGenesisFirebaseAuth } from '../auth/firebaseApp'
+import { isConsoleStaffRole } from '../auth/firebaseRoles'
 
 const AdminAuthContext = createContext(null)
 
-const STORAGE_KEY = 'genesis_admin_panel_authenticated'
+async function refreshConsoleAccessFromUser(fbUser) {
+  if (!fbUser) return false
+  try {
+    const idt = await fbUser.getIdTokenResult(true)
+    return isConsoleStaffRole(idt.claims)
+  } catch {
+    return false
+  }
+}
 
 export function AdminAuthProvider({ children }) {
-  const [ok, setOk] = useState(() => (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(STORAGE_KEY) === '1' : false))
+  const [ok, setOk] = useState(false)
 
   useEffect(() => {
-    setOk(sessionStorage.getItem(STORAGE_KEY) === '1')
-  }, [])
-
-  const login = useCallback((username, password) => {
-    if (username === ADMIN_PANEL_USERNAME && password === ADMIN_PANEL_PASSWORD) {
-      sessionStorage.setItem(STORAGE_KEY, '1')
-      setOk(true)
-      return true
+    const auth = getGenesisFirebaseAuth()
+    if (!auth) {
+      setOk(false)
+      return undefined
     }
-    return false
+    return onAuthStateChanged(auth, (fbUser) => {
+      if (!fbUser) {
+        setOk(false)
+        return
+      }
+      void refreshConsoleAccessFromUser(fbUser).then(setOk)
+    })
   }, [])
 
-  const logout = useCallback(() => {
-    sessionStorage.removeItem(STORAGE_KEY)
+  const login = useCallback(async (email, password) => {
+    const auth = getGenesisFirebaseAuth()
+    if (!auth) return { ok: false, reason: 'no_firebase' }
+    try {
+      const cred = await signInWithEmailAndPassword(auth, String(email).trim(), password)
+      const allowed = await refreshConsoleAccessFromUser(cred.user)
+      if (!allowed) {
+        await signOut(auth)
+        return { ok: false, reason: 'forbidden_role' }
+      }
+      setOk(true)
+      return { ok: true }
+    } catch {
+      return { ok: false, reason: 'firebase_auth' }
+    }
+  }, [])
+
+  const logout = useCallback(async () => {
+    const auth = getGenesisFirebaseAuth()
+    if (auth?.currentUser) {
+      await signOut(auth)
+    }
     setOk(false)
   }, [])
 

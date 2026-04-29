@@ -1,3 +1,4 @@
+import { getGenesisFirebaseAuth } from '../../auth/firebaseApp'
 import { getGenesisApiBaseUrl, getGenesisApiBearerToken } from '../../config/genesisEnv'
 import { GenesisApiError } from './errors'
 import { parseGenesisResponseMeta } from './genesisResponseMeta'
@@ -21,11 +22,28 @@ export function configureGenesisApi(options: {
   if ('onUnauthorized' in options) onUnauthorized = options.onUnauthorized ?? null
 }
 
+/**
+ * Prefer a live Firebase ID token whenever a session exists, so every request gets
+ * `Authorization: Bearer <jwt>` even if `configureGenesisApi` has not run yet (StrictMode / ordering).
+ * Then fall back to the registered provider, then env dev token (see genesisEnv).
+ */
 async function resolveBearerToken(): Promise<string | null> {
+  try {
+    const auth = getGenesisFirebaseAuth()
+    const user = auth?.currentUser ?? null
+    if (user) {
+      const t = await user.getIdToken()
+      if (t?.trim()) return t.trim()
+    }
+  } catch {
+    /* fall through */
+  }
+
   if (accessTokenProvider) {
     const t = await accessTokenProvider()
     if (t?.trim()) return t.trim()
   }
+
   const env = getGenesisApiBearerToken()
   return env || null
 }

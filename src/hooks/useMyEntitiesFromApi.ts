@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchGenesisBusinessById } from '../api/genesis/businessesApi'
+import { fetchGenesisBusinessById, fetchGenesisBusinessList } from '../api/genesis/businessesApi'
+import { isGenesisApiError } from '../api/genesis/errors'
 import {
-  GENESIS_BUSINESSES_UPDATED_EVENT,
   GENESIS_SAVED_BUSINESSES_STORAGE_KEY,
   loadPersistedGenesisBusinesses,
+  setPersistedGenesisBusinesses,
   type PersistedGenesisBusiness,
 } from '../dashboard/genesisBusinessStorage'
 import {
   mapPersistedBusinessToEntityView,
   type GenesisEntityViewModel,
 } from '../dashboard/mapPersistedBusinessToEntityView'
+import type { LicenseTypeId } from '../types/business'
 import type { GenesisBusinessApiData } from '../types/genesisBusiness'
 import { POLL_MS_DASHBOARD, refetchIntervalWithVisibilityAndBackoff } from '../lib/genesisPolling'
 
@@ -18,33 +20,66 @@ function mergeRow(persisted: PersistedGenesisBusiness, api: GenesisBusinessApiDa
   return { ...persisted, api }
 }
 
+function stubPersisted(api: GenesisBusinessApiData, licenseType: LicenseTypeId): PersistedGenesisBusiness {
+  return {
+    businessId: api.business_id,
+    savedAt: new Date().toISOString(),
+    api,
+    licenseType,
+  }
+}
+
+/**
+ * Prefer GET `/api/v1/businesses` as the source of truth so localStorage does not keep
+ * business UUIDs the signed-in user is no longer allowed to access (would otherwise 401 every chart/dashboard call).
+ */
 async function loadMergedEntities(): Promise<{
   merged: PersistedGenesisBusiness[]
   errorKey: string | null
 }> {
   const persisted = loadPersistedGenesisBusinesses()
-  if (persisted.length === 0) {
-    return { merged: [], errorKey: null }
-  }
-  const results = await Promise.all(
-    persisted.map(async (p) => {
+  try {
+    const { items } = await fetchGenesisBusinessList({ limit: 100 })
+    const byId = new Map(persisted.map((p) => [p.businessId, p]))
+    const merged = items.map((api) => {
+      const prev = byId.get(api.business_id)
+      const license = (prev?.licenseType ?? 'ltd') as LicenseTypeId
+      return mergeRow(prev ?? stubPersisted(api, license), api)
+    })
+    setPersistedGenesisBusinesses(merged)
+    return { merged, errorKey: null }
+  } catch (e) {
+    if (persisted.length === 0) {
+      return {
+        merged: [],
+        errorKey: 'entities.loadFromApiFailed',
+      }
+    }
+    const next: PersistedGenesisBusiness[] = []
+    let forbiddenOrGone = 0
+    let otherFailures = 0
+    for (const p of persisted) {
       try {
         const api = await fetchGenesisBusinessById(p.businessId)
-        return { ok: true as const, row: mergeRow(p, api) }
-      } catch {
-        return { ok: false as const, row: p }
+        next.push(mergeRow(p, api))
+      } catch (err) {
+        if (isGenesisApiError(err) && (err.status === 401 || err.status === 403)) {
+          forbiddenOrGone += 1
+        } else {
+          otherFailures += 1
+          next.push(p)
+        }
       }
-    }),
-  )
-  const merged = results.map((r) => r.row)
-  const failed = results.filter((r) => !r.ok)
-  let errorKey: string | null = null
-  if (failed.length === results.length) errorKey = 'entities.loadFromApiFailed'
-  else if (failed.length > 0) errorKey = 'entities.loadFromApiPartial'
-  return { merged, errorKey }
+    }
+    setPersistedGenesisBusinesses(next)
+    let errorKey: string | null = null
+    if (otherFailures === persisted.length) errorKey = 'entities.loadFromApiFailed'
+    else if (otherFailures > 0 || forbiddenOrGone > 0) errorKey = 'entities.loadFromApiPartial'
+    return { merged: next, errorKey }
+  }
 }
 
-const MY_ENTITIES_QUERY_KEY = ['my-entities'] as const
+export const MY_ENTITIES_QUERY_KEY = ['my-entities'] as const
 
 export function useMyEntitiesFromApi(locale: string): {
   rows: GenesisEntityViewModel[]
@@ -65,14 +100,14 @@ export function useMyEntitiesFromApi(locale: string): {
   }, [qc])
 
   useEffect(() => {
-    const onCustom = () => refetch()
+    /** Cross-tab only: same-tab `localStorage.setItem` does not fire `storage`. */
+    /** Do not listen to `GENESIS_BUSINESSES_UPDATED_EVENT`: `loadMergedEntities` writes storage and notifies;
+     *  refetching on that event caused an infinite loop (API payload JSON rarely matches byte-for-byte). */
     const onStorage = (e: StorageEvent) => {
       if (e.key === GENESIS_SAVED_BUSINESSES_STORAGE_KEY) refetch()
     }
-    window.addEventListener(GENESIS_BUSINESSES_UPDATED_EVENT, onCustom)
     window.addEventListener('storage', onStorage)
     return () => {
-      window.removeEventListener(GENESIS_BUSINESSES_UPDATED_EVENT, onCustom)
       window.removeEventListener('storage', onStorage)
     }
   }, [refetch])

@@ -37,6 +37,20 @@ function notifyUpdated(): void {
   }
 }
 
+/** Write list and notify listeners only when serialized payload changed (avoids refetch loops). */
+function persistBusinessListIfChanged(rows: PersistedGenesisBusiness[]): void {
+  const trimmed = rows.slice(0, 50)
+  try {
+    const next = JSON.stringify(trimmed)
+    const prev = localStorage.getItem(STORAGE_KEY)
+    if (prev === next) return
+    localStorage.setItem(STORAGE_KEY, next)
+    notifyUpdated()
+  } catch {
+    /* ignore */
+  }
+}
+
 export function loadPersistedGenesisBusinesses(): PersistedGenesisBusiness[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -76,23 +90,17 @@ export function upsertPersistedGenesisBusiness(
     api,
     licenseType,
   })
-  const trimmed = list.slice(0, 50)
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed))
-    notifyUpdated()
-  } catch {
-    /* ignore */
-  }
+  persistBusinessListIfChanged(list)
 }
 
 export function removePersistedGenesisBusiness(businessId: string): void {
   const id = businessId.trim()
   if (!id) return
   const list = loadPersistedGenesisBusinesses().filter((b) => b.businessId !== id)
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
-    notifyUpdated()
-  } catch {
-    /* ignore */
-  }
+  persistBusinessListIfChanged(list)
+}
+
+/** Replace the whole list (e.g. after syncing from GET `/api/v1/businesses`). */
+export function setPersistedGenesisBusinesses(rows: PersistedGenesisBusiness[]): void {
+  persistBusinessListIfChanged(rows)
 }

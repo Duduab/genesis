@@ -32,8 +32,7 @@ export default function AdminLayout({ active, children }) {
   ]
 
   const handleLogout = () => {
-    logout()
-    navigate('/admin')
+    void Promise.resolve(logout()).then(() => navigate('/admin'))
   }
 
   return (
