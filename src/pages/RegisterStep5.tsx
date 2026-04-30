@@ -1,11 +1,13 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, Phone, User } from 'lucide-react'
+import { createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { useI18n } from '../i18n/I18nContext'
 import { Link, useRouter } from '../router'
 import AuthHeroPanel from '../components/AuthHeroPanel'
 import { submitBusinessRegistration } from '../api/submitBusinessRegistration'
 import { isGenesisApiError } from '../api/genesis/errors'
+import { getGenesisFirebaseAuth } from '../auth/firebaseApp'
 import { getBusinessAnalysisProfile } from '../config/businessAnalysisProfiles'
 import { getLocationInsightBundlePrefix } from '../config/locationInsightBundles'
 import { saveDashboardBusinessProfile } from '../dashboard/dashboardBusinessProfileStorage'
@@ -101,12 +103,47 @@ export default function RegisterStep5() {
 
     const payload = buildPayload(step1, userPayload, t)
 
+    const auth = getGenesisFirebaseAuth()
+    if (!auth) {
+      setSubmitError(t('createBusiness.step5.error_firebase_unavailable'))
+      setSubmitting(false)
+      return
+    }
+
+    let firebaseUserCreated = false
     try {
+      // Create Firebase account first so subsequent POST /api/v1/businesses
+      // automatically carries `Authorization: Bearer <idToken>` (resolved from
+      // `auth.currentUser.getIdToken()` inside the Genesis API client).
+      try {
+        await createUserWithEmailAndPassword(auth, userPayload.email, userPayload.password)
+        firebaseUserCreated = true
+      } catch (firebaseErr) {
+        const code = (firebaseErr as { code?: string })?.code ?? ''
+        if (code === 'auth/email-already-in-use') {
+          setSubmitError(t('createBusiness.step5.error_email_in_use'))
+        } else if (code === 'auth/weak-password') {
+          setSubmitError(t('createBusiness.step5.error_weak_password'))
+        } else if (code === 'auth/invalid-email') {
+          setSubmitError(t('createBusiness.step5.error_email_invalid'))
+        } else {
+          setSubmitError(t('createBusiness.step5.error_registration_failed'))
+        }
+        return
+      }
+
       const created = await submitBusinessRegistration(payload)
       upsertPersistedGenesisBusiness(created.data, payload.business.licenseType as LicenseTypeId)
       void qc.invalidateQueries({ queryKey: MY_ENTITIES_QUERY_KEY })
       saveDashboardBusinessProfile(payload.business)
       clearWizardStorage()
+      // Sign out so the user must re-authenticate from /login.
+      // Keeps registration UX consistent (success → login screen).
+      try {
+        await signOut(auth)
+      } catch {
+        /* ignore */
+      }
       try {
         sessionStorage.setItem('genesis-reg-success', '1')
       } catch {
@@ -114,6 +151,15 @@ export default function RegisterStep5() {
       }
       navigate('/login')
     } catch (e) {
+      // Business creation failed after Firebase user was created — sign the
+      // user out so a retry doesn't hit `auth/email-already-in-use`.
+      if (firebaseUserCreated) {
+        try {
+          await signOut(auth)
+        } catch {
+          /* ignore */
+        }
+      }
       const msg = isGenesisApiError(e)
         ? e.userFacingMessage(t('createBusiness.step5.error_registration_failed'), t)
         : e instanceof Error

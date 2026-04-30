@@ -110,13 +110,19 @@ export default function LandingPage() {
       {/* ──── NAV — solid black bar ──── */}
       <nav className="relative z-30 border-b border-white/10 bg-black">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center gap-2">
             <img
               src="/logos/logo-primary.png"
               alt="Genesis Technologies"
               className="h-9 w-auto brightness-0 invert object-contain"
               style={{ aspectRatio: 'auto' }}
             />
+            <span
+              aria-label="App version"
+              className="rounded-md border border-white/15 bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/80"
+            >
+              V1.0.0
+            </span>
           </Link>
 
           <div className="hidden items-center gap-6 md:flex">
