@@ -183,12 +183,6 @@ export default function LegalCompliancePage() {
 
   const { data, loading, error, refetch } = useLegalDocumentsForBusiness(businessId)
 
-  useEffect(() => {
-    if (!businessId) return
-    void refetch()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [businessId])
-
   const items = data?.items ?? []
   const categoryCounts = data?.category_counts ?? {}
   const statusCounts = data?.status_counts ?? {}

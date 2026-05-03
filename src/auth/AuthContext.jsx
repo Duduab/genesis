@@ -44,6 +44,7 @@ export function AuthProvider({ children }) {
         const auth = getGenesisFirebaseAuth()
         const u = auth?.currentUser
         if (!u) return null
+        // Firebase ID token (JWT) — same as `id_token` from the securetoken endpoint.
         return u.getIdToken()
       },
       onUnauthorized: async () => {

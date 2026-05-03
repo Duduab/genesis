@@ -72,6 +72,9 @@ export default function LoginPage() {
     }
     try {
       await signInWithPopup(auth, new GoogleAuthProvider())
+      // Same token family as `securetoken` `id_token` — materialize before REST calls so
+      // `Authorization: Bearer` is always populated on the first dashboard request.
+      if (auth.currentUser) await auth.currentUser.getIdToken()
       navigate('/dashboard')
     } catch {
       setError(t('auth.login.firebaseError'))

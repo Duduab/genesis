@@ -11,7 +11,12 @@ let accessTokenProvider: GenesisAccessTokenProvider | null = null
 let onUnauthorized: GenesisUnauthorizedHandler | null = null
 
 /**
- * Production: set `getAccessToken` from Firebase (`getIdToken()`).
+ * Production: set `getAccessToken` from Firebase (`User.getIdToken()`).
+ * That value is the Firebase **ID token** (JWT) — the `id_token` field in the JSON
+ * returned by `securetoken.googleapis.com/v1/token`. Your Genesis API should verify
+ * this JWT (e.g. Firebase Admin `verifyIdToken`). It is **not** the Google OAuth
+ * `access_token` from the same response (that token is for Google APIs, not your REST API).
+ *
  * Optional `onUnauthorized`: e.g. `getIdToken(true)` then return new token for one retry.
  */
 export function configureGenesisApi(options: {
@@ -23,17 +28,22 @@ export function configureGenesisApi(options: {
 }
 
 /**
- * Prefer a live Firebase ID token whenever a session exists, so every request gets
- * `Authorization: Bearer <jwt>` even if `configureGenesisApi` has not run yet (StrictMode / ordering).
- * Then fall back to the registered provider, then env dev token (see genesisEnv).
+ * Resolves the string sent as `Authorization: Bearer <token>` on every Genesis REST call.
+ *
+ * Firebase Auth refreshes tokens via `securetoken.googleapis.com/v1/token?key=…`.
+ * The JSON body includes `id_token` and `access_token`. For this app and for backends
+ * that validate Firebase users, you must send the **ID token** — that is exactly what
+ * `firebase/auth` `User.getIdToken()` returns (a JWT), not the OAuth `access_token`.
+ *
+ * Resolution order: signed-in Firebase user → configured `getAccessToken` → env dev token.
  */
 async function resolveBearerToken(): Promise<string | null> {
   try {
     const auth = getGenesisFirebaseAuth()
     const user = auth?.currentUser ?? null
     if (user) {
-      const t = await user.getIdToken()
-      if (t?.trim()) return t.trim()
+      const idToken = await user.getIdToken()
+      if (idToken?.trim()) return idToken.trim()
     }
   } catch {
     /* fall through */
@@ -178,7 +188,7 @@ export interface GenesisRequestOptions extends Omit<RequestInit, 'body'> {
   idempotencyKey?: string
   /** When false, omit Authorization (rare). */
   auth?: boolean
-  /** When set, used as Bearer for this request instead of the configured provider / env token. */
+  /** When set, used as Bearer for this request instead of the Firebase ID token / env token. */
   bearerToken?: string | null
 }
 

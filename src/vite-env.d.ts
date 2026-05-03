@@ -3,7 +3,7 @@
 interface ImportMetaEnv {
   /** Override default staging API origin. */
   readonly VITE_GENESIS_API_BASE_URL?: string
-  /** Dev/staging token (e.g. dev-entrepreneur-user1). Production: use Firebase JWT via configureGenesisApi. */
+  /** Dev/staging token (e.g. dev-entrepreneur-user1). Production: use Firebase ID token via `User.getIdToken()`. */
   readonly VITE_GENESIS_API_BEARER_TOKEN?: string
   /** Admin token for `/admin` APIs; in dev, code falls back to `dev-admin-test` when unset. */
   readonly VITE_GENESIS_ADMIN_BEARER_TOKEN?: string

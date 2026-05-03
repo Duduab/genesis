@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useI18n } from '../i18n/I18nContext'
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
 import { useAgentActivityListQuery } from '../hooks/useAgentActivityListQuery'
@@ -213,13 +213,6 @@ export default function AgentActivityPage() {
     },
     { enabled: Boolean(businessId), limit: 200 },
   )
-
-  useEffect(() => {
-    if (!businessId) return
-    void refetch()
-    // Intentionally when businessId changes or tab first gets an id (not on agent/status filter changes).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [businessId])
 
   const apiItems = useMemo(() => activityPayload?.items ?? [], [activityPayload?.items])
 

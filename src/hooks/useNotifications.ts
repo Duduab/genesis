@@ -56,8 +56,14 @@ export function useNotifications(open: boolean, options?: { enabled?: boolean })
   }, [items])
 
   useEffect(() => {
-    if (open) refetch()
-  }, [open, refetch])
+    if (!open) return
+    // Avoid an extra GET every time the panel opens when polling already refreshed
+    // recently (same query key is shared with TopHeader + App).
+    const state = qc.getQueryState(NOTIFICATIONS_QUERY_KEY)
+    const updatedAt = state?.dataUpdatedAt ?? 0
+    const ageMs = updatedAt ? Date.now() - updatedAt : Number.POSITIVE_INFINITY
+    if (ageMs > 10_000) void qc.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY })
+  }, [open, qc])
 
   return {
     items,

@@ -64,7 +64,7 @@ export async function fetchDashboardRevenueChart(
 /** GET `/api/v1/businesses/{business_id}/dashboard/stats` — per-business KPI cards. */
 export async function fetchDashboardStats(businessId: string): Promise<DashboardStatsPayload | null> {
   const bid = encodeURIComponent(businessId.trim())
-  const paths = [`/api/v1/businesses/${bid}/dashboard/stats`, `/api/v1/businesses/${bid}/dashboard/stats`]
+  const paths = [`/api/v1/businesses/${bid}/dashboard/stats`, `/api/v1/${bid}/dashboard/stats`]
   let lastErr: unknown
   for (const path of paths) {
     try {
