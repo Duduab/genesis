@@ -131,6 +131,7 @@ export {
   postOrganizationMember,
   deleteOrganizationMember,
   patchOrganizationMemberRole,
+  postCreateOrganization,
 } from './organizationsApi'
 export { fetchStageById, fetchStageLogs, postStageRetry } from './stagesApi'
 export type { GenesisStageDetail, GenesisStageLogs } from '../../types/genesisStageDetail'

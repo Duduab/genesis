@@ -235,8 +235,18 @@
       "subtitle": "Workspaces and teams linked to your businesses.",
       "loading": "Loading organizations…",
       "loadError": "Could not load organizations. Try again later.",
+      "loadErrorHint": "You can still create an organization below.",
       "empty": "You are not part of an organization yet. When you create a business, a workspace is created for you automatically.",
       "redirecting": "Opening team settings…"
+    },
+    "add": {
+      "title": "Add organization",
+      "subtitle": "Create a workspace, chain, or franchise. You will be the first owner.",
+      "nameLabel": "Organization name",
+      "namePlaceholder": "e.g. My Holdings Ltd.",
+      "typeLabel": "Type",
+      "submit": "Create organization",
+      "createFailed": "Could not create organization. Try again."
     },
     "type": {
       "workspace": "Workspace",

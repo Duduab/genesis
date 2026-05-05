@@ -1,6 +1,23 @@
 import type { OrganizationMemberRow, OrganizationSummary } from '../../types/organization'
 import { genesisGetJson, genesisListJson, genesisPostJson, genesisRequestJson } from './client'
 
+export async function postCreateOrganization(body: {
+  name: string
+  organization_type?: 'workspace' | 'chain' | 'franchise'
+}): Promise<OrganizationSummary> {
+  const idempotencyKey =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `org-create-${Date.now()}`
+  const envelope = await genesisPostJson<OrganizationSummary>('/api/v1/organizations', {
+    body: {
+      name: body.name.trim(),
+      organization_type: body.organization_type ?? 'workspace',
+    },
+    idempotencyKey,
+  })
+  if (!envelope.data?.organization_id) throw new Error('Invalid create organization response')
+  return envelope.data
+}
+
 export async function fetchOrganizationsList(): Promise<{ items: OrganizationSummary[] }> {
   const envelope = await genesisListJson<OrganizationSummary>('/api/v1/organizations')
   return { items: Array.isArray(envelope.data) ? envelope.data : [] }
