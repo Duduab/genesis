@@ -184,6 +184,8 @@
     "searchMobileClose": "סגור חיפוש",
     "searchMobileHint": "הקלידו לפחות תו אחד לחיפוש.",
     "activeBusinessChip": "{{name}}",
+    "organizationLabel": "ארגון",
+    "organizationAria": "ארגון פעיל",
     "roleAdministrator": "מנהל מערכת",
     "roleAdmin": "מנהל מערכת",
     "roleOperator": "מפעיל",
@@ -247,6 +249,14 @@
       "typeLabel": "סוג",
       "submit": "יצירת ארגון",
       "createFailed": "לא ניתן ליצור ארגון. נסה שוב."
+    },
+    "registration": {
+      "defaultOrgName": "סביבת עבודה של {{name}}",
+      "createOrgFailed": "לא ניתן ליצור את הארגון. נסה שוב או פנה לתמיכה."
+    },
+    "scope": {
+      "label": "ארגון",
+      "hint": "רק עסקים תחת הארגון הזה מוצגים. החלף ארגון לניהול סביבה אחרת."
     },
     "type": {
       "workspace": "סביבת עבודה",
@@ -481,6 +491,7 @@
     "cancelBusinessFailed": "לא ניתן לבטל את העסק. נסה שוב.",
     "createNew": "הוספת עסק חדש",
     "createNewSub": "אותו תהליך כמו בהרשמה — בלי שדות חשבון",
+    "addBusinessNoOrg": "יש להצטרף או ליצור ארגון תחילה (הארגונים שלי), ואז להוסיף עסק.",
     "openChat": "פתח צ׳אט",
     "searchPlaceholder": "חיפוש עסקים…",
     "filters": "מסננים",

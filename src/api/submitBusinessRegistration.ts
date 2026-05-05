@@ -33,18 +33,23 @@ function isAlreadyCreatedPayload(data: unknown): boolean {
  */
 async function resolveBusinessAfterIdempotentReplay(
   body: CreateBusinessRequestBody,
+  organizationId?: string | null,
 ): Promise<GenesisBusinessApiData | null> {
   const list = await fetchGenesisBusinessList({ limit: 100 })
   const tol = 1
-  const matches = list.items.filter(
+  let candidates = list.items.filter(
     (b) =>
       b.business_type === body.business_type &&
       b.target_location === body.target_city &&
       Math.abs(Number(b.total_budget_ils) - Number(body.total_budget_ils)) <= tol,
   )
-  if (matches.length === 1) return matches[0]
-  if (matches.length > 1) {
-    return [...matches].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+  const wantOrg = organizationId?.trim()
+  if (wantOrg) {
+    candidates = candidates.filter((b) => (b.organization_id?.trim() || '') === wantOrg)
+  }
+  if (candidates.length === 1) return candidates[0]
+  if (candidates.length > 1) {
+    return [...candidates].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
   }
   if (list.items.length > 0) {
     return [...list.items].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
@@ -60,9 +65,9 @@ async function resolveBusinessAfterIdempotentReplay(
  */
 export async function submitBusinessRegistration(
   payload: BusinessRegistrationPayload,
-  options?: { idempotencyKey?: string },
+  options?: { idempotencyKey?: string; organizationId?: string | null },
 ): Promise<SubmitBusinessRegistrationResult> {
-  const body = wizardPayloadToCreateBusinessRequest(payload)
+  const body = wizardPayloadToCreateBusinessRequest(payload, { organizationId: options?.organizationId })
   const idempotencyKey = options?.idempotencyKey ?? crypto.randomUUID()
 
   const envelope = await genesisPostJson<GenesisBusinessApiData>('/api/v1/businesses', {
@@ -76,7 +81,7 @@ export async function submitBusinessRegistration(
   }
 
   if (isAlreadyCreatedPayload(data)) {
-    const resolved = await resolveBusinessAfterIdempotentReplay(body)
+    const resolved = await resolveBusinessAfterIdempotentReplay(body, options?.organizationId)
     if (resolved) return { businessId: resolved.business_id, data: resolved }
     throw new Error(
       'This submission was already processed (duplicate Idempotency-Key), but the business list could not be matched. Open My Businesses and refresh, or try again with a new request.',

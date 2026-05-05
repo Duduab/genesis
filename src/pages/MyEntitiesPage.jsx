@@ -19,6 +19,7 @@ import { useI18n } from '../i18n/I18nContext'
 import { useMyEntitiesFromApi } from '../hooks/useMyEntitiesFromApi'
 import { useRouter } from '../router'
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
+import { useActiveOrganization } from '../context/ActiveOrganizationContext'
 import { cancelGenesisBusiness } from '../api/genesis/businessesApi'
 import { useAuth } from '../auth/AuthContext'
 import { canWriteOrganizationBusiness } from '../lib/orgAccess'
@@ -247,6 +248,12 @@ export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
   const claims = user?.jwtClaims ?? {}
   const orgsQ = useOrganizationsQuery({ enabled: true })
   const organizations = orgsQ.data ?? []
+  const {
+    sortedOrganizations,
+    activeOrganizationId,
+    setActiveOrganizationId,
+    organizationsLoading,
+  } = useActiveOrganization()
   const { enterBusiness, activeBusinessId, clearActiveBusiness } = useActiveBusiness()
   const { rows: entities, loading, error, refetch } = useMyEntitiesFromApi(locale)
   const [confirmCancel, setConfirmCancel] = useState(null)
@@ -304,9 +311,31 @@ export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
           <p className="mt-1 text-sm text-surface-500">
             {loading ? t('entities.loadingFromApi') : `${entities.length} ${t('entities.registered')}`}
           </p>
+          {!organizationsLoading && sortedOrganizations.length > 0 ? (
+            <p className="mt-2 max-w-xl text-xs leading-relaxed text-surface-400">{t('organizations.scope.hint')}</p>
+          ) : null}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:items-end">
+          {!organizationsLoading && sortedOrganizations.length > 0 ? (
+            <label className="flex w-full flex-col gap-1 sm:w-auto sm:min-w-[14rem]">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-surface-400">
+                {t('organizations.scope.label')}
+              </span>
+              <select
+                value={activeOrganizationId ?? ''}
+                onChange={(e) => setActiveOrganizationId(e.target.value.trim() || null)}
+                className="h-10 w-full rounded-lg border border-surface-200 bg-white px-3 text-sm font-medium text-surface-800 outline-none focus:border-genesis-400 focus:ring-2 focus:ring-genesis-100 sm:max-w-xs"
+              >
+                {sortedOrganizations.map((o) => (
+                  <option key={o.organization_id} value={o.organization_id}>
+                    {o.name || o.organization_id}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
             <input
@@ -322,6 +351,7 @@ export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
             <SlidersHorizontal className="h-3.5 w-3.5" />
             {t('entities.filters')}
           </button>
+          </div>
         </div>
       </div>
 

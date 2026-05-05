@@ -13,6 +13,7 @@ import { useRouter } from '../router'
 import { ORGANIZATIONS_QUERY_KEY, useOrganizationsQuery } from '../hooks/useOrganizationsQuery'
 import { postCreateOrganization } from '../api/genesis/organizationsApi'
 import { isGenesisApiError } from '../api/genesis/errors'
+import { useActiveOrganization } from '../context/ActiveOrganizationContext'
 
 function orgTypeLabelKey(organization_type) {
   const x = String(organization_type || '').toLowerCase()
@@ -24,6 +25,7 @@ function orgTypeLabelKey(organization_type) {
 function AddOrganizationPanel() {
   const { t } = useI18n()
   const qc = useQueryClient()
+  const { setActiveOrganizationId } = useActiveOrganization()
   const [name, setName] = useState('')
   const [organizationType, setOrganizationType] = useState('workspace')
 
@@ -34,8 +36,9 @@ function AddOrganizationPanel() {
         organization_type:
           organizationType === 'chain' ? 'chain' : organizationType === 'franchise' ? 'franchise' : 'workspace',
       }),
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       setName('')
+      if (data?.organization_id) setActiveOrganizationId(data.organization_id)
       await qc.invalidateQueries({ queryKey: ORGANIZATIONS_QUERY_KEY })
     },
   })

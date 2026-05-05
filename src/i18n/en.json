@@ -184,6 +184,8 @@
     "searchMobileClose": "Close search",
     "searchMobileHint": "Type at least one character to search.",
     "activeBusinessChip": "{{name}}",
+    "organizationLabel": "Organization",
+    "organizationAria": "Active organization",
     "roleAdministrator": "Administrator",
     "roleAdmin": "Administrator",
     "roleOperator": "Operator",
@@ -247,6 +249,14 @@
       "typeLabel": "Type",
       "submit": "Create organization",
       "createFailed": "Could not create organization. Try again."
+    },
+    "registration": {
+      "defaultOrgName": "{{name}} workspace",
+      "createOrgFailed": "Could not create your organization. Try again or contact support."
+    },
+    "scope": {
+      "label": "Organization",
+      "hint": "Only businesses under this organization are listed. Switch organization to work with another tenant."
     },
     "type": {
       "workspace": "Workspace",
@@ -481,6 +491,7 @@
     "cancelBusinessFailed": "Could not cancel this business. Try again.",
     "createNew": "Add new business",
     "createNewSub": "Same setup as registration — without account fields",
+    "addBusinessNoOrg": "Join or create an organization first (My Organizations), then add a business.",
     "openChat": "Open Chat",
     "searchPlaceholder": "Search businesses…",
     "filters": "Filters",

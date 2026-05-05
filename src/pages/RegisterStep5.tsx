@@ -6,6 +6,7 @@ import { useI18n } from '../i18n/I18nContext'
 import { Link, useRouter } from '../router'
 import AuthHeroPanel from '../components/AuthHeroPanel'
 import { submitBusinessRegistration } from '../api/submitBusinessRegistration'
+import { postCreateOrganization } from '../api/genesis/organizationsApi'
 import { isGenesisApiError } from '../api/genesis/errors'
 import { getGenesisFirebaseAuth } from '../auth/firebaseApp'
 import { getBusinessAnalysisProfile } from '../config/businessAnalysisProfiles'
@@ -15,6 +16,8 @@ import { upsertPersistedGenesisBusiness } from '../dashboard/genesisBusinessStor
 import { clearWizardStorage, loadWizardStep1 } from '../wizard/createBusinessWizardStorage'
 import type { BusinessRegistrationPayload, LicenseTypeId, WizardStep1Persisted } from '../types/business'
 import { MY_ENTITIES_QUERY_KEY } from '../hooks/useMyEntitiesFromApi'
+import { ORGANIZATIONS_QUERY_KEY } from '../hooks/useOrganizationsQuery'
+import { useActiveOrganization } from '../context/ActiveOrganizationContext'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -47,6 +50,7 @@ export default function RegisterStep5() {
   const qc = useQueryClient()
   const { t, locale, toggleLocale } = useI18n()
   const { navigate } = useRouter()
+  const { setActiveOrganizationId } = useActiveOrganization()
 
   const step1 = useMemo(() => loadWizardStep1(), [])
 
@@ -132,7 +136,29 @@ export default function RegisterStep5() {
         return
       }
 
-      const created = await submitBusinessRegistration(payload)
+      const firstName = fullName.trim().split(/\s+/)[0] || fullName.trim() || 'My'
+      const defaultOrgName = t('organizations.registration.defaultOrgName').replaceAll('{{name}}', firstName)
+
+      let organizationId: string | null = null
+      try {
+        const org = await postCreateOrganization({
+          name: defaultOrgName,
+          organization_type: 'workspace',
+        })
+        organizationId = org.organization_id
+        setActiveOrganizationId(organizationId)
+        void qc.invalidateQueries({ queryKey: ORGANIZATIONS_QUERY_KEY })
+      } catch {
+        setSubmitError(t('organizations.registration.createOrgFailed'))
+        try {
+          await signOut(auth)
+        } catch {
+          /* ignore */
+        }
+        return
+      }
+
+      const created = await submitBusinessRegistration(payload, { organizationId })
       upsertPersistedGenesisBusiness(created.data, payload.business.licenseType as LicenseTypeId)
       void qc.invalidateQueries({ queryKey: MY_ENTITIES_QUERY_KEY })
       saveDashboardBusinessProfile(payload.business)

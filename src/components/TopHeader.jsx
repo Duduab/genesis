@@ -19,6 +19,7 @@ import {
 import { useI18n } from '../i18n/I18nContext'
 import { useRouter, Link } from '../router'
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
+import { useActiveOrganization } from '../context/ActiveOrganizationContext'
 import { useAuth } from '../auth/AuthContext'
 import { useNotifications } from '../hooks/useNotifications'
 import { usePendingAgentApprovalsQuery } from '../hooks/usePendingAgentApprovalsQuery'
@@ -291,6 +292,12 @@ export default function TopHeader({ onMenuClick }) {
   const { t, locale } = useI18n()
   const { navigate } = useRouter()
   const { activeViewModel, enterBusiness } = useActiveBusiness()
+  const {
+    sortedOrganizations,
+    activeOrganizationId,
+    setActiveOrganizationId,
+    organizationsLoading,
+  } = useActiveOrganization()
   const [notifOpen, setNotifOpen] = useState(false)
   const [globalSearchInput, setGlobalSearchInput] = useState('')
   const [searchDismissed, setSearchDismissed] = useState(false)
@@ -471,6 +478,26 @@ export default function TopHeader({ onMenuClick }) {
               {t('topHeader.activeBusinessChip').replaceAll('{{name}}', activeViewModel.name)}
             </span>
           </div>
+        ) : null}
+
+        {isAuthenticated && !organizationsLoading && sortedOrganizations.length > 0 ? (
+          <label className="hidden max-w-[min(16rem,34vw)] flex-col gap-0.5 md:flex">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-surface-400">
+              {t('topHeader.organizationLabel')}
+            </span>
+            <select
+              value={activeOrganizationId ?? ''}
+              onChange={(e) => setActiveOrganizationId(e.target.value.trim() || null)}
+              aria-label={t('topHeader.organizationAria')}
+              className="h-9 max-w-full rounded-lg border border-surface-200 bg-white px-2.5 text-xs font-semibold text-surface-800 outline-none focus:border-genesis-400 focus:ring-2 focus:ring-genesis-100 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-100"
+            >
+              {sortedOrganizations.map((o) => (
+                <option key={o.organization_id} value={o.organization_id}>
+                  {o.name || o.organization_id}
+                </option>
+              ))}
+            </select>
+          </label>
         ) : null}
       </div>
 

@@ -19,6 +19,8 @@ import {
   readActiveBusinessId,
   writeActiveBusinessId,
 } from '../dashboard/activeBusinessStorage'
+import { useActiveOrganization } from './ActiveOrganizationContext'
+import { businessBelongsToOrganizationScope } from '../lib/orgAccess'
 import { useRouter } from '../router'
 import {
   mapPersistedBusinessToEntityView,
@@ -47,6 +49,7 @@ function resolveRow(
 export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
   const { locale } = useI18n()
   const { pathBusinessId } = useRouter()
+  const { activeOrganizationId, legacyFallbackOrganizationId } = useActiveOrganization()
   const [activeBusinessId, setActiveBusinessId] = useState<string | null>(() => readActiveBusinessId())
   const [listTick, setListTick] = useState(0)
 
@@ -83,6 +86,16 @@ export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
     return loadPersistedGenesisBusinesses()
   }, [listTick])
 
+  const orgScopedList = useMemo(() => {
+    return persistedList.filter((p) =>
+      businessBelongsToOrganizationScope(
+        p.api.organization_id,
+        activeOrganizationId,
+        legacyFallbackOrganizationId,
+      ),
+    )
+  }, [persistedList, activeOrganizationId, legacyFallbackOrganizationId])
+
   useEffect(() => {
     if (persistedList.length === 0) {
       if (readActiveBusinessId() != null) {
@@ -92,25 +105,43 @@ export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    const stored = readActiveBusinessId()
+    let stored = readActiveBusinessId()
     if (stored && !persistedList.some((b) => b.businessId === stored)) {
       writeActiveBusinessId(null)
       setActiveBusinessId(null)
+      stored = null
     }
 
-    if (!readActiveBusinessId()) {
-      const firstId = persistedList[0]?.businessId?.trim()
+    const inScope = Boolean(stored && orgScopedList.some((b) => b.businessId === stored))
+    if (stored && !inScope) {
+      writeActiveBusinessId(null)
+      setActiveBusinessId(null)
+      stored = null
+    }
+
+    if (!readActiveBusinessId() && orgScopedList.length > 0) {
+      const firstId = orgScopedList[0]?.businessId?.trim()
       if (firstId) {
         writeActiveBusinessId(firstId)
         setActiveBusinessId(firstId)
       }
     }
-  }, [persistedList])
+  }, [persistedList, orgScopedList])
 
-  const activeBusiness = useMemo(
-    () => resolveRow(activeBusinessId, persistedList),
-    [activeBusinessId, persistedList],
-  )
+  const activeBusiness = useMemo(() => {
+    const row = resolveRow(activeBusinessId, persistedList)
+    if (!row) return null
+    if (
+      !businessBelongsToOrganizationScope(
+        row.api.organization_id,
+        activeOrganizationId,
+        legacyFallbackOrganizationId,
+      )
+    ) {
+      return null
+    }
+    return row
+  }, [activeBusinessId, persistedList, activeOrganizationId, legacyFallbackOrganizationId])
 
   const activeViewModel = useMemo(() => {
     if (!activeBusiness) return null

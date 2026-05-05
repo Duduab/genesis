@@ -10,6 +10,8 @@ export interface CreateBusinessRequestBody {
   total_budget_ils: number
   requires_genesis_legal: boolean
   existing_tax_file: boolean
+  /** Owning organization — new businesses are created under the active organization. */
+  organization_id?: string
 }
 
 /** Canonical English city names for the API (establishment city from step 1). */
@@ -39,8 +41,10 @@ function existingTaxFileFromLicense(licenseType: string): boolean {
 
 export function wizardPayloadToCreateBusinessRequest(
   payload: BusinessRegistrationPayload,
+  options?: { organizationId?: string | null },
 ): CreateBusinessRequestBody {
   const cityEn = establishmentCityEn(payload.business.cityId)
+  const orgId = options?.organizationId?.trim()
 
   return {
     entrepreneur_name: payload.user.fullName.trim(),
@@ -52,5 +56,6 @@ export function wizardPayloadToCreateBusinessRequest(
     total_budget_ils: normalizeBudgetIls(payload.business.budgetNis),
     requires_genesis_legal: payload.business.requiresGenesisLegal !== false,
     existing_tax_file: existingTaxFileFromLicense(payload.business.licenseType),
+    ...(orgId ? { organization_id: orgId } : {}),
   }
 }

@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { I18nProvider } from './i18n/I18nContext'
 import { RouterProvider } from './router'
 import { AuthProvider } from './auth/AuthContext'
+import { ActiveOrganizationProvider } from './context/ActiveOrganizationContext'
 import { ActiveBusinessProvider } from './context/ActiveBusinessContext'
 import { ThemeProvider } from './theme/ThemeContext'
 import { genesisQueryClient } from './queryClient'
@@ -17,9 +18,11 @@ createRoot(document.getElementById('root')).render(
         <I18nProvider>
           <RouterProvider>
             <AuthProvider>
-              <ActiveBusinessProvider>
-                <App />
-              </ActiveBusinessProvider>
+              <ActiveOrganizationProvider>
+                <ActiveBusinessProvider>
+                  <App />
+                </ActiveBusinessProvider>
+              </ActiveOrganizationProvider>
             </AuthProvider>
           </RouterProvider>
         </I18nProvider>

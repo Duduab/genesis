@@ -15,6 +15,8 @@ import {
 import type { LicenseTypeId } from '../types/business'
 import type { GenesisBusinessApiData } from '../types/genesisBusiness'
 import { POLL_MS_DASHBOARD, refetchIntervalWithVisibilityAndBackoff } from '../lib/genesisPolling'
+import { useActiveOrganization } from '../context/ActiveOrganizationContext'
+import { businessBelongsToOrganizationScope } from '../lib/orgAccess'
 
 function mergeRow(persisted: PersistedGenesisBusiness, api: GenesisBusinessApiData): PersistedGenesisBusiness {
   return { ...persisted, api }
@@ -99,6 +101,7 @@ export function useMyEntitiesFromApi(locale: string): {
   refetch: () => void
 } {
   const qc = useQueryClient()
+  const { activeOrganizationId, legacyFallbackOrganizationId } = useActiveOrganization()
 
   const q = useMyEntitiesMergedQuery({ enabled: true })
 
@@ -120,8 +123,17 @@ export function useMyEntitiesFromApi(locale: string): {
   }, [refetch])
 
   const rows = useMemo(
-    () => (q.data?.merged ?? []).map((r) => mapPersistedBusinessToEntityView(r, locale)),
-    [q.data?.merged, locale],
+    () =>
+      (q.data?.merged ?? [])
+        .filter((r) =>
+          businessBelongsToOrganizationScope(
+            r.api.organization_id,
+            activeOrganizationId,
+            legacyFallbackOrganizationId,
+          ),
+        )
+        .map((r) => mapPersistedBusinessToEntityView(r, locale)),
+    [q.data?.merged, locale, activeOrganizationId, legacyFallbackOrganizationId],
   )
 
   return {

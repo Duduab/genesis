@@ -40,6 +40,7 @@ import {
 } from '../wizard/createBusinessWizardStorage'
 import { formatNisFull } from '../utils/formatNis'
 import { MY_ENTITIES_QUERY_KEY } from '../hooks/useMyEntitiesFromApi'
+import { useActiveOrganization } from '../context/ActiveOrganizationContext'
 
 const ACCENT_DARK = {
   cyan: {
@@ -117,6 +118,7 @@ export default function AddBusinessWizardModal({ open, onClose }) {
   const qc = useQueryClient()
   const { t, locale, toggleLocale } = useI18n()
   const { user } = useAuth()
+  const { activeOrganizationId } = useActiveOrganization()
   const [step, setStep] = useState(1)
   const [categoryId, setCategoryId] = useState(null)
   const [subTypeId, setSubTypeId] = useState(null)
@@ -226,8 +228,12 @@ export default function AddBusinessWizardModal({ open, onClose }) {
     setSubmitting(true)
     setSubmitErr('')
     try {
+      if (!activeOrganizationId?.trim()) {
+        setSubmitErr(t('entities.addBusinessNoOrg'))
+        return
+      }
       const payload = buildModalPayload(s1, t, user)
-      const created = await submitBusinessRegistration(payload)
+      const created = await submitBusinessRegistration(payload, { organizationId: activeOrganizationId })
       upsertPersistedGenesisBusiness(created.data, s1.licenseType)
       void qc.invalidateQueries({ queryKey: MY_ENTITIES_QUERY_KEY })
       saveDashboardBusinessProfile(payload.business)
