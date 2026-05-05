@@ -44,5 +44,7 @@ export interface GenesisBusinessApiData {
   entrepreneur_phone: string
   total_cost_ils: number
   estimated_time_remaining_seconds: number | null
+  /** Owning organization — used for member vs owner UI (GET `/businesses`). */
+  organization_id?: string | null
   stages: GenesisBusinessStage[]
 }

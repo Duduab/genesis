@@ -13,6 +13,11 @@ import { useOrchestratorBusinessId } from '../hooks/useOrchestratorBusinessId'
 import { fetchChatMessages, postChatMessage, clearChatMessages } from '../api/genesis/businessChatApi'
 import { isGenesisApiError } from '../api/genesis/errors'
 import { POLL_MS_INTERACTIVE, refetchIntervalWithVisibilityAndBackoff } from '../lib/genesisPolling'
+import {
+  getChatMessageSortTimeMs,
+  getHiddenOrchestratorMessageIds,
+  mergeHiddenOrchestratorMessageIds,
+} from '../lib/orchestratorChatClear'
 import AILoadingIndicator from './AILoadingIndicator'
 
 const AI_AVATAR = '/logos/logo-icon.png'
@@ -81,6 +86,8 @@ export default function OrchestratorChat({ open, onClose }) {
   const businessId = useOrchestratorBusinessId()
   const qc = useQueryClient()
   const [input, setInput] = useState('')
+  /** Bumps after a clear so the list re-filters even if React Query returns referentially stable data. */
+  const [localClearTick, setLocalClearTick] = useState(0)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -91,20 +98,28 @@ export default function OrchestratorChat({ open, onClose }) {
     refetchInterval: open && businessId ? refetchIntervalWithVisibilityAndBackoff(POLL_MS_INTERACTIVE) : false,
   })
 
+  const rawItems = messagesQuery.data?.items ?? []
+  const rawMessageCount = rawItems.length
+
   const messages = useMemo(() => {
-    const items = messagesQuery.data?.items ?? []
-    const sorted = [...items].sort((a, b) => {
-      const ta = new Date(a.created_at || 0).getTime()
-      const tb = new Date(b.created_at || 0).getTime()
-      return ta - tb
+    const hidden = getHiddenOrchestratorMessageIds(businessId)
+    const filtered = rawItems.filter((m) => {
+      const id = m.message_id != null && String(m.message_id).trim()
+      if (!id) return true
+      return !hidden.has(id)
+    })
+    const sorted = [...filtered].sort((a, b) => {
+      const dt = getChatMessageSortTimeMs(a) - getChatMessageSortTimeMs(b)
+      if (dt !== 0) return dt
+      return String(a.message_id ?? '').localeCompare(String(b.message_id ?? ''))
     })
     return sorted.map((m) => ({
       id: m.message_id,
       role: m.role === 'user' ? 'user' : 'ai',
       text: m.content || m.text || '',
-      time: formatMessageTime(m.created_at, locale),
+      time: formatMessageTime(m.created_at ?? m.timestamp, locale),
     }))
-  }, [messagesQuery.data?.items, locale])
+  }, [rawItems, businessId, locale, localClearTick])
 
   const sendMutation = useMutation({
     mutationFn: (text) => postChatMessage(businessId, text),
@@ -114,14 +129,24 @@ export default function OrchestratorChat({ open, onClose }) {
   })
 
   const clearMutation = useMutation({
-    mutationFn: () => clearChatMessages(businessId),
+    mutationFn: async () => {
+      const bid = businessId
+      if (!bid) throw new Error('missing business id')
+      const cached = qc.getQueryData(['chat-messages', bid])
+      const items = cached?.items ?? []
+      const ids = items.map((m) => m.message_id).filter((id) => id != null && String(id).trim())
+      mergeHiddenOrchestratorMessageIds(bid, ids)
+      setLocalClearTick((n) => n + 1)
+      await clearChatMessages(bid)
+      return {}
+    },
     onSuccess: async () => {
       if (businessId) await qc.invalidateQueries({ queryKey: ['chat-messages', businessId] })
     },
   })
 
   const handleClearChat = () => {
-    if (!businessId || messages.length === 0 || clearMutation.isPending) return
+    if (!businessId || rawMessageCount === 0 || clearMutation.isPending || sendMutation.isPending) return
     if (!window.confirm(t('chat.clearChatConfirm'))) return
     clearMutation.mutate()
   }
@@ -196,7 +221,7 @@ export default function OrchestratorChat({ open, onClose }) {
               <button
                 type="button"
                 onClick={handleClearChat}
-                disabled={messages.length === 0 || clearMutation.isPending || sendMutation.isPending}
+                disabled={rawMessageCount === 0 || clearMutation.isPending || sendMutation.isPending}
                 className="flex h-8 shrink-0 items-center gap-1 rounded-lg px-1.5 text-surface-500 transition-colors hover:bg-red-50 hover:text-red-700 disabled:pointer-events-none disabled:opacity-40 dark:hover:bg-red-950/30 dark:hover:text-red-300 sm:px-2"
                 aria-label={t('chat.clearChat')}
                 title={t('chat.clearChat')}

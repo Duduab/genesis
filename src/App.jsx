@@ -8,11 +8,13 @@ import EntityStatusChart from './components/EntityStatusChart'
 import OrchestratorChat from './components/OrchestratorChat'
 import AddBusinessWizardModal from './components/AddBusinessWizardModal'
 import MyEntitiesPage from './pages/MyEntitiesPage'
+import MyOrganizationsPage from './pages/MyOrganizationsPage'
 import LegalCompliancePage from './pages/LegalCompliancePage'
 import SettingsPage from './pages/SettingsPage'
 import AgentActivityPage from './pages/AgentActivityPage'
 import AgentApprovalsPage from './pages/AgentApprovalsPage'
 import LoginPage from './pages/LoginPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import RegisterPage from './pages/RegisterPage'
 import RegisterStep2 from './pages/RegisterStep2'
 import RegisterStep3 from './pages/RegisterStep3'
@@ -339,6 +341,7 @@ export default function App() {
 
   if (page === 'landing') return <LandingPage />
   if (page === 'login') return <LoginPage />
+  if (page === 'login/forgot-password') return <ForgotPasswordPage />
   if (page === 'register') return <RegisterPage />
   if (page === 'register/step2') return <RegisterStep2 />
   if (page === 'register/step3') return <RegisterStep3 />
@@ -352,6 +355,8 @@ export default function App() {
 
   const renderPage = () => {
     switch (page) {
+      case 'organizations':
+        return <MyOrganizationsPage />
       case 'entities':
         return <MyEntitiesPage onOpenChat={openChat} onAddBusiness={openAddBusiness} />
       case 'legal':

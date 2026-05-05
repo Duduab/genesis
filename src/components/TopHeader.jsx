@@ -25,12 +25,10 @@ import { usePendingAgentApprovalsQuery } from '../hooks/usePendingAgentApprovals
 import { fetchGlobalSearch } from '../api/genesis/searchApi'
 import { isGenesisApiError } from '../api/genesis/errors'
 import { genesisBusinessStatusTranslationKey } from '../constants/genesisApiEnums'
+import { useOrganizationsQuery } from '../hooks/useOrganizationsQuery'
+import { resolveHeaderOrgBadgeVariant } from '../lib/orgAccess'
 
-const mockUser = {
-  name: 'David Abrahams',
-  role: 'Administrator',
-  avatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=David&backgroundColor=c4b8f6',
-}
+const GUEST_PROFILE_NAME = 'David Abrahams'
 
 function notifVisual(type) {
   switch (type) {
@@ -310,7 +308,7 @@ export default function TopHeader({ onMenuClick }) {
     markAllRead,
   } = useNotifications(notifOpen)
 
-  const { isAuthenticated, logout } = useAuth()
+  const { isAuthenticated, logout, user } = useAuth()
   const { data: pendingApprovalsPayload } = usePendingAgentApprovalsQuery({ enabled: isAuthenticated })
   const pendingApprovalCount = pendingApprovalsPayload?.items?.length ?? 0
   const bellBadgeCount = effectiveUnread + pendingApprovalCount
@@ -385,6 +383,29 @@ export default function TopHeader({ onMenuClick }) {
     globalSearchInput.trim().length >= 1 && debouncedSearch.trim() !== globalSearchInput.trim()
   const searchLoading =
     searchDebouncePending || globalSearchQ.isPending || (globalSearchQ.isFetching && !globalSearchQ.data)
+
+  const orgsQ = useOrganizationsQuery({ enabled: isAuthenticated })
+
+  const roleLabelKey = useMemo(() => {
+    if (!isAuthenticated || !user) return 'topHeader.roleAdministrator'
+    const variant = resolveHeaderOrgBadgeVariant({
+      claims: user.jwtClaims,
+      organizations: orgsQ.data ?? [],
+      orgsLoading: orgsQ.isLoading,
+    })
+    const map = {
+      loading: 'topHeader.badgeLoading',
+      systemAdmin: 'topHeader.badgeSystemAdmin',
+      orgOwner: 'topHeader.badgeOrgOwner',
+      orgMember: 'topHeader.badgeOrgMember',
+      plainUser: 'topHeader.badgePlainUser',
+    }
+    return map[variant] ?? 'topHeader.badgePlainUser'
+  }, [isAuthenticated, user, orgsQ.data, orgsQ.isLoading])
+
+  const profileName = isAuthenticated && user ? user.displayName : GUEST_PROFILE_NAME
+  const avatarSeed = isAuthenticated && user ? user.email || user.uid : 'David'
+  const avatarUrl = `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(avatarSeed)}&backgroundColor=c4b8f6`
 
   const handleSettingsClick = () => {
     navigate('/settings')
@@ -521,13 +542,13 @@ export default function TopHeader({ onMenuClick }) {
 
         <button type="button" className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-100">
           <img
-            src={mockUser.avatar}
-            alt={mockUser.name}
+            src={avatarUrl}
+            alt={profileName}
             className="h-8 w-8 rounded-full bg-genesis-100 object-cover ring-2 ring-genesis-200"
           />
           <div className="hidden text-start sm:block">
-            <p className="text-sm font-semibold leading-tight text-surface-800">{mockUser.name}</p>
-            <p className="text-xs text-surface-400">{t('topHeader.roleAdministrator')}</p>
+            <p className="text-sm font-semibold leading-tight text-surface-800">{profileName}</p>
+            <p className="text-xs text-surface-400">{t(roleLabelKey)}</p>
           </div>
         </button>
       </div>

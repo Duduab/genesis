@@ -21,6 +21,7 @@ export interface GenesisEntityViewModel {
   registeredLabel: string
   /** Indices into fixed avatar palette (My Entities). */
   agentAvatarIndices: number[]
+  organizationId: string | null
 }
 
 /** Maps API `global_status` (Genesis business lifecycle enums + legacy strings) to dashboard card styles. */
@@ -95,6 +96,7 @@ export function mapPersistedBusinessToEntityView(
     burnTrend: monthly <= 0 ? 'down' : 'up',
     registeredLabel,
     agentAvatarIndices: agentIndices(api.active_agents_count),
+    organizationId: api.organization_id?.trim() ? api.organization_id.trim() : null,
   }
 }
 

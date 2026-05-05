@@ -145,6 +145,37 @@ body {
   animation: typing-bounce 1.4s ease-in-out infinite;
 }
 
+/* Orchestrator chat — indeterminate progress while AI is “thinking” */
+.orchestrator-thinking-track {
+  position: relative;
+  height: 6px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: rgb(241 245 249 / 0.95);
+}
+.dark .orchestrator-thinking-track {
+  background: rgb(30 41 59 / 0.6);
+}
+.orchestrator-thinking-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 38%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #2dd4bf, #7c3aed, #22d3ee);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.35);
+  animation: orchestrator-thinking-slide 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes orchestrator-thinking-slide {
+  0% {
+    inset-inline-start: -38%;
+  }
+  100% {
+    inset-inline-start: 100%;
+  }
+}
+
 /* ── Accessibility ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -152,6 +183,11 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  .orchestrator-thinking-fill {
+    animation: none !important;
+    inset-inline-start: 31%;
+    opacity: 0.9;
   }
 }
 

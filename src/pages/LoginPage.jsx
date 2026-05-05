@@ -183,9 +183,12 @@ export default function LoginPage() {
                     <label htmlFor="login-pw" className="text-xs font-semibold text-surface-600">
                       {t('auth.login.password')}
                     </label>
-                    <button type="button" className="text-[11px] font-medium text-genesis-600 transition-colors hover:text-genesis-700">
+                    <Link
+                      to="/login/forgot-password"
+                      className="text-[11px] font-medium text-genesis-600 transition-colors hover:text-genesis-700"
+                    >
                       {t('auth.login.forgotPassword')}
-                    </button>
+                    </Link>
                   </div>
                   <div className="relative">
                     <Lock className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />

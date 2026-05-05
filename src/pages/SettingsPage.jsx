@@ -4,6 +4,7 @@ import { useI18n } from '../i18n/I18nContext'
 import { useTheme } from '../theme/ThemeContext'
 import {
   User,
+  Users,
   ShieldAlert,
   AlertCircle,
   Bell,
@@ -43,6 +44,7 @@ import {
   fetchSettingsGuardrails,
   putSettingsGuardrails,
 } from '../api/genesis/settingsApi'
+import TeamMembersTab from './settings/TeamMembersTab'
 import { fetchMyProfile, updateMyProfile, uploadMyAvatar, putMy2fa, putMyPassword } from '../api/genesis/usersMeApi'
 import { isGenesisApiError } from '../api/genesis/errors'
 import { formatNisFull } from '../utils/formatNis'
@@ -328,7 +330,7 @@ function ProfileContent() {
   }
 
   const roleLabel =
-    profileQ.data?.role === 'admin'
+    profileQ.data?.role === 'admin' || profileQ.data?.role === 'superAdmin'
       ? t('profile.personal.roleAdministrator')
       : profileQ.data?.role
         ? String(profileQ.data.role)
@@ -1571,11 +1573,26 @@ const tabsMeta = [
   { key: 'guardrails', tKey: 'settings.tabsGuardrails', icon: ShieldAlert },
   { key: 'notifications', tKey: 'settings.tabsNotifications', icon: Bell },
   { key: 'billing', tKey: 'settings.tabsBilling', icon: CreditCard },
+  { key: 'teamMembers', tKey: 'settings.tabsTeamMembers', icon: Users },
 ]
+
+function readSettingsRouteBoot() {
+  if (typeof window === 'undefined') return { tab: 'profile', organizationId: null }
+  const q = new URLSearchParams(window.location.search)
+  const tab = q.get('tab')
+  const organizationId = q.get('organizationId')
+  return {
+    tab: tab === 'teamMembers' ? 'teamMembers' : 'profile',
+    organizationId: organizationId?.trim() || null,
+  }
+}
 
 export default function SettingsPage() {
   const { t } = useI18n()
-  const [activeTab, setActiveTab] = useState('profile')
+  const routeBoot = useMemo(() => readSettingsRouteBoot(), [])
+  const [activeTab, setActiveTab] = useState(() =>
+    routeBoot.tab === 'teamMembers' ? 'teamMembers' : 'profile',
+  )
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -1587,6 +1604,8 @@ export default function SettingsPage() {
         return <NotificationsContent />
       case 'billing':
         return <BillingContent />
+      case 'teamMembers':
+        return <TeamMembersTab initialOrganizationId={routeBoot.organizationId} />
       default:
         return null
     }

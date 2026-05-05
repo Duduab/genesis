@@ -123,5 +123,14 @@ export type {
 } from './searchApi'
 export { fetchMyProfile, updateMyProfile, uploadMyAvatar, putMy2fa, putMyPassword } from './usersMeApi'
 export type { GenesisMeProfile, UpdateMyProfileBody } from '../../types/genesisMeProfile'
+export {
+  fetchOrganizationsList,
+  fetchOrganizationById,
+  patchOrganizationName,
+  fetchOrganizationMembers,
+  postOrganizationMember,
+  deleteOrganizationMember,
+  patchOrganizationMemberRole,
+} from './organizationsApi'
 export { fetchStageById, fetchStageLogs, postStageRetry } from './stagesApi'
 export type { GenesisStageDetail, GenesisStageLogs } from '../../types/genesisStageDetail'

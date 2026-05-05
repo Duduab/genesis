@@ -4,6 +4,7 @@ import {
   Activity,
   ShieldCheck,
   Settings,
+  UsersRound,
   ChevronLeft,
   ChevronRight,
   X,
@@ -28,6 +29,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   const navItems = [
     { label: t('sidebar.dashboard'), icon: LayoutDashboard, href: '/dashboard', key: 'dashboard' },
     { label: t('sidebar.myEntities'), icon: Building2, href: '/businesses', key: 'entities' },
+    { label: t('sidebar.myOrganizations'), icon: UsersRound, href: '/organizations', key: 'organizations' },
     { label: t('sidebar.approvals'), icon: ClipboardCheck, href: '/approvals', key: 'approvals' },
     { label: t('sidebar.agentActivity'), icon: Activity, href: '/activity', key: 'activity' },
     { label: t('sidebar.legalCompliance'), icon: ShieldCheck, href: '/legal', key: 'legal' },

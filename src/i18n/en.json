@@ -185,6 +185,15 @@
     "searchMobileHint": "Type at least one character to search.",
     "activeBusinessChip": "{{name}}",
     "roleAdministrator": "Administrator",
+    "roleAdmin": "Administrator",
+    "roleOperator": "Operator",
+    "roleEntrepreneur": "Entrepreneur",
+    "roleUser": "User",
+    "badgeLoading": "…",
+    "badgeSystemAdmin": "System admin",
+    "badgeOrgOwner": "Owner",
+    "badgeOrgMember": "Member",
+    "badgePlainUser": "User",
     "logout": "Log out",
     "notifications": "Notifications",
     "markAllRead": "Mark all read",
@@ -210,6 +219,7 @@
   "sidebar": {
     "dashboard": "Dashboard",
     "myEntities": "My Businesses",
+    "myOrganizations": "My Organizations",
     "approvals": "Approvals",
     "agentActivity": "Agent Activity",
     "legalCompliance": "Legal & Compliance",
@@ -218,6 +228,58 @@
     "proPlan": "Pro Plan",
     "agentsUsedOf": "of",
     "agentsUsedLabel": "agents used"
+  },
+  "organizations": {
+    "page": {
+      "title": "My Organizations",
+      "subtitle": "Workspaces and teams linked to your businesses.",
+      "loading": "Loading organizations…",
+      "loadError": "Could not load organizations. Try again later.",
+      "empty": "You are not part of an organization yet. When you create a business, a workspace is created for you automatically.",
+      "redirecting": "Opening team settings…"
+    },
+    "type": {
+      "workspace": "Workspace",
+      "chain": "Chain",
+      "franchise": "Franchise"
+    },
+    "card": {
+      "yourRole": "Your role",
+      "roleOwner": "Owner",
+      "roleMember": "Member",
+      "members": "Members",
+      "manage": "Manage"
+    },
+    "team": {
+      "title": "Team members",
+      "subtitle": "Invite colleagues and manage roles for this organization.",
+      "orgSelect": "Organization",
+      "noOrganizations": "No organizations available.",
+      "loadingMembers": "Loading members…",
+      "loadFailed": "Could not load members.",
+      "readOnlyHint": "Only owners can change membership.",
+      "addMember": "Add member",
+      "colEmail": "Email",
+      "colRole": "Role",
+      "colStatus": "Status",
+      "colActions": "Actions",
+      "roleOwner": "Owner",
+      "roleMember": "Member",
+      "statusPending": "Pending",
+      "statusActive": "Active",
+      "makeOwner": "Make owner",
+      "makeMember": "Make member",
+      "remove": "Remove",
+      "cancelInvite": "Cancel invite",
+      "removeConfirm": "Remove this member from the organization?",
+      "lastOwnerHint": "An organization must have at least one owner.",
+      "inviteTitle": "Invite member",
+      "inviteEmail": "Email address",
+      "inviteRole": "Role",
+      "sendInvite": "Send invite",
+      "inviteFailed": "Could not send invite.",
+      "inviteFootnote": "If the user is already registered in Genesis, they get access immediately. Otherwise an invite is created and activates automatically when they register."
+    }
   },
   "approvals": {
     "title": "Agent approvals",
@@ -584,6 +646,7 @@
     "tabsGuardrails": "Agent Guardrails",
     "tabsNotifications": "Notifications",
     "tabsBilling": "Billing & Usage",
+    "tabsTeamMembers": "Team Members",
     "languageSettings": "Language Settings",
     "selectLanguage": "Select Language",
     "languageHelper": "Changes the interface language and text direction",
@@ -901,6 +964,22 @@
       "signInEmail": "Sign in with Email",
       "firebaseError": "Sign-in failed. Check your email and password.",
       "providerUnavailable": "This sign-in method is not available yet. Use email and password."
+    },
+    "forgotPassword": {
+      "title": "Reset your password",
+      "subtitle": "Enter the email for your account. We will send you a link from Firebase to choose a new password.",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "you@company.com",
+      "submit": "Send reset link",
+      "submitting": "Sending…",
+      "backToLogin": "Back to sign in",
+      "returnToSignIn": "Return to sign in",
+      "successMessage": "If an account exists for {{email}}, you will receive a password reset email shortly. Check your inbox and spam folder.",
+      "errorGeneric": "Could not send the reset email. Please try again.",
+      "errorInvalidEmail": "Enter a valid email address.",
+      "errorMissingEmail": "Email is required.",
+      "errorTooManyRequests": "Too many attempts. Please wait a few minutes and try again.",
+      "errorUnauthorizedDomain": "This site is not authorized for password reset. Add this domain in Firebase Console → Authentication → Settings → Authorized domains."
     },
     "register": {
       "title": "Join Genesis",

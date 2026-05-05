@@ -185,6 +185,15 @@
     "searchMobileHint": "הקלידו לפחות תו אחד לחיפוש.",
     "activeBusinessChip": "{{name}}",
     "roleAdministrator": "מנהל מערכת",
+    "roleAdmin": "מנהל מערכת",
+    "roleOperator": "מפעיל",
+    "roleEntrepreneur": "יזם",
+    "roleUser": "משתמש",
+    "badgeLoading": "…",
+    "badgeSystemAdmin": "מנהל מערכת",
+    "badgeOrgOwner": "בעלים",
+    "badgeOrgMember": "חבר",
+    "badgePlainUser": "משתמש",
     "logout": "התנתקות",
     "notifications": "התראות",
     "markAllRead": "סמן הכל כנקרא",
@@ -210,6 +219,7 @@
   "sidebar": {
     "dashboard": "לוח בקרה",
     "myEntities": "העסקים שלי",
+    "myOrganizations": "הארגונים שלי",
     "approvals": "אישורים",
     "agentActivity": "פעילות סוכנים",
     "legalCompliance": "משפט ורגולציה",
@@ -218,6 +228,58 @@
     "proPlan": "מנוי Pro",
     "agentsUsedOf": "מתוך",
     "agentsUsedLabel": "סוכנים בשימוש"
+  },
+  "organizations": {
+    "page": {
+      "title": "הארגונים שלי",
+      "subtitle": "סביבות עבודה וצוותים המקושרים לעסקים שלך.",
+      "loading": "טוען ארגונים…",
+      "loadError": "לא ניתן לטעון ארגונים. נסה שוב מאוחר יותר.",
+      "empty": "אינך משויך לארגון עדיין. בעת יצירת עסק, נוצרת עבורך סביבת עבודה אוטומטית.",
+      "redirecting": "פותח הגדרות צוות…"
+    },
+    "type": {
+      "workspace": "סביבת עבודה",
+      "chain": "רשת",
+      "franchise": "זיכיון"
+    },
+    "card": {
+      "yourRole": "התפקיד שלך",
+      "roleOwner": "בעלים",
+      "roleMember": "חבר",
+      "members": "חברים",
+      "manage": "ניהול"
+    },
+    "team": {
+      "title": "חברי צוות",
+      "subtitle": "הזמן עמיתים ונהל תפקידים בארגון זה.",
+      "orgSelect": "ארגון",
+      "noOrganizations": "אין ארגונים זמינים.",
+      "loadingMembers": "טוען חברים…",
+      "loadFailed": "לא ניתן לטעון חברים.",
+      "readOnlyHint": "רק בעלים יכולים לשנות חברות.",
+      "addMember": "הוספת חבר",
+      "colEmail": "אימייל",
+      "colRole": "תפקיד",
+      "colStatus": "סטטוס",
+      "colActions": "פעולות",
+      "roleOwner": "בעלים",
+      "roleMember": "חבר",
+      "statusPending": "ממתין",
+      "statusActive": "פעיל",
+      "makeOwner": "הפוך לבעלים",
+      "makeMember": "הפוך לחבר",
+      "remove": "הסרה",
+      "cancelInvite": "ביטול הזמנה",
+      "removeConfirm": "להסיר את החבר מהארגון?",
+      "lastOwnerHint": "לארגון חייב להיות לפחות בעלים אחד.",
+      "inviteTitle": "הזמנת חבר",
+      "inviteEmail": "כתובת אימייל",
+      "inviteRole": "תפקיד",
+      "sendInvite": "שליחת הזמנה",
+      "inviteFailed": "לא ניתן לשלוח הזמנה.",
+      "inviteFootnote": "אם המשתמש כבר רשום ב-Genesis, הוא מקבל גישה מידית. אחרת נוצרת הזמנה והיא תופעל אוטומטית עם ההרשמה."
+    }
   },
   "approvals": {
     "title": "אישורי סוכן",
@@ -584,6 +646,7 @@
     "tabsGuardrails": "גבולות גזרה (Guardrails)",
     "tabsNotifications": "התראות",
     "tabsBilling": "חיוב ושימוש",
+    "tabsTeamMembers": "חברי צוות",
     "languageSettings": "הגדרות שפה",
     "selectLanguage": "בחר שפה",
     "languageHelper": "שינוי שפת הממשק וכיוון הטקסט",
@@ -901,6 +964,22 @@
       "signInEmail": "התחבר עם אימייל",
       "firebaseError": "ההתחברות נכשלה. בדוק אימייל וסיסמה.",
       "providerUnavailable": "שיטת ההתחברות הזו עדיין לא זמינה. השתמש באימייל וסיסמה."
+    },
+    "forgotPassword": {
+      "title": "איפוס סיסמה",
+      "subtitle": "הזן את כתובת האימייל של החשבון. נשלח אליך קישור מ-Firebase לבחירת סיסמה חדשה.",
+      "emailLabel": "כתובת אימייל",
+      "emailPlaceholder": "you@company.com",
+      "submit": "שלח קישור לאיפוס",
+      "submitting": "שולח…",
+      "backToLogin": "חזרה להתחברות",
+      "returnToSignIn": "חזרה למסך ההתחברות",
+      "successMessage": "אם קיים חשבון עבור {{email}}, יישלח אליך מייל לאיפוס סיסמה בקרוב. בדוק את תיבת הדואר והספאם.",
+      "errorGeneric": "לא ניתן לשלוח את מייל האיפוס. נסה שוב.",
+      "errorInvalidEmail": "נא להזין כתובת אימייל תקינה.",
+      "errorMissingEmail": "יש להזין אימייל.",
+      "errorTooManyRequests": "יותר מדי ניסיונות. המתן מספר דקות ונסה שוב.",
+      "errorUnauthorizedDomain": "האתר אינו מורשה לאיפוס סיסמה. הוסף את הדומיין ב-Firebase Console → Authentication → Settings → Authorized domains."
     },
     "register": {
       "title": "הצטרף ל-Genesis",

@@ -3,6 +3,7 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebas
 import { configureGenesisApi } from '../api/genesis/client'
 import { getGenesisFirebaseAuth } from './firebaseApp'
 import { displayRoleLabel, roleClaimFromJwt } from './firebaseRoles'
+import { isJwtPlatformSuperAdmin } from '../lib/orgAccess'
 import { registerGenesisServiceWorker } from './registerOptionalServiceWorker'
 
 const AuthContext = createContext()
@@ -18,6 +19,8 @@ function firebaseUserToAppUser(fbUser, claims) {
     phone: fbUser.phoneNumber || '',
     uid: fbUser.uid,
     authSource: 'firebase',
+    jwtClaims: claims && typeof claims === 'object' ? claims : {},
+    platformSuperAdmin: isJwtPlatformSuperAdmin(claims),
   }
 }
 

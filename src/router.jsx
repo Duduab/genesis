@@ -26,6 +26,9 @@ export function parseRoute() {
   if (path === 'businesses' || path === 'entities') {
     return { page: 'entities', pathBusinessId: null, adminRoute: null }
   }
+  if (path === 'organizations') {
+    return { page: 'organizations', pathBusinessId: null, adminRoute: null }
+  }
   if (path.startsWith('businesses/')) {
     const id = path.slice('businesses/'.length).split('/')[0] || ''
     const pathBusinessId = looksLikeUuid(id) ? id : null

@@ -20,6 +20,9 @@ import { useMyEntitiesFromApi } from '../hooks/useMyEntitiesFromApi'
 import { useRouter } from '../router'
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
 import { cancelGenesisBusiness } from '../api/genesis/businessesApi'
+import { useAuth } from '../auth/AuthContext'
+import { canWriteOrganizationBusiness } from '../lib/orgAccess'
+import { useOrganizationsQuery } from '../hooks/useOrganizationsQuery'
 import { loadPersistedGenesisBusinesses, removePersistedGenesisBusiness } from '../dashboard/genesisBusinessStorage'
 import EditBusinessModal from '../components/EditBusinessModal'
 
@@ -68,7 +71,16 @@ function resolveEditInitials(entity) {
   }
 }
 
-function EntityCard({ entity, t, onManageBusiness, onEditBusiness, onDeleteBusiness, isWorkspaceActive, deleteBusy }) {
+function EntityCard({
+  entity,
+  t,
+  onManageBusiness,
+  onEditBusiness,
+  onDeleteBusiness,
+  isWorkspaceActive,
+  deleteBusy,
+  canMutateBusiness,
+}) {
   const s = statusStyles[entity.status]
   const BalanceIcon = entity.balanceTrend === 'up' ? TrendingUp : TrendingDown
   const BurnIcon = entity.burnTrend === 'up' ? TrendingUp : TrendingDown
@@ -185,7 +197,7 @@ function EntityCard({ entity, t, onManageBusiness, onEditBusiness, onDeleteBusin
         <button
           type="button"
           onClick={() => onEditBusiness?.(entity)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-surface-200 bg-white px-4 py-2 text-xs font-semibold text-surface-700 transition-all hover:border-genesis-300 hover:bg-genesis-50/40 hover:shadow-sm active:scale-[0.98]"
+          className={`flex w-full items-center justify-center gap-2 rounded-lg border border-surface-200 bg-white px-4 py-2 text-xs font-semibold text-surface-700 transition-all hover:border-genesis-300 hover:bg-genesis-50/40 hover:shadow-sm active:scale-[0.98] ${canMutateBusiness ? '' : 'hidden'}`}
         >
           <PenLine className="h-3.5 w-3.5 text-surface-500" aria-hidden />
           {t('entities.editBusiness')}
@@ -194,7 +206,7 @@ function EntityCard({ entity, t, onManageBusiness, onEditBusiness, onDeleteBusin
           type="button"
           disabled={deleteBusy}
           onClick={() => onDeleteBusiness?.(entity)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50/50 px-4 py-2 text-xs font-semibold text-red-700 transition-all hover:bg-red-100 hover:shadow-sm active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+          className={`flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50/50 px-4 py-2 text-xs font-semibold text-red-700 transition-all hover:bg-red-100 hover:shadow-sm active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ${canMutateBusiness ? '' : 'hidden'}`}
         >
           {deleteBusy ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
@@ -231,6 +243,10 @@ function CreateEntityCard({ onClick, t }) {
 export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
   const { t, locale } = useI18n()
   const { navigate } = useRouter()
+  const { user } = useAuth()
+  const claims = user?.jwtClaims ?? {}
+  const orgsQ = useOrganizationsQuery({ enabled: true })
+  const organizations = orgsQ.data ?? []
   const { enterBusiness, activeBusinessId, clearActiveBusiness } = useActiveBusiness()
   const { rows: entities, loading, error, refetch } = useMyEntitiesFromApi(locale)
   const [confirmCancel, setConfirmCancel] = useState(null)
@@ -368,6 +384,7 @@ export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
                   onDeleteBusiness={openCancelDialog}
                   isWorkspaceActive={activeBusinessId === entity.key}
                   deleteBusy={deletingId === entity.key}
+                  canMutateBusiness={canWriteOrganizationBusiness(entity.organizationId, organizations, claims)}
                 />
               </div>
             ))}

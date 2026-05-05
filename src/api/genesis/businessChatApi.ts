@@ -4,6 +4,7 @@ import type {
   ChatTimelineEntry,
 } from '../../types/chatMessage'
 import { genesisGetJson, genesisPostJson, genesisRequestJson } from './client'
+import { isGenesisApiError } from './errors'
 
 function unwrapMessages(envelope: { data?: ChatMessagesPayload | null }): ChatMessagesPayload {
   const d = envelope.data
@@ -59,10 +60,25 @@ export async function postChatMessage(
   return { message_id: d.message_id, status: String(d.status ?? 'queued') }
 }
 
-/** DELETE `/api/v1/businesses/{business_id}/chat/messages` — clears the business chat thread (when supported by the API). */
-export async function clearChatMessages(businessId: string): Promise<void> {
+/**
+ * Clears orchestrator chat history for a business.
+ *
+ * Tries `DELETE /api/v1/businesses/{id}/chat/messages` when the gateway supports it.
+ * The published OpenAPI often only lists GET+POST for this path; in that case the
+ * server returns **405** and the caller should fall back to client-side hiding by
+ * message id (see `mergeHiddenOrchestratorMessageIds` in `src/lib/orchestratorChatClear.ts`).
+ */
+export async function clearChatMessages(businessId: string): Promise<{ serverCleared: boolean }> {
   const bid = encodeURIComponent(businessId.trim())
-  await genesisRequestJson<unknown>({ path: `/api/v1/businesses/${bid}/chat/messages`, method: 'DELETE' })
+  try {
+    await genesisRequestJson<unknown>({ path: `/api/v1/businesses/${bid}/chat/messages`, method: 'DELETE' })
+    return { serverCleared: true }
+  } catch (e) {
+    if (isGenesisApiError(e) && (e.status === 405 || e.status === 404 || e.status === 501)) {
+      return { serverCleared: false }
+    }
+    throw e
+  }
 }
 
 export type ChatApprovalDecision = 'APPROVE' | 'REJECT'
