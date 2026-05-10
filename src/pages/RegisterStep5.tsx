@@ -119,9 +119,13 @@ export default function RegisterStep5() {
       // Create Firebase account first so subsequent POST /api/v1/businesses
       // automatically carries `Authorization: Bearer <idToken>` (resolved from
       // `auth.currentUser.getIdToken()` inside the Genesis API client).
+      let registrationBearer: string
       try {
-        await createUserWithEmailAndPassword(auth, userPayload.email, userPayload.password)
+        const cred = await createUserWithEmailAndPassword(auth, userPayload.email, userPayload.password)
         firebaseUserCreated = true
+        // Same materialization as email login (`getIdTokenResult(true)`): force a fresh ID JWT so the gateway’s
+        // first authenticated calls after signup don’t see a stale/mismatched token from cache.
+        registrationBearer = await cred.user.getIdToken(true)
       } catch (firebaseErr) {
         const code = (firebaseErr as { code?: string })?.code ?? ''
         if (code === 'auth/email-already-in-use') {
@@ -141,10 +145,13 @@ export default function RegisterStep5() {
 
       let organizationId: string | null = null
       try {
-        const org = await postCreateOrganization({
-          name: defaultOrgName,
-          organization_type: 'workspace',
-        })
+        const org = await postCreateOrganization(
+          {
+            name: defaultOrgName,
+            organization_type: 'workspace',
+          },
+          { bearerToken: registrationBearer },
+        )
         organizationId = org.organization_id
         setActiveOrganizationId(organizationId)
         void qc.invalidateQueries({ queryKey: ORGANIZATIONS_QUERY_KEY })
@@ -158,7 +165,7 @@ export default function RegisterStep5() {
         return
       }
 
-      const created = await submitBusinessRegistration(payload, { organizationId })
+      const created = await submitBusinessRegistration(payload, { organizationId, bearerToken: registrationBearer })
       upsertPersistedGenesisBusiness(created.data, payload.business.licenseType as LicenseTypeId)
       void qc.invalidateQueries({ queryKey: MY_ENTITIES_QUERY_KEY })
       saveDashboardBusinessProfile(payload.business)

@@ -7,6 +7,8 @@ export interface FetchGenesisBusinessesParams {
   /** 1–100 per API contract */
   limit?: number
   cursor?: string | null
+  /** When set, sent as `Authorization: Bearer` instead of resolving from Firebase/env. */
+  bearerToken?: string | null
 }
 
 export interface GenesisBusinessListResult {

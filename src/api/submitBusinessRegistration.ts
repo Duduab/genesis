@@ -34,8 +34,9 @@ function isAlreadyCreatedPayload(data: unknown): boolean {
 async function resolveBusinessAfterIdempotentReplay(
   body: CreateBusinessRequestBody,
   organizationId?: string | null,
+  bearerToken?: string | null,
 ): Promise<GenesisBusinessApiData | null> {
-  const list = await fetchGenesisBusinessList({ limit: 100 })
+  const list = await fetchGenesisBusinessList({ limit: 100, bearerToken })
   const tol = 1
   let candidates = list.items.filter(
     (b) =>
@@ -65,7 +66,12 @@ async function resolveBusinessAfterIdempotentReplay(
  */
 export async function submitBusinessRegistration(
   payload: BusinessRegistrationPayload,
-  options?: { idempotencyKey?: string; organizationId?: string | null },
+  options?: {
+    idempotencyKey?: string
+    organizationId?: string | null
+    /** Firebase ID JWT — same as login; use after signup `user.getIdToken(true)` so the gateway accepts the first request. */
+    bearerToken?: string | null
+  },
 ): Promise<SubmitBusinessRegistrationResult> {
   const body = wizardPayloadToCreateBusinessRequest(payload, { organizationId: options?.organizationId })
   const idempotencyKey = options?.idempotencyKey ?? crypto.randomUUID()
@@ -73,6 +79,7 @@ export async function submitBusinessRegistration(
   const envelope = await genesisPostJson<GenesisBusinessApiData>('/api/v1/businesses', {
     body,
     idempotencyKey,
+    bearerToken: options?.bearerToken,
   })
 
   const data = envelope.data as unknown
@@ -81,7 +88,7 @@ export async function submitBusinessRegistration(
   }
 
   if (isAlreadyCreatedPayload(data)) {
-    const resolved = await resolveBusinessAfterIdempotentReplay(body, options?.organizationId)
+    const resolved = await resolveBusinessAfterIdempotentReplay(body, options?.organizationId, options?.bearerToken)
     if (resolved) return { businessId: resolved.business_id, data: resolved }
     throw new Error(
       'This submission was already processed (duplicate Idempotency-Key), but the business list could not be matched. Open My Businesses and refresh, or try again with a new request.',

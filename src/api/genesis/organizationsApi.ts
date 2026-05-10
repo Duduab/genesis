@@ -1,10 +1,13 @@
 import type { OrganizationMemberRow, OrganizationSummary } from '../../types/organization'
 import { genesisGetJson, genesisListJson, genesisPostJson, genesisRequestJson } from './client'
 
-export async function postCreateOrganization(body: {
-  name: string
-  organization_type?: 'workspace' | 'chain' | 'franchise'
-}): Promise<OrganizationSummary> {
+export async function postCreateOrganization(
+  body: {
+    name: string
+    organization_type?: 'workspace' | 'chain' | 'franchise'
+  },
+  options?: { bearerToken?: string | null },
+): Promise<OrganizationSummary> {
   const idempotencyKey =
     typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `org-create-${Date.now()}`
   const envelope = await genesisPostJson<OrganizationSummary>('/api/v1/organizations', {
@@ -13,6 +16,7 @@ export async function postCreateOrganization(body: {
       organization_type: body.organization_type ?? 'workspace',
     },
     idempotencyKey,
+    bearerToken: options?.bearerToken,
   })
   if (!envelope.data?.organization_id) throw new Error('Invalid create organization response')
   return envelope.data

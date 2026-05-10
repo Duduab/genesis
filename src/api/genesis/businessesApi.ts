@@ -33,7 +33,8 @@ export async function fetchGenesisBusinessList(params: FetchGenesisBusinessesPar
   if (params.cursor?.trim()) q.set('cursor', params.cursor.trim())
   const qs = q.toString()
   const path = `/api/v1/businesses${qs ? `?${qs}` : ''}`
-  const envelope = await genesisListJson<GenesisBusinessApiData>(path)
+  const bearerToken = params.bearerToken
+  const envelope = await genesisListJson<GenesisBusinessApiData>(path, { bearerToken })
   return {
     items: Array.isArray(envelope.data) ? envelope.data : [],
     pagination: envelope.pagination ?? null,
