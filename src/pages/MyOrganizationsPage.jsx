@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Building2,
@@ -127,12 +127,6 @@ export default function MyOrganizationsPage() {
   const orgsQ = useOrganizationsQuery({ enabled: true })
   const organizations = orgsQ.data ?? []
 
-  useEffect(() => {
-    if (!orgsQ.isSuccess || organizations.length !== 1) return
-    const id = organizations[0].organization_id
-    navigate(`/settings?tab=teamMembers&organizationId=${encodeURIComponent(id)}`, { replace: true })
-  }, [orgsQ.isSuccess, organizations, navigate])
-
   const sorted = useMemo(() => {
     return [...organizations].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }, [organizations])
@@ -162,8 +156,6 @@ export default function MyOrganizationsPage() {
         <p className="mt-8 rounded-xl border border-surface-200 bg-white px-6 py-8 text-center text-sm text-surface-500">
           {t('organizations.page.empty')}
         </p>
-      ) : sorted.length === 1 ? (
-        <p className="mt-8 text-center text-sm text-surface-400">{t('organizations.page.redirecting')}</p>
       ) : (
         <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {sorted.map((org) => (

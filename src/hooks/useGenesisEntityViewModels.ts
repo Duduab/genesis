@@ -10,11 +10,15 @@ import {
   mapPersistedBusinessToEntityView,
   type GenesisEntityViewModel,
 } from '../dashboard/mapPersistedBusinessToEntityView'
+import { useOrganizationsQuery } from '../hooks/useOrganizationsQuery'
+import { businessDetailHref } from '../lib/businessPaths'
 
 export function useGenesisEntityViewModels(locale: string): GenesisEntityViewModel[] {
   const [tick, setTick] = useState(0)
   const bump = useCallback(() => setTick((n) => n + 1), [])
   const { activeOrganizationId, legacyFallbackOrganizationId } = useActiveOrganization()
+  const orgsQ = useOrganizationsQuery({ enabled: true })
+  const organizations = orgsQ.data ?? []
 
   useEffect(() => {
     const onCustom = () => bump()
@@ -39,6 +43,17 @@ export function useGenesisEntityViewModels(locale: string): GenesisEntityViewMod
           legacyFallbackOrganizationId,
         ),
       )
-      .map((r) => mapPersistedBusinessToEntityView(r, locale))
-  }, [locale, tick, activeOrganizationId, legacyFallbackOrganizationId])
+      .map((r) => {
+        const vm = mapPersistedBusinessToEntityView(r, locale)
+        const org = organizations.find((o) => o.organization_id === vm.organizationId)
+        return {
+          ...vm,
+          detailHref: businessDetailHref({
+            orgSlug: org?.slug ?? undefined,
+            businessNumber: r.api.business_number,
+            businessId: vm.key,
+          }),
+        }
+      })
+  }, [locale, tick, activeOrganizationId, legacyFallbackOrganizationId, organizations])
 }

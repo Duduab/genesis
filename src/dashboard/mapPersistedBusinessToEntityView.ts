@@ -1,5 +1,6 @@
 import { formatNisFull } from '../utils/formatNis'
 import { normalizeGenesisBusinessStatus } from '../constants/genesisApiEnums'
+import { businessDetailHref } from '../lib/businessPaths'
 import type { PersistedGenesisBusiness } from './genesisBusinessStorage'
 
 export type EntityUiStatus = 'active' | 'pendingVat' | 'underReview' | 'hibernating' | 'dormant'
@@ -22,6 +23,8 @@ export interface GenesisEntityViewModel {
   /** Indices into fixed avatar palette (My Entities). */
   agentAvatarIndices: number[]
   organizationId: string | null
+  /** Prefer `/orgs/{slug}/businesses/{n}` when API provides slug + number; else `/businesses/{uuid}`. */
+  detailHref: string
 }
 
 /** Maps API `global_status` (Genesis business lifecycle enums + legacy strings) to dashboard card styles. */
@@ -97,6 +100,10 @@ export function mapPersistedBusinessToEntityView(
     registeredLabel,
     agentAvatarIndices: agentIndices(api.active_agents_count),
     organizationId: api.organization_id?.trim() ? api.organization_id.trim() : null,
+    detailHref: businessDetailHref({
+      businessId: api.business_id,
+      businessNumber: api.business_number,
+    }),
   }
 }
 

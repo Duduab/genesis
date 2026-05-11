@@ -28,6 +28,7 @@ import { isGenesisApiError } from '../api/genesis/errors'
 import { genesisBusinessStatusTranslationKey } from '../constants/genesisApiEnums'
 import { useOrganizationsQuery } from '../hooks/useOrganizationsQuery'
 import { resolveHeaderOrgBadgeVariant } from '../lib/orgAccess'
+import { businessDetailHref } from '../lib/businessPaths'
 
 const GUEST_PROFILE_NAME = 'David Abrahams'
 
@@ -364,7 +365,12 @@ export default function TopHeader({ onMenuClick }) {
       setMobileSearchOpen(false)
       if (groupKey === 'businesses' && row?.business_id) {
         enterBusiness(row.business_id)
-        navigate(`/businesses/${row.business_id}`)
+        const to = businessDetailHref({
+          orgSlug: row.organization_slug,
+          businessNumber: row.business_number,
+          businessId: row.business_id,
+        })
+        navigate(to)
         return
       }
       if (groupKey === 'documents') {

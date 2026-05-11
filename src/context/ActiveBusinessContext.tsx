@@ -48,7 +48,7 @@ function resolveRow(
 
 export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
   const { locale } = useI18n()
-  const { pathBusinessId } = useRouter()
+  const { pathBusinessId, prettyBusiness } = useRouter()
   const { activeOrganizationId, legacyFallbackOrganizationId } = useActiveOrganization()
   const [activeBusinessId, setActiveBusinessId] = useState<string | null>(() => readActiveBusinessId())
   const [listTick, setListTick] = useState(0)
@@ -56,6 +56,7 @@ export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
   const bumpList = useCallback(() => setListTick((n) => n + 1), [])
 
   useEffect(() => {
+    if (prettyBusiness?.orgSlug && prettyBusiness?.businessNumber) return
     if (!pathBusinessId) return
     const trimmed = pathBusinessId.trim()
     if (!trimmed) return
@@ -63,7 +64,7 @@ export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
       writeActiveBusinessId(trimmed)
       setActiveBusinessId(trimmed)
     }
-  }, [pathBusinessId])
+  }, [pathBusinessId, prettyBusiness])
 
   useEffect(() => {
     const onCustom = () => bumpList()
@@ -119,14 +120,15 @@ export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
       stored = null
     }
 
-    if (!readActiveBusinessId() && orgScopedList.length > 0) {
+    const onPretty = Boolean(prettyBusiness?.orgSlug && prettyBusiness?.businessNumber)
+    if (!onPretty && !readActiveBusinessId() && orgScopedList.length > 0) {
       const firstId = orgScopedList[0]?.businessId?.trim()
       if (firstId) {
         writeActiveBusinessId(firstId)
         setActiveBusinessId(firstId)
       }
     }
-  }, [persistedList, orgScopedList])
+  }, [persistedList, orgScopedList, prettyBusiness])
 
   const activeBusiness = useMemo(() => {
     const row = resolveRow(activeBusinessId, persistedList)

@@ -9,6 +9,8 @@ export type SearchBusinessHit = {
   company_name?: string | null
   business_type?: string | null
   global_status?: string | null
+  organization_slug?: string | null
+  business_number?: string | number | null
 }
 
 /** Shape varies; common legal-document fields are handled in UI. */

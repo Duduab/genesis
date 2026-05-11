@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { useMyEntitiesFromApi } from '../hooks/useMyEntitiesFromApi'
-import { useRouter } from '../router'
+import { useRouter, Link } from '../router'
 import { useActiveBusiness } from '../context/ActiveBusinessContext'
 import { useActiveOrganization } from '../context/ActiveOrganizationContext'
 import { cancelGenesisBusiness } from '../api/genesis/businessesApi'
@@ -98,7 +98,14 @@ function EntityCard({
             <Building2 className="h-5 w-5 text-genesis-600" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-[15px] font-bold leading-snug text-surface-900">{entity.name}</h3>
+            <h3 className="text-[15px] font-bold leading-snug text-surface-900">
+              <Link
+                to={entity.detailHref}
+                className="rounded-sm transition-colors hover:text-genesis-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genesis-300"
+              >
+                {entity.name}
+              </Link>
+            </h3>
             <p className="mt-0.5 font-mono text-xs text-surface-400">
               {t('entities.id')}: {entity.legalIdDisplay}
             </p>

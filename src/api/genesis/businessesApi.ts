@@ -19,6 +19,20 @@ export async function fetchGenesisBusinessById(businessId: string): Promise<Gene
   return envelope.data
 }
 
+/** GET `/api/v1/orgs/{slug}/businesses/{business_number}` — resolves pretty URL to full business (includes `business_id`, `organization_id`). */
+export async function fetchGenesisBusinessByOrgSlugAndNumber(
+  orgSlug: string,
+  businessNumber: string | number,
+): Promise<GenesisBusinessApiData> {
+  const slug = encodeURIComponent(String(orgSlug).trim())
+  const num = encodeURIComponent(String(businessNumber).trim())
+  const envelope = await genesisGetJson<GenesisBusinessApiData>(`/api/v1/orgs/${slug}/businesses/${num}`)
+  if (!envelope.data?.business_id) {
+    throw new Error('Invalid business response')
+  }
+  return envelope.data
+}
+
 /**
  * GET `/api/v1/businesses` — list with optional status filter, search, cursor pagination.
  */

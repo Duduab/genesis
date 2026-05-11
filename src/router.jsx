@@ -29,6 +29,18 @@ export function parseRoute() {
   if (path === 'organizations') {
     return { page: 'organizations', pathBusinessId: null, adminRoute: null }
   }
+  const orgBizMatch = path.match(/^orgs\/([^/]+)\/businesses\/([^/]+)$/)
+  if (orgBizMatch) {
+    return {
+      page: 'entities',
+      pathBusinessId: null,
+      adminRoute: null,
+      prettyBusiness: {
+        orgSlug: decodeURIComponent(orgBizMatch[1]),
+        businessNumber: orgBizMatch[2],
+      },
+    }
+  }
   if (path.startsWith('businesses/')) {
     const id = path.slice('businesses/'.length).split('/')[0] || ''
     const pathBusinessId = looksLikeUuid(id) ? id : null
@@ -53,7 +65,13 @@ export function RouterProvider({ children }) {
 
   return (
     <RouterContext.Provider
-      value={{ page: route.page, pathBusinessId: route.pathBusinessId, adminRoute: route.adminRoute ?? null, navigate }}
+      value={{
+        page: route.page,
+        pathBusinessId: route.pathBusinessId,
+        adminRoute: route.adminRoute ?? null,
+        prettyBusiness: route.prettyBusiness ?? null,
+        navigate,
+      }}
     >
       {children}
     </RouterContext.Provider>

@@ -33,6 +33,7 @@ export { fetchBusinessDashboard, fetchDashboardRevenueChart, fetchDashboardStats
 export type { DashboardRevenueChartPeriod } from './dashboardApi'
 export {
   fetchGenesisBusinessById,
+  fetchGenesisBusinessByOrgSlugAndNumber,
   fetchGenesisBusinessList,
   updateGenesisBusiness,
   cancelGenesisBusiness,

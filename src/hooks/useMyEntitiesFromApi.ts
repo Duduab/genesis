@@ -17,6 +17,8 @@ import type { GenesisBusinessApiData } from '../types/genesisBusiness'
 import { POLL_MS_DASHBOARD, refetchIntervalWithVisibilityAndBackoff } from '../lib/genesisPolling'
 import { useActiveOrganization } from '../context/ActiveOrganizationContext'
 import { businessBelongsToOrganizationScope } from '../lib/orgAccess'
+import { businessDetailHref } from '../lib/businessPaths'
+import { useOrganizationsQuery } from '../hooks/useOrganizationsQuery'
 
 function mergeRow(persisted: PersistedGenesisBusiness, api: GenesisBusinessApiData): PersistedGenesisBusiness {
   return { ...persisted, api }
@@ -102,6 +104,8 @@ export function useMyEntitiesFromApi(locale: string): {
 } {
   const qc = useQueryClient()
   const { activeOrganizationId, legacyFallbackOrganizationId } = useActiveOrganization()
+  const orgsQ = useOrganizationsQuery({ enabled: true })
+  const organizations = orgsQ.data ?? []
 
   const q = useMyEntitiesMergedQuery({ enabled: true })
 
@@ -132,8 +136,25 @@ export function useMyEntitiesFromApi(locale: string): {
             legacyFallbackOrganizationId,
           ),
         )
-        .map((r) => mapPersistedBusinessToEntityView(r, locale)),
-    [q.data?.merged, locale, activeOrganizationId, legacyFallbackOrganizationId],
+        .map((r) => {
+          const vm = mapPersistedBusinessToEntityView(r, locale)
+          const org = organizations.find((o) => o.organization_id === vm.organizationId)
+          return {
+            ...vm,
+            detailHref: businessDetailHref({
+              orgSlug: org?.slug ?? undefined,
+              businessNumber: r.api.business_number,
+              businessId: vm.key,
+            }),
+          }
+        }),
+    [
+      q.data?.merged,
+      locale,
+      activeOrganizationId,
+      legacyFallbackOrganizationId,
+      organizations,
+    ],
   )
 
   return {

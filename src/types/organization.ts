@@ -7,6 +7,8 @@ export type OrganizationMembershipRole = 'owner' | 'member' | string
 export interface OrganizationSummary {
   organization_id: string
   name: string
+  /** URL segment for `/orgs/:slug/...` (e.g. `asaf-arviv`). */
+  slug?: string | null
   organization_type: OrganizationType
   created_at: string
   /** Present when the list includes the caller's membership role (backend contract). */

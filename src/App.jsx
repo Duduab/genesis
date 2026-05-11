@@ -7,6 +7,7 @@ import WeeklyTasksChart from './components/WeeklyTasksChart'
 import EntityStatusChart from './components/EntityStatusChart'
 import OrchestratorChat from './components/OrchestratorChat'
 import AddBusinessWizardModal from './components/AddBusinessWizardModal'
+import PrettyBusinessRouteBootstrap from './components/PrettyBusinessRouteBootstrap'
 import MyEntitiesPage from './pages/MyEntitiesPage'
 import MyOrganizationsPage from './pages/MyOrganizationsPage'
 import LegalCompliancePage from './pages/LegalCompliancePage'
@@ -420,6 +421,7 @@ export default function App() {
       floatingActions={orchestratorFab}
     >
       <div key={page} className="animate-fade-in">
+        <PrettyBusinessRouteBootstrap />
         {renderPage()}
       </div>
 
