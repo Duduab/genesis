@@ -196,7 +196,7 @@ export default function MyOrganizationsPage() {
                   type="button"
                   onClick={() =>
                     navigate(
-                      `/settings?tab=teamMembers&organizationId=${encodeURIComponent(org.organization_id)}`,
+                      `/settings?tab=profile&organizationId=${encodeURIComponent(org.organization_id)}`,
                     )
                   }
                   className="group/btn flex w-full items-center justify-center gap-2 rounded-lg border border-genesis-200 bg-genesis-50/50 px-4 py-2 text-xs font-semibold text-genesis-700 transition-all hover:bg-genesis-100 hover:shadow-sm active:scale-[0.98]"

@@ -43,8 +43,11 @@ import AdminApp from './admin/AdminApp.jsx'
 
 function DashboardPage() {
   const { t, locale } = useI18n()
-  const { activeViewModel, activeBusinessId } = useActiveBusiness()
-  const { data: overview } = useDashboardOverviewQuery(activeBusinessId, { enabled: Boolean(activeBusinessId) })
+  const { activeViewModel } = useActiveBusiness()
+  const dashboardBusinessId = useOrchestratorBusinessId()
+  const { data: overview } = useDashboardOverviewQuery(dashboardBusinessId, {
+    enabled: Boolean(dashboardBusinessId),
+  })
 
   const statsMeta = useMemo(() => {
     const fmt = (n) => (n == null || Number.isNaN(Number(n)) ? '—' : String(n))
@@ -285,16 +288,28 @@ const ORCHESTRATOR_FAB_LIGHT = '/orchestrator-fab.png'
 /** Bump `v` when replacing the file so browsers do not keep an old cached PNG. */
 const ORCHESTRATOR_FAB_DARK = '/orchestrator-fab-dark.png?v=500w'
 
+/** Wizard routes return early but App hooks still run; skip dashboard until the user signs in from /login. */
+const REGISTRATION_SHELL_PAGES = new Set([
+  'register',
+  'register/step2',
+  'register/step3',
+  'register/step4',
+  'register/step5',
+])
+
 export default function App() {
   const { t } = useI18n()
   const { dark } = useTheme()
   const { page, navigate } = useRouter()
   const { isAuthenticated } = useAuth()
-  const { activeBusinessId } = useActiveBusiness()
   const orchestratorBusinessId = useOrchestratorBusinessId()
   const orchestratorFabEnabled = Boolean(orchestratorBusinessId)
-  const { data: overview } = useDashboardOverviewQuery(activeBusinessId, {
-    enabled: isAuthenticated && Boolean(activeBusinessId),
+  /** Same id resolution as orchestrator: active business, else first from my-entities merge / storage — so dashboard loads right after login. */
+  const { data: overview } = useDashboardOverviewQuery(orchestratorBusinessId, {
+    enabled:
+      isAuthenticated &&
+      Boolean(orchestratorBusinessId) &&
+      !REGISTRATION_SHELL_PAGES.has(page),
   })
   const { items: notifItems, isItemUnread } = useNotifications(false, { enabled: isAuthenticated })
   const pendingApprovalsQ = usePendingAgentApprovalsQuery({ enabled: isAuthenticated })
@@ -302,11 +317,11 @@ export default function App() {
     if (pendingApprovalsQ.isSuccess) {
       return pendingApprovalsQ.data?.items?.length ?? 0
     }
-    if (activeBusinessId && overview?.pending_approvals != null) {
+    if (orchestratorBusinessId && overview?.pending_approvals != null) {
       return Math.max(0, Math.floor(Number(overview.pending_approvals)))
     }
     return notifItems.filter((n) => n.type === 'approval_required' && isItemUnread(n)).length
-  }, [pendingApprovalsQ.isSuccess, pendingApprovalsQ.data, activeBusinessId, overview, notifItems, isItemUnread])
+  }, [pendingApprovalsQ.isSuccess, pendingApprovalsQ.data, orchestratorBusinessId, overview, notifItems, isItemUnread])
 
   const [chatOpen, setChatOpen] = useState(false)
   const [addBusinessOpen, setAddBusinessOpen] = useState(false)

@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query'
+import { attachReactQueryDevDiagnostics } from './lib/devErrorReporting'
 
 export const genesisQueryClient = new QueryClient({
   defaultOptions: {
@@ -16,3 +17,5 @@ export const genesisQueryClient = new QueryClient({
     },
   },
 })
+
+attachReactQueryDevDiagnostics(genesisQueryClient)

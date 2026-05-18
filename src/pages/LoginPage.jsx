@@ -38,6 +38,17 @@ export default function LoginPage() {
 
   useEffect(() => {
     try {
+      const raw = sessionStorage.getItem('genesis-post-reg-login')
+      if (raw) {
+        sessionStorage.removeItem('genesis-post-reg-login')
+        const parsed = JSON.parse(raw)
+        if (parsed && typeof parsed.email === 'string') setEmail(parsed.email.trim())
+        if (parsed && typeof parsed.password === 'string') setPassword(parsed.password)
+      }
+    } catch {
+      /* ignore */
+    }
+    try {
       if (sessionStorage.getItem('genesis-reg-success')) {
         sessionStorage.removeItem('genesis-reg-success')
         setRegSuccess(t('createBusiness.step5.registration_success_msg'))
@@ -71,7 +82,9 @@ export default function LoginPage() {
       return
     }
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider())
+      const provider = new GoogleAuthProvider()
+      provider.setCustomParameters({ prompt: 'select_account' })
+      await signInWithPopup(auth, provider)
       // Same token family as `securetoken` `id_token` — materialize before REST calls so
       // `Authorization: Bearer` is always populated on the first dashboard request.
       if (auth.currentUser) await auth.currentUser.getIdToken()

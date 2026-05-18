@@ -182,6 +182,14 @@ export default function RegisterStep5() {
       } catch {
         /* ignore */
       }
+      try {
+        sessionStorage.setItem(
+          'genesis-post-reg-login',
+          JSON.stringify({ email: userPayload.email, password: userPayload.password }),
+        )
+      } catch {
+        /* ignore */
+      }
       navigate('/login')
     } catch (e) {
       // Business creation failed after Firebase user was created — sign the
