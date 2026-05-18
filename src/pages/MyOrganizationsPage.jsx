@@ -14,6 +14,7 @@ import { ORGANIZATIONS_QUERY_KEY, useOrganizationsQuery } from '../hooks/useOrga
 import { postCreateOrganization } from '../api/genesis/organizationsApi'
 import { isGenesisApiError } from '../api/genesis/errors'
 import { useActiveOrganization } from '../context/ActiveOrganizationContext'
+import { roleStringToDisplayBucket } from '../auth/firebaseRoles'
 
 function orgTypeLabelKey(organization_type) {
   const x = String(organization_type || '').toLowerCase()
@@ -178,9 +179,7 @@ export default function MyOrganizationsPage() {
                   <span>
                     {t('organizations.card.yourRole')}:{' '}
                     <strong className="text-surface-800">
-                      {String(org.role || '').toLowerCase() === 'owner'
-                        ? t('organizations.card.roleOwner')
-                        : t('organizations.card.roleMember')}
+                      {t(roleStringToDisplayBucket(org.role) === 'admin' ? 'roles.admin' : 'roles.user')}
                     </strong>
                   </span>
                 </div>

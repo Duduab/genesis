@@ -1,6 +1,23 @@
 /** Backend JWT custom claim; defaults to entrepreneur when missing (see FIREBASE_INTEGRATION.md). */
 export type GenesisJwtRole = 'superAdmin' | 'admin' | 'operator' | 'entrepreneur' | 'user'
 
+/** Collapsed UI bucket: Admin vs User (i18n: `roles.admin` / `roles.user`). */
+export type DisplayRoleBucket = 'admin' | 'user'
+
+export function jwtRoleToDisplayBucket(role: GenesisJwtRole): DisplayRoleBucket {
+  if (role === 'superAdmin' || role === 'admin' || role === 'operator') return 'admin'
+  return 'user'
+}
+
+/**
+ * Maps platform/org API role strings to the same two UI buckets (owner → admin, member → user).
+ */
+export function roleStringToDisplayBucket(role: string | null | undefined): DisplayRoleBucket {
+  const r = String(role ?? '').trim().toLowerCase()
+  if (r === 'owner' || r === 'admin' || r === 'superadmin' || r === 'super_admin' || r === 'operator') return 'admin'
+  return 'user'
+}
+
 export function roleClaimFromJwt(claims: Record<string, unknown> | undefined): GenesisJwtRole {
   const r = claims && typeof claims.role === 'string' ? claims.role.trim().toLowerCase() : ''
   if (r === 'superadmin' || r === 'super_admin') return 'superAdmin'
@@ -18,8 +35,5 @@ export function isConsoleStaffRole(claims: Record<string, unknown> | undefined):
 }
 
 export function displayRoleLabel(role: GenesisJwtRole): string {
-  if (role === 'superAdmin' || role === 'admin') return 'Administrator'
-  if (role === 'operator') return 'Operator'
-  if (role === 'user') return 'User'
-  return 'Entrepreneur'
+  return jwtRoleToDisplayBucket(role) === 'admin' ? 'Admin' : 'User'
 }

@@ -400,20 +400,15 @@ export default function TopHeader({ onMenuClick }) {
   const orgsQ = useOrganizationsQuery({ enabled: isAuthenticated })
 
   const roleLabelKey = useMemo(() => {
-    if (!isAuthenticated || !user) return 'topHeader.roleAdministrator'
+    if (!isAuthenticated || !user) return 'roles.user'
     const variant = resolveHeaderOrgBadgeVariant({
       claims: user.jwtClaims,
       organizations: orgsQ.data ?? [],
       orgsLoading: orgsQ.isLoading,
     })
-    const map = {
-      loading: 'topHeader.badgeLoading',
-      systemAdmin: 'topHeader.badgeSystemAdmin',
-      orgOwner: 'topHeader.badgeOrgOwner',
-      orgMember: 'topHeader.badgeOrgMember',
-      plainUser: 'topHeader.badgePlainUser',
-    }
-    return map[variant] ?? 'topHeader.badgePlainUser'
+    if (variant === 'loading') return 'topHeader.badgeLoading'
+    if (variant === 'systemAdmin' || variant === 'orgOwner') return 'roles.admin'
+    return 'roles.user'
   }, [isAuthenticated, user, orgsQ.data, orgsQ.isLoading])
 
   const profileName = isAuthenticated && user ? user.displayName : GUEST_PROFILE_NAME

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   deleteUser,
   fetchUserById,
@@ -9,10 +9,15 @@ import {
 } from '../api/genesis/usersAdminApi'
 import { isGenesisApiError } from '../api/genesis/errors'
 import { useI18n } from '../i18n/I18nContext'
+import { roleStringToDisplayBucket } from '../auth/firebaseRoles'
 
 const pageSize = 25
 
-const ROLES = ['admin', 'operator', 'entrepreneur']
+const ASSIGNABLE_ROLES = ['admin', 'entrepreneur']
+
+function normalizeAssignableRole(role) {
+  return roleStringToDisplayBucket(role) === 'admin' ? 'admin' : 'entrepreneur'
+}
 
 export default function AdminUsersPage() {
   const { t } = useI18n()
@@ -22,7 +27,7 @@ export default function AdminUsersPage() {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
-  const [roleDraft, setRoleDraft] = useState('entrepreneur')
+  const [roleDraftOverride, setRoleDraftOverride] = useState(null)
 
   const listQ = useQuery({
     queryKey: ['admin', 'users', { limit: pageSize, offset }],
@@ -53,6 +58,7 @@ export default function AdminUsersPage() {
     onSuccess: (_, { userId }) => {
       qc.invalidateQueries({ queryKey: ['admin', 'users'] })
       qc.invalidateQueries({ queryKey: ['admin', 'users', 'detail', userId] })
+      setRoleDraftOverride(null)
     },
   })
 
@@ -60,6 +66,7 @@ export default function AdminUsersPage() {
     mutationFn: (userId) => deleteUser(userId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+      setRoleDraftOverride(null)
       setDetailId(null)
     },
   })
@@ -67,13 +74,9 @@ export default function AdminUsersPage() {
   const rows = listQ.data?.data ?? []
   const canPageNext = rows.length >= pageSize && listQ.data?.pagination?.has_more !== false
 
-  useEffect(() => {
-    if (!user) return
-    const r = user.role && ROLES.includes(String(user.role)) ? String(user.role) : 'entrepreneur'
-    setRoleDraft(r)
-  }, [user?.user_id, user?.role])
-
-  const effectiveRole = user?.role && ROLES.includes(String(user.role)) ? String(user.role) : null
+  const roleDraft =
+    roleDraftOverride ?? (user?.role != null ? normalizeAssignableRole(user.role) : 'entrepreneur')
+  const normalizedEffectiveRole = user?.role != null ? normalizeAssignableRole(user.role) : null
 
   return (
     <div className="space-y-6">
@@ -170,13 +173,20 @@ export default function AdminUsersPage() {
               <tr
                 key={row.user_id}
                 className="cursor-pointer text-surface-800 hover:bg-surface-50 dark:text-surface-200 dark:hover:bg-surface-800/50"
-                onClick={() => setDetailId(row.user_id)}
+                onClick={() => {
+                  setRoleDraftOverride(null)
+                  setDetailId(row.user_id)
+                }}
               >
                 <td className="max-w-[200px] truncate px-3 py-2 text-xs" title={row.email ?? ''}>
                   {row.email ?? '—'}
                 </td>
                 <td className="max-w-[160px] truncate px-3 py-2">{row.display_name ?? '—'}</td>
-                <td className="px-3 py-2 text-xs font-medium">{row.role ?? '—'}</td>
+                <td className="px-3 py-2 text-xs font-medium">
+                  {row.role != null && String(row.role).trim()
+                    ? t(roleStringToDisplayBucket(row.role) === 'admin' ? 'roles.admin' : 'roles.user')
+                    : '—'}
+                </td>
                 <td className="whitespace-nowrap px-3 py-2 text-xs text-surface-600 dark:text-surface-400">{row.last_login ?? '—'}</td>
                 <td className="px-3 py-2 font-mono text-xs text-surface-500">{row.user_id}</td>
               </tr>
@@ -221,6 +231,7 @@ export default function AdminUsersPage() {
             if (e.target === e.currentTarget) {
               roleM.reset()
               deleteM.reset()
+              setRoleDraftOverride(null)
               setDetailId(null)
             }
           }}
@@ -233,6 +244,7 @@ export default function AdminUsersPage() {
                 onClick={() => {
                   roleM.reset()
                   deleteM.reset()
+                  setRoleDraftOverride(null)
                   setDetailId(null)
                 }}
                 className="rounded-lg px-2 py-1 text-sm text-surface-600 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800"
@@ -267,7 +279,11 @@ export default function AdminUsersPage() {
                     </div>
                     <div>
                       <dt className="text-xs text-surface-500">{t('admin.usersPage.detailRole')}</dt>
-                      <dd>{user.role ?? '—'}</dd>
+                      <dd>
+                        {user.role != null && String(user.role).trim()
+                          ? t(roleStringToDisplayBucket(user.role) === 'admin' ? 'roles.admin' : 'roles.user')
+                          : '—'}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-xs text-surface-500">{t('admin.usersPage.detailLastLogin')}</dt>
@@ -288,17 +304,21 @@ export default function AdminUsersPage() {
                         id="role-select"
                         className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm dark:border-surface-700 dark:bg-surface-950"
                         value={roleDraft}
-                        onChange={(e) => setRoleDraft(e.target.value)}
+                        onChange={(e) => setRoleDraftOverride(e.target.value)}
                       >
-                        {ROLES.map((r) => (
+                        {ASSIGNABLE_ROLES.map((r) => (
                           <option key={r} value={r}>
-                            {r}
+                            {t(r === 'admin' ? 'roles.admin' : 'roles.user')}
                           </option>
                         ))}
                       </select>
                       <button
                         type="button"
-                        disabled={roleM.isPending || !user.user_id || (effectiveRole != null && roleDraft === effectiveRole)}
+                        disabled={
+                          roleM.isPending ||
+                          !user.user_id ||
+                          (normalizedEffectiveRole != null && roleDraft === normalizedEffectiveRole)
+                        }
                         onClick={() => roleM.mutate({ userId: user.user_id, role: roleDraft })}
                         className="rounded-lg bg-genesis-600 px-3 py-2 text-sm font-semibold text-white hover:bg-genesis-700 disabled:opacity-40"
                       >

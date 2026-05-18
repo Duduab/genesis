@@ -22,6 +22,7 @@ import {
 } from '../../api/genesis/organizationsApi'
 import { ORGANIZATIONS_QUERY_KEY, useOrganizationsQuery } from '../../hooks/useOrganizationsQuery'
 import { canWriteOrganizationBusiness } from '../../lib/orgAccess'
+import { roleStringToDisplayBucket } from '../../auth/firebaseRoles'
 
 function isPendingRow(row) {
   return row.accepted_at == null && row.invited_email
@@ -234,12 +235,12 @@ export default function TeamMembersTab({ initialOrganizationId }) {
                             {roleLower === 'owner' ? (
                               <span className="inline-flex items-center gap-1 rounded-full bg-genesis-50 px-2 py-0.5 text-xs font-semibold text-genesis-800 ring-1 ring-genesis-200">
                                 <Shield className="h-3 w-3" />
-                                {t('organizations.team.roleOwner')}
+                                {t(roleStringToDisplayBucket(row.role) === 'admin' ? 'roles.admin' : 'roles.user')}
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2 py-0.5 text-xs font-semibold text-surface-700">
                                 <UserCircle className="h-3 w-3" />
-                                {t('organizations.team.roleMember')}
+                                {t(roleStringToDisplayBucket(row.role) === 'admin' ? 'roles.admin' : 'roles.user')}
                               </span>
                             )}
                           </td>
@@ -338,8 +339,8 @@ export default function TeamMembersTab({ initialOrganizationId }) {
                   onChange={(e) => setInviteRole(e.target.value)}
                   className="mt-1.5 h-10 w-full rounded-lg border border-surface-200 bg-white px-3 text-sm outline-none focus:border-genesis-400 focus:ring-2 focus:ring-genesis-100"
                 >
-                  <option value="member">{t('organizations.team.roleMember')}</option>
-                  <option value="owner">{t('organizations.team.roleOwner')}</option>
+                  <option value="member">{t('roles.user')}</option>
+                  <option value="owner">{t('roles.admin')}</option>
                 </select>
               </label>
               {inviteErrorText ? (

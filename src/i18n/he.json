@@ -2,6 +2,10 @@
   "footer": {
     "poweredBy": "מופעל על ידי"
   },
+  "roles": {
+    "admin": "מנהל",
+    "user": "משתמש"
+  },
   "admin": {
     "sidebarTitle": "ניהול Genesis",
     "navMonitoring": "ניטור",
@@ -186,15 +190,15 @@
     "activeBusinessChip": "{{name}}",
     "organizationLabel": "ארגון",
     "organizationAria": "ארגון פעיל",
-    "roleAdministrator": "מנהל מערכת",
-    "roleAdmin": "מנהל מערכת",
-    "roleOperator": "מפעיל",
-    "roleEntrepreneur": "יזם",
+    "roleAdministrator": "מנהל",
+    "roleAdmin": "מנהל",
+    "roleOperator": "מנהל",
+    "roleEntrepreneur": "משתמש",
     "roleUser": "משתמש",
     "badgeLoading": "…",
-    "badgeSystemAdmin": "מנהל מערכת",
-    "badgeOrgOwner": "בעלים",
-    "badgeOrgMember": "חבר",
+    "badgeSystemAdmin": "מנהל",
+    "badgeOrgOwner": "מנהל",
+    "badgeOrgMember": "משתמש",
     "badgePlainUser": "משתמש",
     "logout": "התנתקות",
     "notifications": "התראות",
@@ -725,7 +729,7 @@
       "phone": "מספר טלפון",
       "phonePlaceholder": "+972 50 000 0000",
       "role": "תפקיד",
-      "roleAdministrator": "מנהל מערכת",
+      "roleAdministrator": "מנהל",
       "language": "שפת ממשק",
       "languageHelper": "שינוי שפת הממשק וכיוון הטקסט (LTR / RTL)",
       "languageHebrew": "עברית",

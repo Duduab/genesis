@@ -2,6 +2,10 @@
   "footer": {
     "poweredBy": "Powered by"
   },
+  "roles": {
+    "admin": "Admin",
+    "user": "User"
+  },
   "admin": {
     "sidebarTitle": "Genesis Admin",
     "navMonitoring": "Monitoring",
@@ -186,15 +190,15 @@
     "activeBusinessChip": "{{name}}",
     "organizationLabel": "Organization",
     "organizationAria": "Active organization",
-    "roleAdministrator": "Administrator",
-    "roleAdmin": "Administrator",
-    "roleOperator": "Operator",
-    "roleEntrepreneur": "Entrepreneur",
+    "roleAdministrator": "Admin",
+    "roleAdmin": "Admin",
+    "roleOperator": "Admin",
+    "roleEntrepreneur": "User",
     "roleUser": "User",
     "badgeLoading": "…",
-    "badgeSystemAdmin": "System admin",
-    "badgeOrgOwner": "Owner",
-    "badgeOrgMember": "Member",
+    "badgeSystemAdmin": "Admin",
+    "badgeOrgOwner": "Admin",
+    "badgeOrgMember": "User",
     "badgePlainUser": "User",
     "logout": "Log out",
     "notifications": "Notifications",
@@ -725,7 +729,7 @@
       "phone": "Phone Number",
       "phonePlaceholder": "+972 50 000 0000",
       "role": "Role",
-      "roleAdministrator": "Administrator",
+      "roleAdministrator": "Admin",
       "language": "Interface Language",
       "languageHelper": "Changes the UI language and text direction (LTR / RTL)",
       "languageHebrew": "עברית",

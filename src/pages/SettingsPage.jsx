@@ -47,6 +47,7 @@ import {
 import TeamMembersTab from './settings/TeamMembersTab'
 import { fetchMyProfile, updateMyProfile, uploadMyAvatar, putMy2fa, putMyPassword } from '../api/genesis/usersMeApi'
 import { isGenesisApiError } from '../api/genesis/errors'
+import { roleStringToDisplayBucket } from '../auth/firebaseRoles'
 import { formatNisFull } from '../utils/formatNis'
 
 /* ─── Shared primitives ─── */
@@ -329,12 +330,9 @@ function ProfileContent() {
     )
   }
 
-  const roleLabel =
-    profileQ.data?.role === 'admin' || profileQ.data?.role === 'superAdmin'
-      ? t('profile.personal.roleAdministrator')
-      : profileQ.data?.role
-        ? String(profileQ.data.role)
-        : '—'
+  const roleLabel = profileQ.data?.role
+    ? t(roleStringToDisplayBucket(String(profileQ.data.role)) === 'admin' ? 'roles.admin' : 'roles.user')
+    : '—'
 
   return (
     <div className="flex flex-col gap-5">
