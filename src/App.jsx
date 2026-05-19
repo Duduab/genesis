@@ -26,7 +26,7 @@ import DashboardHeader from './components/DashboardHeader'
 import LiveRevenueFlowChart from './components/LiveRevenueFlowChart'
 import BusinessMilestonesSection from './components/BusinessMilestonesSection'
 import BusinessStagesSection from './components/BusinessStagesSection'
-import { Activity, Building2, ShieldCheck, TrendingUp, Trophy, Clock, DollarSign, CheckCircle2, AlertTriangle, ArrowDownRight } from 'lucide-react'
+import { Activity, Building2, ShieldCheck, TrendingUp, Trophy, Clock, DollarSign, CheckCircle2, ArrowDownRight } from 'lucide-react'
 import { useI18n } from './i18n/I18nContext'
 import { useRouter } from './router'
 import { useAuth } from './auth/AuthContext'
@@ -272,12 +272,6 @@ function DashboardPage() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Legal Disclaimer */}
-        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-5 py-3.5">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-          <p className="text-xs leading-relaxed text-amber-800">{t('dashboard.metrics.disclaimer')}</p>
         </div>
       </div>
     </div>

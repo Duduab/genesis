@@ -129,7 +129,8 @@ export default function MyOrganizationsPage() {
   const organizations = orgsQ.data ?? []
 
   const sorted = useMemo(() => {
-    return [...organizations].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    // Oldest first so the org you just created appears at the end of the grid (not first).
+    return [...organizations].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
   }, [organizations])
 
   return (
