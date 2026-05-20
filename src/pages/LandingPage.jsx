@@ -121,7 +121,7 @@ export default function LandingPage() {
               aria-label="App version"
               className="rounded-md border border-white/15 bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/80"
             >
-              V1.0.0
+              V1.0.1
             </span>
           </Link>
 

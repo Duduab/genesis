@@ -535,6 +535,31 @@
     "copy": "Copy",
     "copied": "Copied",
     "rawPayload": "Raw JSON Payload",
+    "dataView": {
+      "panelTitle": "Structured output",
+      "listTitle": "List",
+      "fieldsTitle": "Fields",
+      "yes": "Yes",
+      "no": "No",
+      "empty": "Empty",
+      "emptyList": "No items",
+      "emptyObject": "No fields",
+      "copyJson": "Copy JSON"
+    },
+    "drilldownDashboard": {
+      "modalSubtitle": "Live layout from the latest agent payload — scores, KPIs, and narrative in one view.",
+      "percentSuffix": "%",
+      "rawScaleHint": "Server sent a 0–1 scale; shown as percent.",
+      "mainScoreTitle": "Primary score",
+      "compositeHint": "Blended from all numeric signals below",
+      "noScoreHint": "Structured payload — see KPIs and insights",
+      "mainBarCaption": "Headline coverage of the strongest signal",
+      "noBarsHint": "No percentage-style scores were found; key figures and text are still below.",
+      "kpiTitle": "Key figures",
+      "signalsTitle": "Signal mix",
+      "insightsTitle": "Insights & narrative",
+      "rawToggle": "All fields (structured)"
+    },
     "noActivity": "No matching activity",
     "noActivitySub": "Try adjusting your filters",
     "allAgents": "All Agents",
@@ -548,6 +573,10 @@
     "agentLicensing": "Licensing-Agent",
     "agentProcurement": "Procurement-Agent",
     "agentLiaison": "Liaison-Agent",
+    "agentMri": "MRI — Blueprint",
+    "agentNira": "NIRA — Land registry",
+    "agentGlo": "GLO — Insight layer",
+    "agentNego": "Negotiation — Deal engine",
     "all": "All",
     "event": "event",
     "events": "events",
@@ -559,7 +588,53 @@
     "tagActionRequired": "Action Required",
     "tagNewResults": "New Results",
     "tagInProgress": "In Progress",
-    "pendingApprovalCount": "pending approval"
+    "pendingApprovalCount": "pending approval",
+    "agentsPipeline": {
+      "title": "Agent pipeline",
+      "subtitle": "Live progress across all setup agents (updates every few seconds until the run finishes).",
+      "stagesSummary": "{{completed}} done · {{inProgress}} active · {{failed}} failed · {{total}} total",
+      "started": "Started",
+      "finished": "Finished",
+      "viewDetails": "View output",
+      "noDrilldown": "No output yet",
+      "loadingPipeline": "Loading pipeline…",
+      "loadFailed": "Could not load agent progress.",
+      "noStages": "No stages returned for this business.",
+      "drilldownSubtitle": "Agent output from the API",
+      "drilldownLoading": "Loading agent output…",
+      "drilldownEmpty": "No saved output for this agent yet.",
+      "drilldownEmptyHint": "This is normal until the agent has produced data (404 from the server).",
+      "drilldownUnsupported": "This agent has no drill-down endpoint in the app.",
+      "overallProgressLabel": "Overall setup progress",
+      "stepsCompleteLine": "{{completed}} of {{total}} steps finished",
+      "runningNow": "Active steps right now: {{count}}",
+      "stepReadyFirst": "Waiting to start.",
+      "stepQueued": "Queued — runs after earlier steps finish.",
+      "stepProgressCaption": "This step",
+      "globalRunStatus": {
+        "COMPLETED": "All steps finished",
+        "COMPLETE": "All steps finished",
+        "FAILED": "Stopped — needs attention",
+        "CANCELLED": "Run cancelled",
+        "IN_PROGRESS": "Setup in progress",
+        "default": "Status: {{status}}"
+      },
+      "pipelineStage": {
+        "NOT_STARTED": "Waiting",
+        "IN_PROGRESS": "Working",
+        "SUCCESS": "Done",
+        "FAILED": "Issue",
+        "RETRYING": "Retrying",
+        "CANCELLED": "Cancelled",
+        "AWAITING_APPROVAL": "Awaiting approval"
+      },
+      "agentBlurb": {
+        "agent_mri": "Builds the living blueprint so every later step uses the same property picture.",
+        "agent_nira": "Connects land-registry context (NIRA) so ownership and parcel facts stay trustworthy.",
+        "agent_glo": "Turns scattered signals into one clear snapshot you can act on.",
+        "agent_nego": "Handles negotiation and auction mechanics so pricing moves stay structured."
+      }
+    }
   },
   "enums": {
     "businessStatus": {

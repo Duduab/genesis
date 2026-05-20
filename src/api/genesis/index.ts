@@ -51,6 +51,7 @@ export { submitBusinessRegistration } from '../submitBusinessRegistration'
 export type { SubmitBusinessRegistrationResult } from '../submitBusinessRegistration'
 export { fetchAgentActivityList } from './agentActivityApi'
 export type { FetchAgentActivityParams } from './agentActivityApi'
+export { fetchBusinessAgentsProgress, fetchBusinessAgentDrilldown, drilldownSegmentForAgentId } from './businessAgentsProgressApi'
 export {
   fetchChatMessages,
   postChatMessage,

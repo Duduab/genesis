@@ -7,6 +7,11 @@ export type AgentPresentation = {
 
 /** Keys align with API agent_id enum (`orchestrator`, `agent_*`). */
 const AGENT_PRESENTATION: Record<string, Omit<AgentPresentation, 'label'>> = {
+  /** Setup pipeline (business progress) — keep visuals aligned with Genesis + cyan accents. */
+  agent_mri: { tKey: 'activity.agentMri', gradient: 'from-genesis-600 via-genesis-500 to-cyan-500', avatar: 'MRI' },
+  agent_nira: { tKey: 'activity.agentNira', gradient: 'from-blue-600 via-indigo-500 to-violet-500', avatar: 'NIRA' },
+  agent_glo: { tKey: 'activity.agentGlo', gradient: 'from-teal-600 via-emerald-500 to-cyan-500', avatar: 'GLO' },
+  agent_nego: { tKey: 'activity.agentNego', gradient: 'from-violet-600 via-fuchsia-500 to-rose-500', avatar: 'Nego' },
   agent_prompter: { tKey: 'activity.agentPrompter', gradient: 'from-indigo-600 to-violet-500', avatar: 'Prompter' },
   agent_financial: { tKey: 'activity.agentTaxFin', gradient: 'from-amber-600 to-orange-400', avatar: 'TaxFin' },
   agent_spatial: { tKey: 'activity.agentSpatial', gradient: 'from-cyan-600 to-blue-500', avatar: 'Spatial' },

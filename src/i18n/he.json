@@ -535,6 +535,31 @@
     "copy": "העתק",
     "copied": "הועתק",
     "rawPayload": "נתוני JSON גולמיים",
+    "dataView": {
+      "panelTitle": "פלט מעוצב",
+      "listTitle": "רשימה",
+      "fieldsTitle": "שדות",
+      "yes": "כן",
+      "no": "לא",
+      "empty": "ריק",
+      "emptyList": "אין פריטים",
+      "emptyObject": "אין שדות",
+      "copyJson": "העתק JSON"
+    },
+    "drilldownDashboard": {
+      "modalSubtitle": "תצוגה חיה מהפלט העדכני של הסוכן — ציונים, מספרים מרכזיים וטקסט במקום אחד.",
+      "percentSuffix": "%",
+      "rawScaleHint": "השרת שלח סקאלה 0–1; הומר לאחוזים לצורך קריאות.",
+      "mainScoreTitle": "ציון ראשי",
+      "compositeHint": "ממוצע משוקלל מכל האותות המספריים למטה",
+      "noScoreHint": "מבנה נתונים — עיין במדדים ובתובנות",
+      "mainBarCaption": "כיסוי של האות החזק ביותר",
+      "noBarsHint": "לא זוהו ציונים באחוזים; עדיין מוצגים מספרים מרכזיים וטקסט למטה.",
+      "kpiTitle": "מספרים מרכזיים",
+      "signalsTitle": "תמהיל אותות",
+      "insightsTitle": "תובנות ונרטיב",
+      "rawToggle": "כל השדות (תצוגה מובנית)"
+    },
     "noActivity": "לא נמצאה פעילות תואמת",
     "noActivitySub": "נסה להתאים את המסננים",
     "allAgents": "כל הסוכנים",
@@ -548,6 +573,10 @@
     "agentLicensing": "Licensing-Agent",
     "agentProcurement": "Procurement-Agent",
     "agentLiaison": "Liaison-Agent",
+    "agentMri": "MRI — תכנית עבודה",
+    "agentNira": "NIRA — רישום מקרקעין",
+    "agentGlo": "GLO — שכבת תובנות",
+    "agentNego": "משא ומתן — מנוע עסקה",
     "all": "הכל",
     "event": "אירוע",
     "events": "אירועים",
@@ -559,7 +588,53 @@
     "tagActionRequired": "נדרשת פעולה",
     "tagNewResults": "תוצאות חדשות",
     "tagInProgress": "בתהליך",
-    "pendingApprovalCount": "ממתין לאישור"
+    "pendingApprovalCount": "ממתין לאישור",
+    "agentsPipeline": {
+      "title": "צינור סוכנים",
+      "subtitle": "התקדמות חיה בכל שלבי ההקמה (מתעדכן כל כמה שניות עד סיום הריצה).",
+      "stagesSummary": "{{completed}} הושלמו · {{inProgress}} פעילים · {{failed}} נכשלו · {{total}} סה״כ",
+      "started": "התחלה",
+      "finished": "סיום",
+      "viewDetails": "הצגת פלט",
+      "noDrilldown": "אין פלט עדיין",
+      "loadingPipeline": "טוען צינור…",
+      "loadFailed": "לא ניתן לטעון התקדמות סוכנים.",
+      "noStages": "לא הוחזרו שלבים לעסק זה.",
+      "drilldownSubtitle": "פלט הסוכן מהשרת",
+      "drilldownLoading": "טוען פלט…",
+      "drilldownEmpty": "אין עדיין פלט שמור לסוכן זה.",
+      "drilldownEmptyHint": "זה תקין עד שהסוכן יפיק נתונים (404 מהשרת).",
+      "drilldownUnsupported": "לסוכן זה אין נקודת פלט ייעודית באפליקציה.",
+      "overallProgressLabel": "התקדמות כללית בהקמה",
+      "stepsCompleteLine": "{{completed}} מתוך {{total}} שלבים הושלמו",
+      "runningNow": "שלבים פעילים כעת: {{count}}",
+      "stepReadyFirst": "ממתין להתחלה.",
+      "stepQueued": "בתור — יופעל אחרי השלבים הקודמים.",
+      "stepProgressCaption": "שלב זה",
+      "globalRunStatus": {
+        "COMPLETED": "כל השלבים הושלמו",
+        "COMPLETE": "כל השלבים הושלמו",
+        "FAILED": "הריצה נעצרה — כדאי לבדוק",
+        "CANCELLED": "הריצה בוטלה",
+        "IN_PROGRESS": "ההקמה בתהליך",
+        "default": "סטטוס: {{status}}"
+      },
+      "pipelineStage": {
+        "NOT_STARTED": "ממתין",
+        "IN_PROGRESS": "עובד",
+        "SUCCESS": "הושלם",
+        "FAILED": "בעיה",
+        "RETRYING": "מנסה שוב",
+        "CANCELLED": "בוטל",
+        "AWAITING_APPROVAL": "ממתין לאישור"
+      },
+      "agentBlurb": {
+        "agent_mri": "מגדיר תמונת נכס אחידה שכל השלבים הבאים נשענים עליה.",
+        "agent_nira": "מחבר נתוני רישום מקרקעין (NIRA) כדי שבעלות ומגרש יהיו מדויקים.",
+        "agent_glo": "מאחד רמזים מפוזרים למצב ברור שאפשר לפעול לפיו.",
+        "agent_nego": "מנהל לוגיקת משא ומתן ומכרזים כדי שהמחיר והתנאים יישארו מסודרים."
+      }
+    }
   },
   "enums": {
     "businessStatus": {

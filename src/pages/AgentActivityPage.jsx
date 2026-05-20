@@ -1,21 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useI18n } from '../i18n/I18nContext'
-import { useActiveBusiness } from '../context/ActiveBusinessContext'
+import AgentActivityProgressSection from '../components/AgentActivityProgressSection.jsx'
 import { useAgentActivityListQuery } from '../hooks/useAgentActivityListQuery'
 import { useAgentScopedBusinessId } from '../hooks/useAgentScopedBusinessId'
 import { getAgentPresentation } from '../config/agentPresentation'
 import { normalizeGenesisActivityStatus } from '../constants/genesisApiEnums'
 import {
   ChevronDown,
-  ChevronRight,
   CheckCircle2,
   AlertCircle,
   XCircle,
   Activity,
   Filter,
-  Code2,
-  Copy,
-  Check,
   Loader2,
 } from 'lucide-react'
 
@@ -106,19 +102,11 @@ function SelectDropdown({ value, onChange, options, label, t }) {
 }
 
 function TimelineItem({ item, t }) {
-  const [expanded, setExpanded] = useState(false)
-  const [copied, setCopied] = useState(false)
   const stKey = normalizeGenesisActivityStatus(item.status)
   const StatusIcon = ACTIVITY_STATUS_ICONS[stKey] ?? ACTIVITY_STATUS_ICONS.pending_approval
   const stStyle = ACTIVITY_STATUS_STYLE[stKey] ?? ACTIVITY_STATUS_STYLE.pending_approval
   const agentInfo = getAgentPresentation(item.agent)
   const agentLabel = agentInfo.tKey ? t(agentInfo.tKey) : agentInfo.label
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(JSON.stringify(item.payload, null, 2))
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
 
   return (
     <div className="group relative flex gap-4 pb-8 last:pb-0">
@@ -153,40 +141,8 @@ function TimelineItem({ item, t }) {
                 <StatusIcon className="h-3 w-3" />
                 {t(`enums.activityStatus.${stKey}`)}
               </span>
-              <span className="hidden whitespace-nowrap text-xs text-surface-400 sm:inline">{item.time}</span>
+              <span className="whitespace-nowrap text-xs text-surface-400">{item.time}</span>
             </div>
-          </div>
-
-          <div className="border-t border-surface-100">
-            <button
-              type="button"
-              onClick={() => setExpanded(!expanded)}
-              className="flex w-full items-center gap-2 px-5 py-2 text-xs font-medium text-surface-400 transition-colors hover:text-genesis-600"
-            >
-              {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-              <Code2 className="h-3.5 w-3.5" />
-              {expanded ? t('activity.hideDetails') : t('activity.expandDetails')}
-              <span className="ms-auto text-xs text-surface-400 sm:hidden">{item.time}</span>
-            </button>
-
-            {expanded ? (
-              <div className="border-t border-surface-100 bg-surface-50/70 px-5 py-4">
-                <div className="flex items-center justify-between pb-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-surface-400">{t('activity.rawPayload')}</p>
-                  <button
-                    type="button"
-                    onClick={handleCopy}
-                    className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-600"
-                  >
-                    {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-                    {copied ? t('activity.copied') : t('activity.copy')}
-                  </button>
-                </div>
-                <pre className="overflow-x-auto rounded-lg border border-surface-200 bg-white p-3.5 font-mono text-xs leading-relaxed text-surface-600">
-                  {JSON.stringify(item.payload, null, 2)}
-                </pre>
-              </div>
-            ) : null}
           </div>
         </div>
       </div>
@@ -198,7 +154,6 @@ const DATE_SECTION_ORDER = ['today', 'yesterday', 'earlier']
 
 export default function AgentActivityPage() {
   const { t, locale } = useI18n()
-  const { enterBusiness } = useActiveBusiness()
   const { businessId, businessName } = useAgentScopedBusinessId(locale)
   const [agentFilter, setAgentFilter] = useState('all')
   const [entityFilter, setEntityFilter] = useState(ENTITY_ALL)
@@ -278,6 +233,8 @@ export default function AgentActivityPage() {
           </p>
         ) : null}
       </div>
+
+      <AgentActivityProgressSection businessId={businessId} locale={locale} t={t} />
 
       {isError && businessId ? (
         <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
