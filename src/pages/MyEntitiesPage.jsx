@@ -26,6 +26,8 @@ import { canWriteOrganizationBusiness } from '../lib/orgAccess'
 import { useOrganizationsQuery } from '../hooks/useOrganizationsQuery'
 import { loadPersistedGenesisBusinesses, removePersistedGenesisBusiness } from '../dashboard/genesisBusinessStorage'
 import EditBusinessModal from '../components/EditBusinessModal'
+import ViewModeToggle from '../components/ViewModeToggle'
+import { usePersistedViewMode } from '../hooks/usePersistedViewMode'
 
 const statusStyles = {
   active: { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-600/20', dot: 'bg-emerald-500' },
@@ -228,6 +230,152 @@ function EntityCard({
   )
 }
 
+function EntityListRow({
+  entity,
+  t,
+  onManageBusiness,
+  onEditBusiness,
+  onDeleteBusiness,
+  isWorkspaceActive,
+  deleteBusy,
+  canMutateBusiness,
+}) {
+  const s = statusStyles[entity.status]
+  const BalanceIcon = entity.balanceTrend === 'up' ? TrendingUp : TrendingDown
+  const BurnIcon = entity.burnTrend === 'up' ? TrendingUp : TrendingDown
+
+  return (
+    <div
+      className={`flex flex-col gap-4 rounded-xl border bg-white px-4 py-4 shadow-sm transition-all hover:border-genesis-200 hover:shadow-md sm:flex-row sm:items-center sm:gap-5 ${
+        isWorkspaceActive ? 'border-genesis-400 ring-2 ring-genesis-200' : 'border-surface-200'
+      }`}
+    >
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-genesis-50 ring-1 ring-genesis-200/60">
+          <Building2 className="h-5 w-5 text-genesis-600" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-bold text-surface-900">
+              <Link
+                to={entity.detailHref}
+                className="rounded-sm transition-colors hover:text-genesis-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genesis-300"
+              >
+                {entity.name}
+              </Link>
+            </h3>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${s.bg} ${s.text} ${s.ring}`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+              {t(statusMap[entity.status])}
+            </span>
+          </div>
+          <p className="mt-0.5 font-mono text-[11px] text-surface-400">
+            {t('entities.id')}: {entity.legalIdDisplay}
+          </p>
+          <p className="mt-0.5 text-[11px] text-surface-400">
+            {t(typeMap[entity.entityType])} · {t('entities.since')} {entity.registeredLabel}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex shrink-0 flex-wrap items-center gap-4 text-sm sm:gap-6">
+        <div className="flex items-center gap-1.5">
+          <Wallet className="h-3.5 w-3.5 text-surface-400" aria-hidden />
+          <span className="font-semibold text-surface-900">{entity.balanceLabel}</span>
+          <BalanceIcon
+            className={`h-3.5 w-3.5 ${entity.balanceTrend === 'up' ? 'text-emerald-500' : 'text-red-400'}`}
+          />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Flame className="h-3.5 w-3.5 text-surface-400" aria-hidden />
+          <span className="font-semibold text-surface-900">{entity.burnRateLabel}</span>
+          <BurnIcon
+            className={`h-3.5 w-3.5 ${entity.burnTrend === 'down' ? 'text-emerald-500' : 'text-red-400'}`}
+          />
+        </div>
+        {entity.agentAvatarIndices.length > 0 ? (
+          <div className="flex -space-x-1.5">
+            {entity.agentAvatarIndices.map((agentIdx) => {
+              const agent = agentAvatars[agentIdx]
+              return (
+                <div
+                  key={`${entity.key}-list-${agent.seed}`}
+                  title={`${agent.name}-Agent`}
+                  className={`flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br ${agent.color} ring-2 ring-white`}
+                >
+                  <img
+                    src={`https://api.dicebear.com/9.x/bottts/svg?seed=${agent.seed}&backgroundColor=transparent&size=16`}
+                    alt={agent.name}
+                    className="h-3.5 w-3.5"
+                  />
+                </div>
+              )
+            })}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+        <button
+          type="button"
+          onClick={() => onManageBusiness?.(entity)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-genesis-200 bg-genesis-50/50 px-3 py-1.5 text-xs font-semibold text-genesis-700 transition-all hover:bg-genesis-100"
+        >
+          {t('entities.manageEntity')}
+          <ArrowRight className="h-3 w-3" />
+        </button>
+        {canMutateBusiness ? (
+          <>
+            <button
+              type="button"
+              onClick={() => onEditBusiness?.(entity)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-700 transition-all hover:border-genesis-300 hover:bg-genesis-50/40"
+            >
+              <PenLine className="h-3.5 w-3.5" aria-hidden />
+              {t('entities.editBusiness')}
+            </button>
+            <button
+              type="button"
+              disabled={deleteBusy}
+              onClick={() => onDeleteBusiness?.(entity)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50/50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-all hover:bg-red-100 disabled:opacity-50"
+            >
+              {deleteBusy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" aria-hidden />
+              )}
+              {t('entities.deleteBusiness')}
+            </button>
+          </>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function CreateEntityListRow({ onClick, t }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-surface-300 bg-white/50 px-6 py-5 text-center transition-all hover:border-genesis-400 hover:bg-genesis-50/30"
+    >
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-dashed border-surface-300 transition-all group-hover:border-genesis-400 group-hover:bg-genesis-100">
+        <Plus className="h-5 w-5 text-surface-400 transition-colors group-hover:text-genesis-600" />
+      </div>
+      <div className="text-start">
+        <span className="block text-sm font-bold text-surface-600 transition-colors group-hover:text-genesis-700">
+          {t('entities.createNew')}
+        </span>
+        <span className="mt-0.5 block text-xs text-surface-400">{t('entities.createNewSub')}</span>
+      </div>
+    </button>
+  )
+}
+
 function CreateEntityCard({ onClick, t }) {
   return (
     <button
@@ -268,6 +416,7 @@ export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
   const [cancelError, setCancelError] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const [editBusiness, setEditBusiness] = useState(null)
+  const [viewMode, setViewMode] = usePersistedViewMode('genesis.ui.viewMode.entities', 'cards')
 
   const handleManageBusiness = (entity) => {
     enterBusiness(entity.key)
@@ -343,6 +492,7 @@ export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
             </label>
           ) : null}
           <div className="flex items-center gap-3">
+          <ViewModeToggle mode={viewMode} onChange={setViewMode} />
           <div className="relative">
             <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" />
             <input
@@ -399,21 +549,58 @@ export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {loading && entities.length === 0 ? (
-          <div className="col-span-full flex flex-col items-center justify-center gap-3 py-20 text-surface-500">
-            <Loader2 className="h-10 w-10 animate-spin text-genesis-600" aria-hidden />
-            <p className="text-sm font-medium">{t('entities.loadingFromApi')}</p>
-          </div>
-        ) : (
-          <>
-            {entities.map((entity, i) => (
+      {viewMode === 'cards' ? (
+        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {loading && entities.length === 0 ? (
+            <div className="col-span-full flex flex-col items-center justify-center gap-3 py-20 text-surface-500">
+              <Loader2 className="h-10 w-10 animate-spin text-genesis-600" aria-hidden />
+              <p className="text-sm font-medium">{t('entities.loadingFromApi')}</p>
+            </div>
+          ) : (
+            <>
+              {entities.map((entity, i) => (
+                <div
+                  key={entity.key}
+                  className="h-full min-h-0 animate-slide-up-fade"
+                  style={{ animationDelay: `${i * 75}ms` }}
+                >
+                  <EntityCard
+                    entity={entity}
+                    t={t}
+                    onManageBusiness={handleManageBusiness}
+                    onEditBusiness={openEditModal}
+                    onDeleteBusiness={openCancelDialog}
+                    isWorkspaceActive={activeBusinessId === entity.key}
+                    deleteBusy={deletingId === entity.key}
+                    canMutateBusiness={canWriteOrganizationBusiness(
+                      entity.organizationId,
+                      organizations,
+                      claims,
+                    )}
+                  />
+                </div>
+              ))}
               <div
-                key={entity.key}
                 className="h-full min-h-0 animate-slide-up-fade"
-                style={{ animationDelay: `${i * 75}ms` }}
+                style={{ animationDelay: `${entities.length * 75}ms` }}
               >
-                <EntityCard
+                <CreateEntityCard onClick={onAddBusiness ?? onOpenChat} t={t} />
+              </div>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="mt-6 flex flex-col gap-3">
+          {loading && entities.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-20 text-surface-500">
+              <Loader2 className="h-10 w-10 animate-spin text-genesis-600" aria-hidden />
+              <p className="text-sm font-medium">{t('entities.loadingFromApi')}</p>
+            </div>
+          ) : (
+            <>
+              {entities.map((entity) => (
+                <EntityListRow
+                  key={entity.key}
                   entity={entity}
                   t={t}
                   onManageBusiness={handleManageBusiness}
@@ -421,19 +608,18 @@ export default function MyEntitiesPage({ onOpenChat, onAddBusiness }) {
                   onDeleteBusiness={openCancelDialog}
                   isWorkspaceActive={activeBusinessId === entity.key}
                   deleteBusy={deletingId === entity.key}
-                  canMutateBusiness={canWriteOrganizationBusiness(entity.organizationId, organizations, claims)}
+                  canMutateBusiness={canWriteOrganizationBusiness(
+                    entity.organizationId,
+                    organizations,
+                    claims,
+                  )}
                 />
-              </div>
-            ))}
-            <div
-              className="h-full min-h-0 animate-slide-up-fade"
-              style={{ animationDelay: `${entities.length * 75}ms` }}
-            >
-              <CreateEntityCard onClick={onAddBusiness ?? onOpenChat} t={t} />
-            </div>
-          </>
-        )}
-      </div>
+              ))}
+              <CreateEntityListRow onClick={onAddBusiness ?? onOpenChat} t={t} />
+            </>
+          )}
+        </div>
+      )}
 
       <EditBusinessModal
         open={Boolean(editBusiness)}

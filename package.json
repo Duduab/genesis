@@ -1,12 +1,14 @@
 {
   "name": "genesis-ui-platform",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",
     "build": "vite build",
     "lint": "eslint .",
+    "prepare": "node scripts/install-git-hooks.mjs",
+    "version:bump": "node scripts/bump-version.mjs",
     "preview": "vite preview",
     "gen:api-types": "openapi-typescript https://genesis-gateway-svc-242231160010.me-west1.run.app/openapi.json -o src/types/genesis-api.ts",
     "gen:api-types:local": "openapi-typescript docs/openapi.json -o src/types/genesis-api.ts"

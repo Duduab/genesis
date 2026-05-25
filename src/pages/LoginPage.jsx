@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
+import AuthPageBrand from '../components/AuthPageBrand'
 import { useRouter, Link } from '../router'
 import { useAuth } from '../auth/AuthContext'
 import { getGenesisFirebaseAuth } from '../auth/firebaseApp'
@@ -100,14 +101,7 @@ export default function LoginPage() {
       <div className="flex w-full flex-col lg:w-1/2">
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 py-5 sm:px-10">
-          <Link to="/login" className="flex items-center">
-            <img
-              src="/logos/logo-primary.png"
-              alt="Genesis Technologies"
-              className="animate-fade-in h-12 w-auto object-contain"
-              style={{ aspectRatio: 'auto' }}
-            />
-            </Link>
+          <AuthPageBrand to="/login" />
           <button
             onClick={toggleLocale}
             className="rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-600 transition-colors hover:bg-surface-50"

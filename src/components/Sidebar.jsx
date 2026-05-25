@@ -15,6 +15,7 @@ import { useCallback } from 'react'
 import { useI18n } from '../i18n/I18nContext'
 import { Link, useRouter } from '../router'
 import { useAuth } from '../auth/AuthContext'
+import AppVersionBadge from './AppVersionBadge'
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose, activePage }) {
   const { t } = useI18n()
@@ -54,7 +55,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         `}
       >
         <div className={`flex h-16 items-center border-b border-surface-200 px-4 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-          <div className="flex items-center overflow-hidden">
+          <div className="flex items-center gap-2 overflow-hidden">
             {collapsed ? (
               <img
                 src="/logos/logo-icon.png"
@@ -63,12 +64,15 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                 style={{ aspectRatio: 'auto' }}
               />
             ) : (
-              <img
-                src="/logos/logo-primary.png"
-                alt="Genesis Technologies"
-                className="h-10 w-auto object-contain"
-                style={{ aspectRatio: 'auto' }}
-              />
+              <>
+                <img
+                  src="/logos/logo-primary.png"
+                  alt="Genesis Technologies"
+                  className="h-10 w-auto object-contain"
+                  style={{ aspectRatio: 'auto' }}
+                />
+                <AppVersionBadge variant="light" />
+              </>
             )}
           </div>
 

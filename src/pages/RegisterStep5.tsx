@@ -5,6 +5,7 @@ import { createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { useI18n } from '../i18n/I18nContext'
 import { Link, useRouter } from '../router'
 import AuthHeroPanel from '../components/AuthHeroPanel'
+import AuthPageBrand from '../components/AuthPageBrand'
 import { submitBusinessRegistration } from '../api/submitBusinessRegistration'
 import { postCreateOrganization } from '../api/genesis/organizationsApi'
 import { isGenesisApiError } from '../api/genesis/errors'
@@ -222,13 +223,11 @@ export default function RegisterStep5() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(139,92,246,0.18),transparent)]" />
 
         <header className="relative z-10 flex shrink-0 items-center justify-between px-6 py-5 sm:px-10">
-          <Link to="/register" className="flex items-center">
-            <img
-              src="/logos/logo-primary.png"
-              alt={t('createBusiness.logoAlt')}
-              className="h-11 w-auto max-w-[200px] object-contain opacity-95"
-            />
-          </Link>
+          <AuthPageBrand
+            to="/register"
+            logoClassName="h-11 w-auto max-w-[200px] object-contain opacity-95"
+            badgeVariant="dark"
+          />
           <button
             type="button"
             onClick={toggleLocale}

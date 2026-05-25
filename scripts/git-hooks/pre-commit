@@ -1,0 +1,14 @@
+#!/bin/sh
+# Bump app version on every commit (patch +1). Skip with: SKIP_VERSION_BUMP=1 git commit ...
+
+if [ -n "$SKIP_VERSION_BUMP" ]; then
+  exit 0
+fi
+
+ROOT="$(git rev-parse --show-toplevel)" || exit 1
+cd "$ROOT" || exit 1
+
+node scripts/bump-version.mjs || exit 1
+git add package.json src/generated/appVersion.js
+
+exit 0

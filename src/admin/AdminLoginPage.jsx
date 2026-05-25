@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
+import AuthPageBrand from '../components/AuthPageBrand'
 import { useRouter, Link } from '../router'
 import { useAdminAuth } from '../context/AdminAuthContext'
 import AdminAuthHeroPanel from '../components/AdminAuthHeroPanel'
@@ -31,14 +32,7 @@ export default function AdminLoginPage() {
     <div className="flex h-screen bg-white">
       <div className="flex w-full flex-col lg:w-1/2">
         <div className="flex items-center justify-between px-6 py-5 sm:px-10">
-          <Link to="/admin" className="flex items-center">
-            <img
-              src="/logos/logo-primary.png"
-              alt="Genesis Technologies"
-              className="animate-fade-in h-12 w-auto object-contain"
-              style={{ aspectRatio: 'auto' }}
-            />
-          </Link>
+          <AuthPageBrand to="/admin" />
           <button
             type="button"
             onClick={toggleLocale}

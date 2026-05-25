@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronRight, Shield, Landmark, Users, CreditCard, BadgeCheck, ArrowRight, Terminal, MessageSquare, Bot, Zap, Globe, Menu, X, Moon, Sun } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
+import AppVersionBadge from '../components/AppVersionBadge'
 import { useTheme } from '../theme/ThemeContext'
 import { Link } from '../router'
 
@@ -117,12 +118,7 @@ export default function LandingPage() {
               className="h-9 w-auto brightness-0 invert object-contain"
               style={{ aspectRatio: 'auto' }}
             />
-            <span
-              aria-label="App version"
-              className="rounded-md border border-white/15 bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/80"
-            >
-              V1.0.1
-            </span>
+            <AppVersionBadge variant="dark" />
           </Link>
 
           <div className="hidden items-center gap-6 md:flex">
@@ -267,8 +263,13 @@ export default function LandingPage() {
               <Bot className="h-3.5 w-3.5 text-cyan-600" />
               {t('landing.agents.badge')}
             </span>
-            <h2 className={`mt-4 text-3xl font-bold tracking-tight sm:text-4xl ${dark ? '' : 'text-slate-900'}`}>{t('landing.agents.title')}</h2>
-            <p className={`mx-auto mt-4 max-w-2xl text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>{t('landing.agents.sub')}</p>
+            <p
+              className={`mx-auto mt-6 max-w-3xl text-xl font-semibold leading-snug tracking-tight sm:text-2xl ${
+                dark ? 'text-slate-200' : 'text-slate-800'
+              }`}
+            >
+              {t('landing.agents.sub')}
+            </p>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -399,13 +400,14 @@ export default function LandingPage() {
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {/* Brand */}
             <div>
-              <div className="flex items-center">
+              <div className="flex items-center gap-2">
                 <img
                   src="/logos/logo-primary.png"
                   alt="Genesis Technologies"
                   className={`h-8 w-auto object-contain ${dark ? 'brightness-0 invert' : ''}`}
                   style={{ aspectRatio: 'auto' }}
                 />
+                <AppVersionBadge variant={dark ? 'dark' : 'light'} />
               </div>
               <p className={`mt-4 text-xs leading-relaxed ${dark ? 'text-slate-500' : 'text-slate-600'}`}>{t('landing.hero.sub').slice(0, 90)}…</p>
             </div>

@@ -3,6 +3,7 @@ import * as LucideIcons from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { Link, useRouter } from '../router'
 import AuthHeroPanel from '../components/AuthHeroPanel'
+import AuthPageBrand from '../components/AuthPageBrand'
 import {
   BUDGET_MAX_NIS,
   BUDGET_MIN_NIS,
@@ -145,13 +146,11 @@ export default function RegisterPage() {
         )}
 
         <header className="relative z-10 flex shrink-0 items-center justify-between px-6 py-5 sm:px-10">
-          <Link to="/register" className="flex items-center">
-            <img
-              src="/logos/logo-primary.png"
-              alt={t('createBusiness.logoAlt')}
-              className="h-11 w-auto max-w-[200px] object-contain opacity-95"
-            />
-          </Link>
+          <AuthPageBrand
+            to="/register"
+            logoClassName="h-11 w-auto max-w-[200px] object-contain opacity-95"
+            badgeVariant="dark"
+          />
           <button
             type="button"
             onClick={toggleLocale}

@@ -15,6 +15,8 @@ import { postCreateOrganization } from '../api/genesis/organizationsApi'
 import { isGenesisApiError } from '../api/genesis/errors'
 import { useActiveOrganization } from '../context/ActiveOrganizationContext'
 import { roleStringToDisplayBucket } from '../auth/firebaseRoles'
+import ViewModeToggle from '../components/ViewModeToggle'
+import { usePersistedViewMode } from '../hooks/usePersistedViewMode'
 
 function orgTypeLabelKey(organization_type) {
   const x = String(organization_type || '').toLowerCase()
@@ -122,22 +124,116 @@ function AddOrganizationPanel() {
   )
 }
 
+function OrganizationCard({ org, t, onManage }) {
+  return (
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-surface-200 bg-white shadow-sm transition-all hover:border-genesis-200 hover:shadow-md">
+      <div className="flex items-start gap-3 border-b border-surface-100 px-5 py-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-genesis-50 ring-1 ring-genesis-200/60">
+          <Building2 className="h-5 w-5 text-genesis-600" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[15px] font-bold leading-snug text-surface-900">{org.name}</h2>
+          <p className="mt-1 text-[11px] text-surface-400">{t(orgTypeLabelKey(org.organization_type))}</p>
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col gap-3 px-5 py-4 text-sm text-surface-600">
+        <div className="flex items-center gap-2">
+          <UsersRound className="h-4 w-4 text-surface-400" aria-hidden />
+          <span>
+            {t('organizations.card.yourRole')}:{' '}
+            <strong className="text-surface-800">
+              {t(roleStringToDisplayBucket(org.role) === 'admin' ? 'roles.admin' : 'roles.user')}
+            </strong>
+          </span>
+        </div>
+        <div className="text-xs text-surface-500">
+          {t('organizations.card.members')}:{' '}
+          <span className="font-semibold text-surface-800">
+            {org.member_count != null ? String(org.member_count) : '—'}
+          </span>
+        </div>
+      </div>
+      <div className="border-t border-surface-100 px-5 py-3">
+        <button
+          type="button"
+          onClick={onManage}
+          className="group/btn flex w-full items-center justify-center gap-2 rounded-lg border border-genesis-200 bg-genesis-50/50 px-4 py-2 text-xs font-semibold text-genesis-700 transition-all hover:bg-genesis-100 hover:shadow-sm active:scale-[0.98]"
+        >
+          {t('organizations.card.manage')}
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function OrganizationListRow({ org, t, onManage }) {
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-surface-200 bg-white px-4 py-4 shadow-sm transition-all hover:border-genesis-200 hover:shadow-md sm:flex-row sm:items-center sm:gap-5">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-genesis-50 ring-1 ring-genesis-200/60">
+          <Building2 className="h-5 w-5 text-genesis-600" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-bold text-surface-900">{org.name}</h2>
+          <p className="mt-0.5 text-[11px] text-surface-400">{t(orgTypeLabelKey(org.organization_type))}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-surface-600">
+        <div className="flex items-center gap-2">
+          <UsersRound className="h-4 w-4 text-surface-400" aria-hidden />
+          <span>
+            {t('organizations.card.yourRole')}:{' '}
+            <strong className="text-surface-800">
+              {t(roleStringToDisplayBucket(org.role) === 'admin' ? 'roles.admin' : 'roles.user')}
+            </strong>
+          </span>
+        </div>
+        <div className="text-xs text-surface-500 sm:text-sm">
+          {t('organizations.card.members')}:{' '}
+          <span className="font-semibold text-surface-800">
+            {org.member_count != null ? String(org.member_count) : '—'}
+          </span>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onManage}
+        className="group/btn inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-lg border border-genesis-200 bg-genesis-50/50 px-4 py-2 text-xs font-semibold text-genesis-700 transition-all hover:bg-genesis-100 sm:self-center"
+      >
+        {t('organizations.card.manage')}
+        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5" />
+      </button>
+    </div>
+  )
+}
+
 export default function MyOrganizationsPage() {
   const { t } = useI18n()
   const { navigate } = useRouter()
   const orgsQ = useOrganizationsQuery({ enabled: true })
   const organizations = orgsQ.data ?? []
+  const [viewMode, setViewMode] = usePersistedViewMode('genesis.ui.viewMode.organizations', 'cards')
 
   const sorted = useMemo(() => {
     // Oldest first so the org you just created appears at the end of the grid (not first).
     return [...organizations].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
   }, [organizations])
 
+  const openManage = (organizationId) => {
+    navigate(`/settings?tab=profile&organizationId=${encodeURIComponent(organizationId)}`)
+  }
+
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="animate-fade-in">
-        <h1 className="text-2xl font-bold text-surface-900">{t('organizations.page.title')}</h1>
-        <p className="mt-1 text-sm text-surface-500">{t('organizations.page.subtitle')}</p>
+      <div className="animate-fade-in flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-surface-900">{t('organizations.page.title')}</h1>
+          <p className="mt-1 text-sm text-surface-500">{t('organizations.page.subtitle')}</p>
+        </div>
+        {!orgsQ.isLoading && sorted.length > 0 ? (
+          <ViewModeToggle mode={viewMode} onChange={setViewMode} />
+        ) : null}
       </div>
 
       <AddOrganizationPanel />
@@ -158,54 +254,26 @@ export default function MyOrganizationsPage() {
         <p className="mt-8 rounded-xl border border-surface-200 bg-white px-6 py-8 text-center text-sm text-surface-500">
           {t('organizations.page.empty')}
         </p>
-      ) : (
+      ) : viewMode === 'cards' ? (
         <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {sorted.map((org) => (
-            <div
+            <OrganizationCard
               key={org.organization_id}
-              className="flex h-full flex-col overflow-hidden rounded-xl border border-surface-200 bg-white shadow-sm transition-all hover:border-genesis-200 hover:shadow-md"
-            >
-              <div className="flex items-start gap-3 border-b border-surface-100 px-5 py-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-genesis-50 ring-1 ring-genesis-200/60">
-                  <Building2 className="h-5 w-5 text-genesis-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-[15px] font-bold leading-snug text-surface-900">{org.name}</h2>
-                  <p className="mt-1 text-[11px] text-surface-400">{t(orgTypeLabelKey(org.organization_type))}</p>
-                </div>
-              </div>
-              <div className="flex flex-1 flex-col gap-3 px-5 py-4 text-sm text-surface-600">
-                <div className="flex items-center gap-2">
-                  <UsersRound className="h-4 w-4 text-surface-400" aria-hidden />
-                  <span>
-                    {t('organizations.card.yourRole')}:{' '}
-                    <strong className="text-surface-800">
-                      {t(roleStringToDisplayBucket(org.role) === 'admin' ? 'roles.admin' : 'roles.user')}
-                    </strong>
-                  </span>
-                </div>
-                <div className="text-xs text-surface-500">
-                  {t('organizations.card.members')}:{' '}
-                  <span className="font-semibold text-surface-800">
-                    {org.member_count != null ? String(org.member_count) : '—'}
-                  </span>
-                </div>
-              </div>
-              <div className="border-t border-surface-100 px-5 py-3">
-                <button
-                  type="button"
-                  onClick={() =>
-                    navigate(
-                      `/settings?tab=profile&organizationId=${encodeURIComponent(org.organization_id)}`,
-                    )
-                  }
-                  className="group/btn flex w-full items-center justify-center gap-2 rounded-lg border border-genesis-200 bg-genesis-50/50 px-4 py-2 text-xs font-semibold text-genesis-700 transition-all hover:bg-genesis-100 hover:shadow-sm active:scale-[0.98]"
-                >
-                  {t('organizations.card.manage')}
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5" />
-                </button>
-              </div>
-            </div>
+              org={org}
+              t={t}
+              onManage={() => openManage(org.organization_id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-8 flex flex-col gap-3">
+          {sorted.map((org) => (
+            <OrganizationListRow
+              key={org.organization_id}
+              org={org}
+              t={t}
+              onManage={() => openManage(org.organization_id)}
+            />
           ))}
         </div>
       )}

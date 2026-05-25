@@ -16,6 +16,7 @@ import { Link, useRouter } from '../router'
 import { useI18n } from '../i18n/I18nContext'
 import { useTheme } from '../theme/ThemeContext'
 import { useAdminAuth } from '../context/AdminAuthContext'
+import AppVersionBadge from '../components/AppVersionBadge'
 
 export default function AdminLayout({ active, children }) {
   const { t, locale, toggleLocale } = useI18n()
@@ -56,7 +57,7 @@ export default function AdminLayout({ active, children }) {
         <div
           className={`flex h-16 shrink-0 items-center border-b border-surface-200 px-4 ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}
         >
-          <div className="flex min-w-0 items-center overflow-hidden">
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
             {sidebarCollapsed ? (
               <img
                 src="/logos/logo-icon.png"
@@ -65,12 +66,15 @@ export default function AdminLayout({ active, children }) {
                 style={{ aspectRatio: 'auto' }}
               />
             ) : (
-              <img
-                src="/logos/logo-primary.png"
-                alt=""
-                className="h-10 w-auto max-w-[11rem] object-contain dark:brightness-0 dark:invert"
-                style={{ aspectRatio: 'auto' }}
-              />
+              <>
+                <img
+                  src="/logos/logo-primary.png"
+                  alt=""
+                  className="h-10 w-auto max-w-[11rem] object-contain dark:brightness-0 dark:invert"
+                  style={{ aspectRatio: 'auto' }}
+                />
+                <AppVersionBadge variant="light" />
+              </>
             )}
           </div>
           <button

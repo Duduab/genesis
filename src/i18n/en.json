@@ -235,6 +235,14 @@
     "agentsUsedOf": "of",
     "agentsUsedLabel": "agents used"
   },
+  "app": {
+    "versionLabel": "App version"
+  },
+  "viewMode": {
+    "groupLabel": "Display layout",
+    "cards": "Cards",
+    "list": "List"
+  },
   "organizations": {
     "page": {
       "title": "My Organizations",

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import TopHeader from '../components/TopHeader'
 import { useI18n } from '../i18n/I18nContext'
+import AppVersionBadge from '../components/AppVersionBadge'
 
 export default function DashboardLayout({ children, activePage, topSlot = null, floatingActions = null }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -25,7 +26,11 @@ export default function DashboardLayout({ children, activePage, topSlot = null, 
           {topSlot}
           {children}
 
-          <footer className="mt-12 flex items-center justify-center gap-2 border-t border-surface-200 pb-4 pt-6">
+          <footer className="mt-12 flex flex-wrap items-center justify-center gap-2 border-t border-surface-200 pb-4 pt-6">
+            <AppVersionBadge variant="subtle" />
+            <span className="text-surface-300" aria-hidden>
+              ·
+            </span>
             <span className="text-[11px] text-surface-400">{t('footer.poweredBy')}</span>
             <img
               src="/logos/logo-specialty.png"

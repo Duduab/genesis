@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, DollarSign } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { Link, useRouter } from '../router'
 import AuthHeroPanel from '../components/AuthHeroPanel'
+import AuthPageBrand from '../components/AuthPageBrand'
 import { getBusinessAnalysisProfile } from '../config/businessAnalysisProfiles'
 import { loadWizardStep1 } from '../wizard/createBusinessWizardStorage'
 import { BUSINESS_CATEGORIES } from '../config/businessCategories'
@@ -72,13 +73,11 @@ export default function RegisterStep3() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(139,92,246,0.18),transparent)]" />
 
         <header className="relative z-10 flex shrink-0 items-center justify-between px-6 py-5 sm:px-10">
-          <Link to="/register" className="flex items-center">
-            <img
-              src="/logos/logo-primary.png"
-              alt={t('createBusiness.logoAlt')}
-              className="h-11 w-auto max-w-[200px] object-contain opacity-95"
-            />
-          </Link>
+          <AuthPageBrand
+            to="/register"
+            logoClassName="h-11 w-auto max-w-[200px] object-contain opacity-95"
+            badgeVariant="dark"
+          />
           <button
             type="button"
             onClick={toggleLocale}

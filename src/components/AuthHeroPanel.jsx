@@ -109,10 +109,7 @@ export default function AuthHeroPanel() {
         </div>
 
         <div>
-          <h1 className="whitespace-pre-line text-4xl font-bold leading-tight tracking-tight text-white xl:text-5xl">
-            {t('auth.hero.headline')}
-          </h1>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-genesis-200/80">
+          <p className="max-w-xl text-2xl font-semibold leading-snug tracking-tight text-white xl:text-3xl">
             {t('auth.hero.subtext')}
           </p>
         </div>
